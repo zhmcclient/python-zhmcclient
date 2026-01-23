@@ -1,316 +1,419 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 title: JSON schema for a zhmcclient function test file
 definitions:
-  zhmcclient_object:
+  value:
+    description: ->
+      A value that can be used as property value, method parameter value or
+      method return value. The usual mapping between JSON types and Python
+      types applies.
+    oneOf:
+    - description: >-
+        Value for all types except list, dict and zhmcclient resource/manager object.
+      type:
+        - string
+        - number
+        - integer
+        - boolean
+        - 'null'
+    - description: >-
+        Value for type list
+      type: array
+      items:
+        $ref: '#/definitions/value'
+    - description: >-
+        Value for types dict and zhmcclient resource/manager object.
+      type: object
+      patternProperties:
+        '^(?!(_resource|_manager)$).+$':
+          description: Value for type dict.
+          $ref: '#/definitions/value'
+      properties:
+        _resource:
+          description: >-
+            Value for type zhmcclient resource object.
+            If specified, no other items may be in the dict.
+          $ref: '#/definitions/resource_reference'
+        _manager:
+          description: >-
+            Value for type zhmcclient manager object.
+            If specified, no other items may be in the dict.
+          $ref: '#/definitions/manager_reference'
+  resource_reference:
     description: >-
-      A zhmcclient resource or manager object, along with input parameters for
-      creating it. Its parent resource objects are also defined, up to but
-      excluding the zhmcclient.Client object.
+      Reference to a zhmcclient resource object identified by its
+      canonical URI.
     type: object
     additionalProperties: false
     required:
-      - manager_attribute
+      - uri
     properties:
-      manager_attribute:
-        description: >-
-          Name of the attribute on the parent zhmcclient resource object that
-          represents the manager object for this resource object.
-        type: string
       uri:
         description: >-
-          Canonical URI of the resource object on the HMC.
-          Required for zhmcclient resource objects; not permitted for zhmcclient
-          manager objects.
+          The canonical URI of the resource.
         type: string
-      name:
+        format: uri-reference
+  manager_reference:
+    description: >-
+      Reference to a zhmcclient manager object identified by the
+      canonical URI of its parent resource object, and the manager
+      attribute on that resource object.
+    type: object
+    additionalProperties: false
+    required:
+      - parent_uri
+      - attribute
+    properties:
+      parent_uri:
         description: >-
-          Name of the resource object.
-          Required for zhmcclient resource objects; not permitted for zhmcclient
-          manager objects.
+          The canonical URI of the parent resource.
         type: string
-      properties:
+        format: uri-reference
+      attribute:
         description: >-
-          Additional properties for creating the zhmcclient resource object.
-          Optional for zhmcclient resource objects; not permitted for zhmcclient
-          manager objects.
+          The name of the manager attribute on the parent zhmcclient
+          resource object.
+        type: string
+  setup:
+    description: >-
+      Setup data for the zhmcclient.Session and zhmcclient.Client objects.
+      The setup is performed for the testcase before the zhmcclient method
+      or property to be tested is called or accessed.
+    type: object
+    additionalProperties: false
+    properties:
+      testfile_setup:
+        description: >-
+          Flag that indicates whether the setup defined at the level of the test
+          file should be used as the default for this testcase level setup.
+          Must not be specified in the test file setup itself.
+        type: boolean
+      session:
+        description: >-
+          kwargs for creating a zhmcclient.Session object for the testcase.
         type: object
         additionalProperties: false
-        patternProperties:
-          '^[a-zA-Z0-9\-]+$':
-            description: Property name and value
-            type:
-              - string
-              - number
-              - integer
-              - boolean
-              - 'null'
-              - object
-              - array
-      parent:
-        $ref: '#/definitions/zhmcclient_object'
+        required:
+          - host
+        properties:
+          # Keep defaults in sync with the defaults set in conftest.py
+          host:
+            description: >-
+              "host" parameter for the zhmcclient.Session object.
+            type: string
+          userid:
+            description: >-
+              "userid" parameter for the zhmcclient.Session object.
+            type: string
+            default: "hmc-userid"
+          password:
+            description: >-
+              "password" parameter for the zhmcclient.Session object.
+            type: string
+            default: "hmc-password"
+          session_id:
+            description: >-
+              "session_id" parameter for the zhmcclient.Session object.
+            type: string
+            default: "hmc-session-id"
+      resources:
         description: >-
-          Parent zhmcclient resource object of the resource or manager object.
-          The chain of parents must go up to but not include the
-          zhmcclient.Client object.
-description: List of zhmcclient function testcases
-type: array
-items:
-  description: A single zhmcclient function testcase
-  type: object
-  additionalProperties: false
-  required:
-    - name
-    - description
-    - zhmcclient_call
-    - zhmcclient_result
-  properties:
-    name:
-      description: 'Name of the testcase as recognized by pytest. Must be unique within the
-        test file.'
-      type: string
-    description:
-      description: Short description of the testcase
-      type: string
-    skip:
-      description: >-
-        If specified, this testcase is skipped, and the string is the skip message.
-      type: string
-    debug:
-      description: >-
-        Flag indicating that the interactive Python debugger should come up
-        in this testcase.
-      type: boolean
-      default: false
-    zhmcclient_call:
-      description: >-
-        The zhmcclient method to be called or zhmcclient property to be
-        accessed in this testcase.
-      type: object
-      additionalProperties: false
-      required:
-        - target
-      properties:
-        target:
-          $ref: '#/definitions/zhmcclient_object'
-          description: >-
-            Target zhmcclient resource or manager object against which the
-            zhmcclient method is called or the zhmcclient property is accessed.
-        attribute:
-          description: >-
-            Name of an attribute on the target resource object that has the
-            zhmcclient method to be called or zhmcclient property to be
-            accessed. If omitted, the target resource object has that
-            method or property directly.
-          type: string
-        property:
-          description: >-
-            Name of the zhmcclient property to be accessed.
-            Mutually exclusive with "method", and exactly one is required.
-          type: string
-        method:
-          description: >-
-            Name of the zhmcclient method to be called.
-            Mutually exclusive with "property", and exactly one is required.
-          type: string
-        parameters:
-          description: >-
-            Parameters to be passed to the zhmcclient method.
-            Required when "method" is specified.
-          type: object
-          additionalProperties: false
-          patternProperties:
-            '^[a-zA-Z0-9_]+$':
-              description: Parameter name and value
-              type:
-                - string
-                - number
-                - integer
-                - boolean
-                - 'null'
-                - object
-                - array
-    zhmcclient_result:
-      description: >-
-        The expected result of the zhmcclient method call or property access.
-      type: object
-      additionalProperties: false
-      oneOf:
-        - required:
-            - return
-        - required:
-            - exception
-      properties:
-        return:
-          description: >-
-            Expected return value, if the method call or property access does
-            not raise an exception.
-            TODO: Support for zhmcclient objects as return values.
-          type:
-            - string
-            - number
-            - integer
-            - boolean
-            - 'null'
-            - object
-            - array
-        exception:
-          description: >-
-            Expected exception data, if the method call or property access
-            raises an exception.
+          List of zhmcclient resource objects to be created.
+        type: array
+        items:
           type: object
           additionalProperties: false
           required:
-            - class
+            - uri
+            - name
+            - parent_uri
+            - parent_attribute
           properties:
-            class:
+            uri:
               description: >-
-                Python class name of the expected exception, without Python
-                module path.
+                The canonical URI of the resource.
               type: string
-            message_pattern:
+              format: uri-reference
+            name:
               description: >-
-                Regexp pattern for the expected exception message. Begin and end
-                markers must be specified, if they should be considered.
-                If omitted, the exception message is not validated.
+                The name of the resource.
               type: string
-            attributes:
+            parent_uri:
               description: >-
-                Expected attributes of the exception.
-                If omitted, the exception attributes are not validated.
+                The canonical URI of the parent resource.
+                If null, the parent resource is the zhmcclient.Client object.
+              type:
+                - string
+                - 'null'
+            parent_attribute:
+              description: >-
+                The name of the attribute on the parent zhmcclient resource
+                object for the manager of the resource.
+              type: string
+            properties:
+              description: >-
+                Additional properties for creating the zhmcclient resource object.
+              type: object
+              additionalProperties: false
+              patternProperties:
+                '^[a-zA-Z0-9\-]+$':
+                  description: Property name and value
+                  $ref: '#/definitions/value'
+description: zhmcclient function test file
+type: object
+additionalProperties: false
+required:
+  - testcases
+properties:
+  setup:
+    description: ->
+      Setup defined at the level of the test file.
+      This setup is performed for each testcase and acts as a default that
+      can be modified by the testcase specific setup.
+    $ref: '#/definitions/setup'
+  testcases:
+    description: List of zhmcclient function testcases
+    type: array
+    items:
+      description: A single zhmcclient function testcase
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - description
+        - zhmcclient_call
+        - zhmcclient_result
+      properties:
+        name:
+          description: 'Name of the testcase as recognized by pytest. Must be unique within the
+            test file.'
+          type: string
+        description:
+          description: Short description of the testcase
+          type: string
+        skip:
+          description: >-
+            If specified, this testcase is skipped, and the string is the skip message.
+          type: string
+        debug:
+          description: >-
+            Flag indicating that the interactive Python debugger should come up
+            in this testcase.
+          type: boolean
+          default: false
+        setup:
+          description: >-
+            Setup defined at the level of the testcase.
+            This setup is performed for each testcase and modifies the setup
+            that is defined at the level of the test file.
+          $ref: '#/definitions/setup'
+        zhmcclient_call:
+          description: >-
+            The zhmcclient method to be called or zhmcclient property to be
+            accessed in this testcase.
+          type: object
+          additionalProperties: false
+          required:
+            - target
+          properties:
+            target:
+              description: >-
+                Target zhmcclient resource or manager object against which the
+                zhmcclient method is called or the zhmcclient property is accessed.
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required:
+                    - _resource
+                  properties:
+                    _resource:
+                      description: >-
+                        Value for type zhmcclient resource object.
+                        If specified, no other items may be in the dict.
+                      $ref: '#/definitions/resource_reference'
+                - type: object
+                  additionalProperties: false
+                  required:
+                    - _manager
+                  properties:
+                    _manager:
+                      description: >-
+                        Value for type zhmcclient manager object.
+                        If specified, no other items may be in the dict.
+                      $ref: '#/definitions/manager_reference'
+            attribute:
+              description: >-
+                Name of an attribute on the target resource object that has the
+                zhmcclient method to be called or zhmcclient property to be
+                accessed. If omitted, the target resource object has that
+                method or property directly.
+              type: string
+            property:
+              description: >-
+                Name of the zhmcclient property to be accessed.
+                Mutually exclusive with "method", and exactly one is required.
+              type: string
+            method:
+              description: >-
+                Name of the zhmcclient method to be called.
+                Mutually exclusive with "property", and exactly one is required.
+              type: string
+            parameters:
+              description: >-
+                Parameters to be passed to the zhmcclient method.
+                Required when "method" is specified.
               type: object
               additionalProperties: false
               patternProperties:
                 '^[a-zA-Z0-9_]+$':
-                  description: Attribute name and value.
-                  type:
-                    - string
-                    - number
-                    - integer
-                    - boolean
-                    - 'null'
-                    - object
-                    - array
-    hmc_session:
-      description: Parameters for creating a zhmcclient.Session object for the test.
-      type: object
-      additionalProperties: false
-      required:
-        - host
-      properties:
-        # Keep defaults in sync with the defaults set in conftest.py
-        host:
+                  description: Parameter name and value
+                  $ref: '#/definitions/value'
+        zhmcclient_result:
           description: >-
-            "host" parameter for the zhmcclient.Session object.
-          type: string
-        userid:
-          description: >-
-            "userid" parameter for the zhmcclient.Session object.
-          type: string
-          default: "hmc-userid"
-        password:
-          description: >-
-            "password" parameter for the zhmcclient.Session object.
-          type: string
-          default: "hmc-password"
-        session_id:
-          description: >-
-            "session_id" parameter for the zhmcclient.Session object.
-          type: string
-          default: "hmc-session-id"
-    hmc_interactions:
-      description: List of HMC interactions for this testcase.
-      type: array
-      items:
-        description: >-
-          A single HMC interaction with expected HTTP request and HTTP response
-          to be returned.
-        type: object
-        additionalProperties: false
-        required:
-          - http_request
-          - http_response
-        properties:
-          http_request:
+            The expected result of the zhmcclient method call or property access.
+          type: object
+          additionalProperties: false
+          oneOf:
+            - required:
+                - return
+            - required:
+                - exception
+          properties:
+            return:
+              description: >-
+                Expected return value, if the method call or property access does
+                not raise an exception.
+              $ref: '#/definitions/value'
+            exception:
+              description: >-
+                Expected exception data, if the method call or property access
+                raises an exception.
+              type: object
+              additionalProperties: false
+              required:
+                - class
+              properties:
+                class:
+                  description: >-
+                    Python class name of the expected exception, without Python
+                    module path.
+                  type: string
+                message_pattern:
+                  description: >-
+                    Regexp pattern for the expected exception message. Begin and end
+                    markers must be specified, if they should be considered.
+                    If omitted, the exception message is not validated.
+                  type: string
+                attributes:
+                  description: >-
+                    Expected attributes of the exception.
+                    If omitted, the exception attributes are not validated.
+                  type: object
+                  additionalProperties: false
+                  patternProperties:
+                    '^[a-zA-Z0-9_]+$':
+                      description: Attribute name and value.
+                      type:
+                        - string
+                        - number
+                        - integer
+                        - boolean
+                        - 'null'
+                        - object
+                        - array
+        hmc_interactions:
+          description: List of HMC interactions for this testcase.
+          type: array
+          items:
             description: >-
-              The expected HTTP request, for being checked in the test function.
+              A single HMC interaction with expected HTTP request and HTTP response
+              to be returned.
             type: object
             additionalProperties: false
             required:
-              - method
-              - uri
+              - http_request
+              - http_response
             properties:
-              method:
-                description: The HTTP method in the request.
-                type: string
-                enum:
-                  - GET
-                  - PUT
-                  - POST
-                  - DELETE
-              uri:
+              http_request:
                 description: >-
-                  The canonical URI of the HMC resource in the request, for
-                  being validated in the test.
-                  If omitted, the request URI is not validated in the test.
-                type: string
-                format: uri
-              headers:
-                description: >-
-                  The HTTP header fields in the request that should be validated
-                  in the test.
-                  Key is the header name, and value (string) is the header value.
-                  Header fields not specified are not validated in the test.
-                  If omitted, no header fields are validated in the test.
+                  The expected HTTP request, for being checked in the test function.
                 type: object
-              body:
+                additionalProperties: false
+                required:
+                  - method
+                  - uri
+                properties:
+                  method:
+                    description: The HTTP method in the request.
+                    type: string
+                    enum:
+                      - GET
+                      - PUT
+                      - POST
+                      - DELETE
+                  uri:
+                    description: >-
+                      The canonical URI of the HMC resource in the request, for
+                      being validated in the test.
+                      If omitted, the request URI is not validated in the test.
+                    type: string
+                    format: uri-reference
+                  headers:
+                    description: >-
+                      The HTTP header fields in the request that should be validated
+                      in the test.
+                      Key is the header name, and value (string) is the header value.
+                      Header fields not specified are not validated in the test.
+                      If omitted, no header fields are validated in the test.
+                    type: object
+                  body:
+                    description: >-
+                      The HTTP body in the request for being validated in the test.
+                      If this property is specified as a YAML object, the actual
+                      body is parsed as JSON and the validation happens at the
+                      object level.
+                      If this property is specified as a string, the validation
+                      happens at the string level exactly as specified.
+                    type:
+                      - string
+                      - object
+              http_response:
                 description: >-
-                  The HTTP body in the request for being validated in the test.
-                  If this property is specified as a YAML object, the actual
-                  body is parsed as JSON and the validation happens at the
-                  object level.
-                  If this property is specified as a string, the validation
-                  happens at the string level exactly as specified.
-                type:
-                  - string
-                  - object
-          http_response:
-            description: >-
-              The HTTP response to be returned to the zhmcclient code, or
-              a requests exception to be raised.
-            type: object
-            additionalProperties: false
-            properties:
-              status:
-                description: >-
-                  The HTTP status code in the response.
-                  Mutually exclusive with "callback", and one of them is required.
-                type: integer
-              headers:
-                description: >-
-                  The HTTP header fields in the response.
-                  Key is the header name, and value (string) is the header value.
-                  If omitted, no headers will be in the response.
-                  Not permitted when "callback" is specified.
+                  The HTTP response to be returned to the zhmcclient code, or
+                  a requests exception to be raised.
                 type: object
-              body:
-                description: >-
-                  The HTTP body in the response.
-                  If this property is specified as a YAML object, it is
-                  serialized into JSON and then used for the response body.
-                  If this property is specified as a string, the string is
-                  used for the response body exactly as specified.
-                  If omitted, the response body will be unset.
-                  Not permitted when "callback" is specified.
-                type:
-                  - string
-                  - object
-              callback:
-                description: >-
-                  A requests_mock callback function.
-                  A requests_mock callback function either defines the HTTP
-                  response data or raises an exception that appears to the
-                  zhmcclient code to come from the "requests" package.
-                  The string is the name of a static function in class
-                  ResponseCallbacks in conftest.py.
-                  Mutually exclusive with "status", and one of them is required.
-                type: string
+                additionalProperties: false
+                properties:
+                  status:
+                    description: >-
+                      The HTTP status code in the response.
+                      Mutually exclusive with "callback", and one of them is required.
+                    type: integer
+                  headers:
+                    description: >-
+                      The HTTP header fields in the response.
+                      Key is the header name, and value (string) is the header value.
+                      If omitted, no headers will be in the response.
+                      Not permitted when "callback" is specified.
+                    type: object
+                  body:
+                    description: >-
+                      The HTTP body in the response.
+                      If this property is specified as a YAML object, it is
+                      serialized into JSON and then used for the response body.
+                      If this property is specified as a string, the string is
+                      used for the response body exactly as specified.
+                      If omitted, the response body will be unset.
+                      Not permitted when "callback" is specified.
+                    type:
+                      - string
+                      - object
+                  callback:
+                    description: >-
+                      A requests_mock callback function.
+                      A requests_mock callback function either defines the HTTP
+                      response data or raises an exception that appears to the
+                      zhmcclient code to come from the "requests" package.
+                      The string is the name of a static function in class
+                      ResponseCallbacks in conftest.py.
+                      Mutually exclusive with "status", and one of them is required.
+                    type: string

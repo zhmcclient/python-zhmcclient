@@ -48,7 +48,12 @@ The test file format is described in schemas/test_file.schema.yaml.
 import re
 import pathlib
 import json
+from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+import warnings
 
+from immutabledict import immutabledict
 import yaml
 import pytest
 import requests_mock
@@ -114,14 +119,38 @@ class YamlFile(pytest.File):
             filepath = cwdpath(self.path)
 
             try:
-                testcases = yaml.safe_load(fp)
+                testfile_content = yaml.safe_load(fp)
             except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
                 raise pytest.Collector.CollectError(
                     f"Cannot load test file {filepath}: {exc}")
 
             schema, schema_file = get_test_schema(self.parent.config)
+
+            # Note: format="uri-reference" allows both the relative URIs that
+            #       are used by the HMC as canonical URIs, and absolute URIs.
+            #       There is no format value that requires only the relative
+            #       URIs.
+            # Note: The jsonschema package documents that the rfc3987 or
+            #       rfc3986-validator packages are needed to check the format
+            #       "uri-reference". Normally, jsonschema falls back to
+            #       using the built-in urllib.parse module if neither of these
+            #       packages is installed, but not on Windows on some Python
+            #       versions (e.g. 3.14). We use rfc3986-validator because
+            #       rfc3987 has GPL license.
             try:
-                jsonschema.validate(testcases, schema)
+                format_checker = jsonschema.FormatChecker(["uri-reference"])
+            except KeyError:
+                checkers = list(jsonschema.FormatChecker.checkers.keys())
+                warnings.warn(
+                    "No format checker for 'uri-reference' installed - "
+                    "format will not be checked. "
+                    f"Available format checkers: {checkers}", UserWarning)
+                format_checker = None
+
+            validator = jsonschema.Draft202012Validator(
+                schema, format_checker=format_checker)
+            try:
+                validator.validate(testfile_content)
             except jsonschema.exceptions.SchemaError as exc:
                 elem_path = get_json_path(exc.absolute_path)
                 schema_path = get_json_path(exc.absolute_schema_path)
@@ -141,6 +170,12 @@ class YamlFile(pytest.File):
                     f"Validator: {exc.validator}={exc.validator_value}"
                 )
 
+            tf_setup = testfile_content.get("setup", None)
+            try:
+                testcases = testfile_content["testcases"]
+            except KeyError:
+                raise pytest.Collector.CollectError(
+                    f"Test file {filepath} does not specify 'testcases'")
             for i, testcase in enumerate(testcases):
                 try:
                     name = testcase['name']
@@ -148,9 +183,24 @@ class YamlFile(pytest.File):
                     raise pytest.Collector.CollectError(
                         f"Testcase #{i + 1} in test file {filepath} does not "
                         "have a 'name' property")
+                testcase_data = TestcaseData(testcase, tf_setup, filepath)
                 yield YamlItem.from_parent(
-                    parent=self, name=name, testcase=testcase,
-                    filepath=filepath)
+                    parent=self, name=name, testcase_data=testcase_data)
+
+
+@dataclass
+class TestcaseData:
+    """
+    Data class that holds the data for a testcase.
+
+    An object of this class is added as an attribute to the YamlItem, and this
+    class provides namespace isolation to any attributes inherited by the
+    pytest base class of YamlItem.
+    """
+
+    testcase: dict  # The testcase item from the test file.
+    tf_setup: dict  # The file-level setup item from the test file.
+    filepath: Path  # Path name of test file.
 
 
 class YamlItem(pytest.Item):
@@ -159,7 +209,7 @@ class YamlItem(pytest.Item):
     a YAML test file.
     """
 
-    def __init__(self, parent, name, testcase, filepath):
+    def __init__(self, parent, name, testcase_data):
         """
         Parameters:
 
@@ -167,21 +217,18 @@ class YamlItem(pytest.Item):
 
           name (string): Name of the testcase in the test file.
 
-          testcase (dict): The testcase item from the test file.
-
-          filepath (pathlib.Path): Path name of test file.
+          testcase_data (TestcaseData): The testcase data.
         """
         super().__init__(name=name, parent=parent)
         # self.parent = parent, set by superclass
         # self.name = name, set by superclass
-        self.testcase = testcase
-        self.filepath = filepath
+        self.testcase_data = testcase_data
 
     def runtest(self):
         """
         Called by pytest to run this testcase.
         """
-        runtestcase(self.testcase)
+        runtestcase(self.testcase_data)
 
     def repr_failure(self, excinfo, style=None):
         # pylint: disable=no-self-use
@@ -218,10 +265,10 @@ class YamlItem(pytest.Item):
         about the testcase. The third tuple item is a string that
         identifies the testcase in a human readable way.
         """
-        return self.path, 0, f"{self.name} in {self.filepath}"
+        return self.path, 0, f"{self.name} in {self.testcase_data.filepath}"
 
 
-def runtestcase(testcase):
+def runtestcase(testcase_data):
     """
     Run a single testcase.
 
@@ -230,13 +277,16 @@ def runtestcase(testcase):
 
     Parameters:
 
-      testcase (dict): The testcase item from the test file.
+      testcase_data (TestcaseData): The testcase data from the test file.
 
     Raises:
 
       TestcaseDefinitionError: Invalid testcase definition.
       AssertionError: Failure running the testcase.
     """
+    testcase = deepcopy(testcase_data.testcase)
+    tf_setup = deepcopy(testcase_data.tf_setup)
+    # filepath = deepcopy(testcase_data.filepath)
 
     tc_skip = tc_getitem("", testcase, "skip", None)
     if tc_skip is not None:
@@ -247,19 +297,46 @@ def runtestcase(testcase):
     # tc_desc = tc_getitem("", testcase, "description")
     zhmcclient_call = tc_getitem("", testcase, "zhmcclient_call")
     zhmcclient_result = tc_getitem("", testcase, "zhmcclient_result")
+    tc_setup = tc_getitem("", testcase, "setup", None)
+
+    if tf_setup is not None:
+        session_kwargs = tc_getitem("setup(tf)", tf_setup, "session", {})
+        resources_spec = tc_getitem("setup(tf)", tf_setup, "resources", [])
+    else:
+        session_kwargs = {}
+        resources_spec = []
+
+    if tc_setup is not None:
+        tc_session_kwargs = tc_getitem("setup", tc_setup, "session", {})
+        tc_resources_spec = tc_getitem("setup", tc_setup, "resources", [])
+        session_kwargs.update(tc_session_kwargs)
+        resources_spec.extend(tc_resources_spec)
 
     # Keep these defaults in sync with the schema defaults
-    hmc_session = tc_getitem("", testcase, "hmc_session", {})
-    hmc_session.setdefault("host", "hmc-host")
-    hmc_session.setdefault("userid", "hmc-userid")
-    hmc_session.setdefault("password", "hmc-password")
-    hmc_session.setdefault("session_id", "hmc-session-id")
+    session_kwargs.setdefault("host", "hmc-host")
+    session_kwargs.setdefault("userid", "hmc-userid")
+    session_kwargs.setdefault("password", "hmc-password")
+    session_kwargs.setdefault("session_id", "hmc-session-id")
+
+    session = zhmcclient.Session(**session_kwargs)
+    client = zhmcclient.Client(session)
+
+    # Create the resource objects defined in setup
+    resource_by_uri = {}  # Lookup dict for all resources
+    if resources_spec:
+        create_setup_resources(
+            "setup.resources(tf+tc)", resources_spec, client, resource_by_uri)
 
     hmc_interactions = tc_getitem("", testcase, "hmc_interactions", [])
 
     # Setup requests_mock for the HMC interactions. This will produce
     # the specified HTTP responses.
     mock_adapter = requests_mock.Adapter()
+
+    # Because requests_mock.Adapter maintains a history of only the last
+    # interactions, we need to record the interaction history ourselves.
+    recorded_requests = []  # Items are requests.Response
+
     for i, hmc_interaction in enumerate(hmc_interactions):
         int_loc = f"hmc_interactions[{i}]"
         http_request = tc_getitem(int_loc, hmc_interaction, "http_request")
@@ -287,21 +364,23 @@ def runtestcase(testcase):
                 raise TestcaseDefinitionError(
                     f"'{resp_loc}.callback' specifies an unknown callback "
                     f"function: {resp_callback}") from exc
+
+            callback = make_callback_for_callback(
+                recorded_requests, callback_func)
             mock_adapter.register_uri(
-                method=method, url=uri, text=callback_func)
+                method=method, url=uri, content=callback)
+
         else:
             assert resp_status is not None
             # Register the response data directly.
             resp_headers = tc_getitem(resp_loc, http_response, "headers", {})
             body_spec = tc_getitem(resp_loc, http_response, "body", None)
             resp_body = body_from_spec(f"{resp_loc}.body", body_spec)
-            mock_adapter.register_uri(
-                method=method, url=uri, status_code=resp_status,
-                headers=resp_headers, content=resp_body)
 
-    session = zhmcclient.Session(**hmc_session)
-    client = zhmcclient.Client(session)
-    session.session.mount("https://", mock_adapter)
+            callback = make_callback_for_direct(
+                recorded_requests, resp_status, resp_body, resp_headers)
+            mock_adapter.register_uri(
+                method=method, url=uri, content=callback, complete_qs=True)
 
     call_loc = "zhmcclient_call"
     attr_name = tc_getitem(call_loc, zhmcclient_call, "attribute", None)
@@ -315,17 +394,17 @@ def runtestcase(testcase):
             "'method'.")
 
     # Create the target resource or manager object
-    target = tc_getitem(call_loc, zhmcclient_call, "target")
-    target_loc = f"{call_loc}.target"
-    obj = make_object(target_loc, target, parent_obj=client)
+    target_spec = tc_getitem(call_loc, zhmcclient_call, "target")
+    target_obj = get_target_object(
+        f"{call_loc}.target", target_spec, resource_by_uri)
 
     if attr_name is not None:
         try:
-            obj = getattr(obj, attr_name)
+            target_obj = getattr(target_obj, attr_name)
         except AttributeError as exc:
             raise TestcaseDefinitionError(
-                f"'{call_loc}.attribute' specifies a non-existing "
-                f"attribute on the zhmcclient.{obj.__class__.__name__} object: "
+                f"'{call_loc}.attribute' specifies a non-existing attribute "
+                f"on the zhmcclient.{target_obj.__class__.__name__} object: "
                 f"{attr_name}") from exc
 
     exception = tc_getitem(
@@ -341,19 +420,21 @@ def runtestcase(testcase):
         exp_exc_msg_pat = None
         exp_exc_attrs = None
 
-    # Perform the call to zhmcclient code to be tested
+    # Enable the mocking of requests
+    session.session.mount("https://", mock_adapter)
 
+    # Perform the call to zhmcclient code to be tested
     if prop_name is not None:
         msg_intro = ("Accessing property "
-                     f"zhmcclient.{obj.__class__.__name__}.{prop_name}")
+                     f"zhmcclient.{target_obj.__class__.__name__}.{prop_name}")
 
         # We split the access into a check for presence of the property and
         # accessing the properry, to make sure AttributeErrors raised when
         # accessing are not misinterpreted as a missing property.
-        if not hasattr(obj, prop_name):
+        if not hasattr(target_obj, prop_name):
             raise TestcaseDefinitionError(
                 f"'{call_loc}.attribute' specifies a non-existing property "
-                f"on the zhmcclient.{obj.__class__.__name__} object: "
+                f"on the zhmcclient.{target_obj.__class__.__name__} object: "
                 f"{prop_name}")
 
         try:
@@ -362,7 +443,7 @@ def runtestcase(testcase):
                     breakpoint()  # pylint: disable=forgotten-debug-statement
 
                 # Run the zhmcclient code (access the property)
-                result = getattr(obj, prop_name)
+                result = getattr(target_obj, prop_name)
 
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 exc_class_name = exc.__class__.__name__
@@ -392,16 +473,26 @@ def runtestcase(testcase):
 
     else:
         assert meth_name is not None
-        msg_intro = ("Calling method "
-                     f"zhmcclient.{obj.__class__.__name__}.{meth_name}()")
+        msg_intro = ("Calling method zhmcclient."
+                     f"{target_obj.__class__.__name__}.{meth_name}()")
 
         try:
-            bound_method = getattr(obj, meth_name)
+            bound_method = getattr(target_obj, meth_name)
         except AttributeError as exc:
             raise TestcaseDefinitionError(
                 f"'{call_loc}.method' specifies a non-existing method "
-                f"on the zhmcclient.{obj.__class__.__name__} object: "
+                f"on the zhmcclient.{target_obj.__class__.__name__} object: "
                 f"{meth_name}") from exc
+
+        # Prepare the method parameters
+        for name, value_spec in meth_parms.items():
+            if isinstance(value_spec, dict) and (
+                    "_resource" in value_spec or
+                    "_manager" in value_spec):
+                parm_loc = f"{call_loc}.parameters.{name}"
+                value = resolve_value_spec(
+                    parm_loc, value_spec, resource_by_uri)
+                meth_parms[name] = value
 
         try:
             try:
@@ -444,10 +535,9 @@ def runtestcase(testcase):
 
         # Validate the HTTP requests issued by the zhmcclient code
         if hmc_interactions:
-            history_list = mock_adapter.request_history
-            assert len(history_list) == len(hmc_interactions)
+            assert len(recorded_requests) == len(hmc_interactions)
             for i, hmc_interaction in enumerate(hmc_interactions):
-                history_item = history_list[i]
+                history_item = recorded_requests[i]
 
                 int_loc = f"hmc_interactions[{i}]"
                 http_request = tc_getitem(
@@ -469,93 +559,237 @@ def runtestcase(testcase):
                 if exp_body_spec is not None:
                     assert_body(history_item.body, exp_body_spec)
 
-        # TODO: Support for zhmcclient objects as return values.
-        exp_result = tc_getitem(
+        exp_result_spec = tc_getitem(
             "zhmcclient_result", zhmcclient_result, "return")
-        assert result == exp_result
+
+        exp_result = resolve_value_spec(
+            "zhmcclient_result.return", exp_result_spec, resource_by_uri)
+
+        assert_result(result, exp_result)
 
 
-def make_object(tc_loc, tc_dict, parent_obj):
+def make_callback_for_direct(recorded_requests, status_code, body, headers):
     """
-    Return a zhmcclient resource or manager object from its definition in a
-    testcase.
+    Return a requests_mock callback function that sets the specified HTTP
+    response data directly.
 
-    The parent objects are also processed (recursively), so that this function
-    returns the object resulting from the object definition in the testcase,
-    along with all of its parent resource and manager objects, up to the
-    original parent object.
+    The returned requests_mock callback function adds the interaction to
+    recorded_requests. This approach is necessary because requests_mock stores
+    only the last interaction in its history.
+    """
+
+    def callback(request, context):
+        recorded_requests.append(request)
+        context.status_code = status_code
+        if headers:
+            context.headers.update(headers)
+        return body
+
+    return callback
+
+
+def make_callback_for_callback(recorded_requests, callback_func):
+    """
+    Return a requests_mock callback function that calls the specified
+    callback function.
+
+    The returned requests_mock callback function adds the interaction to
+    recorded_requests. This approach is necessary because requests_mock stores
+    only the last interaction in its history.
+    """
+
+    def callback(request, context):
+        recorded_requests.append(request)
+        return callback_func(request, context)
+
+    return callback
+
+
+def get_target_object(tgt_loc, target_spec, resource_by_uri):
+    """
+    Return the target object (zhmcclient resource or manager) for a target
+    definition in a testcase.
+
+    The object must be in the resource lookup dict (resource_by_uri).
 
     Parameters:
 
-      tc_loc (str): Location of the object definition in the test file, for
-        messages.
+      tgt_loc (str): Location of the target object definition in the test file,
+        for messages.
 
-      tc_dict (dict): The object definition in the testcase. In the intial call
-        to this function, this may specify a zhmcclient resource object or a
-        zhmcclient manager object. In any recursive calls to this function,
-        this must specify a zhmcclient resource object.
+      target_spec (dict): The target definition in the testcase.
 
-      parent_obj (zhmcclient.BaseResource): The parent zhmcclient resource
-        object of the returned zhmcclient object. In the intial call to this
-        function, this must be the zhmcclient.Client object.
+      resource_by_uri (dict): Resource lookup dict that will be used to
+        retrieve the target object based on its URI.
 
     Returns:
 
       zhmcclient.BaseResource or zhmcclient.BaseManager: The zhmcclient object
-      for the object definition in the testcase.
+      for the target definition in the testcase.
 
     Raises:
 
-      TestcaseDefinitionError: Invalid testcase definition.
-      AssertionError: Failure running the testcase.
+      TestcaseDefinitionError
     """
+    assert "_resource" in target_spec or "_manager" in target_spec
+    return resolve_value_spec(tgt_loc, target_spec, resource_by_uri)
 
-    # Process childs, recursively
-    parent = tc_getitem(tc_loc, tc_dict, "parent", None)
-    if parent:
-        parent_obj = make_object(f"{tc_loc}.parent", parent, parent_obj)
 
-    mgr_attr = tc_getitem(tc_loc, tc_dict, "manager_attribute")
-    uri = tc_getitem(tc_loc, tc_dict, "uri", None)
-    name = tc_getitem(tc_loc, tc_dict, "name", None)
-    props = tc_getitem(tc_loc, tc_dict, "properties", {})
+def resolve_value_spec(val_loc, value_spec, resource_by_uri):
+    """
+    Return a deep copy of the value spec where any zhmcclient resource or
+    manager references are resolved to their actual objects.
 
-    if uri:
-        # The testcase specifies a resource object
-        if not name:
+    The objects tpo be resolved must be in the resource lookup dict
+    (resource_by_uri).
+
+    Parameters:
+
+      val_loc (str): Location of the value definition in the test file,
+        for messages.
+
+      value_spec (object): The value definition in the testcase.
+
+      resource_by_uri (dict): Resource lookup dict that will be used to
+        retrieve the target object based on its URI.
+
+    Returns:
+
+      object: The resolved value.
+
+    Raises:
+
+      TestcaseDefinitionError
+    """
+    if isinstance(value_spec, list):
+        resolved_value = []
+        for val_spec in value_spec:
+            val = resolve_value_spec(val_loc, val_spec, resource_by_uri)
+            resolved_value.append(val)
+        return resolved_value
+
+    if isinstance(value_spec, dict):
+        resolved_value = {}
+        for name, val_spec in value_spec.items():
+            if name == "_resource":
+                if len(value_spec) > 1:
+                    keys_str = ", ".join([f"{k!r}" for k in value_spec.keys()])
+                    raise TestcaseDefinitionError(
+                        f"'{val_loc}' specifies '_resource' but has "
+                        f"additional dict keys: {keys_str}")
+                res_loc = f"{val_loc}._resource"
+                uri = tc_getitem(res_loc, val_spec, "uri")
+                try:
+                    resource_obj = resource_by_uri[uri]
+                except KeyError as exc:
+                    raise TestcaseDefinitionError(
+                        f"'{res_loc}.uri' specifies the URI of a resource "
+                        "that has not been created in the file-level or "
+                        f"testcase-level setup: {uri}") from exc
+                return resource_obj
+
+            if name == "_manager":
+                if len(value_spec) > 1:
+                    keys_str = ", ".join([f"{k!r}" for k in value_spec.keys()])
+                    raise TestcaseDefinitionError(
+                        f"'{val_loc}' specifies '_manager' but has "
+                        f"additional dict keys: {keys_str}")
+                mgr_loc = f"{val_loc}._manager"
+                parent_uri = tc_getitem(mgr_loc, val_spec, "parent_uri")
+                attribute = tc_getitem(mgr_loc, val_spec, "attribute")
+                try:
+                    parent_obj = resource_by_uri[parent_uri]
+                except KeyError as exc:
+                    raise TestcaseDefinitionError(
+                        f"'{mgr_loc}.parent_uri' specifies the URI of a "
+                        "resource that has not been created in the file-level "
+                        f"or testcase-level setup: {uri}") from exc
+                try:
+                    manager_obj = getattr(parent_obj, attribute)
+                except AttributeError as exc:
+                    raise TestcaseDefinitionError(
+                        f"'{mgr_loc}.attribute' specifies a non-existing "
+                        "attribute on the zhmcclient."
+                        f"{parent_obj.__class__.__name__} "
+                        f"object: {attribute}") from exc
+                return manager_obj
+
+            val = resolve_value_spec(
+                f"{val_loc}.{name}", val_spec, resource_by_uri)
+            resolved_value[name] = val
+        return resolved_value
+
+    return value_spec
+
+
+def create_setup_resources(
+        reslist_loc, resources_spec, client, resource_by_uri):
+    """
+    Create the zhmcclient resources defined in the file-level and testcase-level
+    setup sections.
+
+    Parameters:
+
+      reslist_loc (str): Location of the resource definition list in the test
+        file, for messages.
+
+      resources_spec (list): The resource definition list in the setup sections
+        of a testcase. This contains the file-level resources followed by the
+        testcase-level resources. If a resource URI appears more than once,
+        TestcaseDefinitionError is raised. The resources must be ordered top
+        to bottom, so that a parent resource already exist when its child
+        resource references it.
+
+      client (zhmcclient.Client): The zhmcclient Client object that should be
+        used as the top level resource object for all others.
+
+      resource_by_uri (dict): Resource lookup dict that will be updated with
+        the created resource.
+
+    Raises:
+
+      TestcaseDefinitionError
+    """
+    for i, resource_spec in enumerate(resources_spec):
+        res_loc = f"{reslist_loc}[{i}]"
+        uri = tc_getitem(res_loc, resource_spec, "uri")
+        name = tc_getitem(res_loc, resource_spec, "name")
+        parent_uri = tc_getitem(res_loc, resource_spec, "parent_uri")
+        parent_attr = tc_getitem(res_loc, resource_spec, "parent_attribute")
+        props = tc_getitem(res_loc, resource_spec, "properties", {})
+
+        if parent_uri is None:
+            parent_obj = client
+        else:
+            try:
+                parent_obj = resource_by_uri[parent_uri]
+            except KeyError as exc:
+                raise TestcaseDefinitionError(
+                    f"'{res_loc}' specifies 'parent_uri='{uri} "
+                    "that has not been created yet") from exc
+        try:
+            manager_obj = getattr(parent_obj, parent_attr)
+        except AttributeError as exc:
             raise TestcaseDefinitionError(
-                f"For a resource object, 'uri' and 'name' must both be "
-                f"specified in '{tc_loc}'")
-    else:
-        # The testcase specifies a manager object
-        if name or props:
-            raise TestcaseDefinitionError(
-                f"For a manager object, 'uri', 'name' and 'properties' must "
-                f"all not be specified in '{tc_loc}'")
+                f"'{res_loc}' specifies 'parent_attribute='{parent_attr} "
+                f"but the parent resource {uri} does not have such an "
+                "attribute.") from exc
 
-    try:
-        manager_obj = getattr(parent_obj, mgr_attr)
-    except AttributeError as exc:
-        raise TestcaseDefinitionError(
-            f"'{tc_loc}.manager_attribute' specifies a non-existing "
-            f"attribute on the zhmcclient.{parent_obj.__class__.__name__} "
-            f"object: {mgr_attr}") from exc
-
-    if uri:
-        res_props = {
-            manager_obj.name_prop: name,
-        }
+        res_props = {}
+        res_props[manager_obj.name_prop] = name
         res_props.update(props)
-        target_obj = manager_obj.resource_object(uri, res_props)
+        resource_obj = manager_obj.resource_object(uri, res_props)
         if DEBUG:
-            print("Debug: make_object: created resource object: "
-                  f"{target_obj!r}")
-    else:
-        target_obj = manager_obj
-        if DEBUG:
-            print(f"Debug: make_object: created manager object: {target_obj!r}")
+            print("Debug: create_setup_resources: created resource object: "
+                  f"{resource_obj!r}")
 
-    return target_obj
+        # Check for duplicate resources in setup
+        if uri in resource_by_uri:
+            raise TestcaseDefinitionError(
+                f"'{res_loc}' specifies a duplicate resource: {uri}")
+
+        # Remember the new resource
+        resource_by_uri[uri] = resource_obj
 
 
 def get_test_schema(config):
@@ -870,3 +1104,71 @@ def assert_body(act_body, exp_body_spec):
                 f"HTTP body begin: {act_body[0:100]!r}") from exc
         # Validate at the object level
         assert act_body_obj == exp_body_spec
+
+
+def assert_result(act_result, exp_result):
+    # pylint: disable=protected-access
+    """
+    Assert that the actual result (property value or method return value)
+    matches the expected result.
+
+    If the result is a zhmcclient resource object or a zhmcclient manager
+    object, the actual and expected objects are compared by taking into
+    account that certain internal objects can be equal copies instead of being
+    identical objects.
+
+    Parameters:
+
+      act_result (object): The actual result.
+
+      exp_result (object): The expected result.
+
+    Raises:
+
+      AssertionError
+    """
+
+    if isinstance(act_result, zhmcclient.BaseResource):
+        assert type(act_result) is type(exp_result)
+        assert_result(act_result.manager, exp_result.manager)
+        assert act_result.uri == exp_result.uri
+        assert act_result.properties == exp_result.properties
+        assert act_result.full_properties == exp_result.full_properties
+        assert act_result._auto_update == exp_result._auto_update
+        assert act_result.ceased_existence == exp_result.ceased_existence
+
+    elif isinstance(act_result, zhmcclient.BaseManager):
+        assert type(act_result) is type(exp_result)
+        assert act_result.resource_class == exp_result.resource_class
+        assert act_result.class_name == exp_result.class_name
+        assert act_result.uri == exp_result.uri
+        assert_result(act_result.parent, exp_result.parent)
+        assert act_result._base_uri == exp_result._base_uri
+        assert act_result._oid_prop == exp_result._oid_prop
+        assert act_result._uri_prop == exp_result._uri_prop
+        assert act_result._name_prop == exp_result._name_prop
+        assert act_result._query_props == exp_result._query_props
+        assert act_result._list_has_name == exp_result._list_has_name
+        assert (act_result.case_insensitive_names ==
+                exp_result.case_insensitive_names)
+        assert act_result.supports_properties == exp_result.supports_properties
+
+    elif isinstance(act_result, immutabledict):
+        act_result_dict = dict(act_result)
+        assert act_result_dict == exp_result
+
+    elif isinstance(act_result, list):
+        assert len(act_result) == len(exp_result)
+        for i, act_result_item in enumerate(act_result):
+            exp_result_item = exp_result[i]
+            assert_result(act_result_item, exp_result_item)
+
+    elif isinstance(act_result, dict):
+        assert len(act_result) == len(exp_result)
+        for key, act_result_item in act_result.items():
+            assert key in exp_result
+            exp_result_item = exp_result[key]
+            assert_result(act_result_item, exp_result_item)
+
+    else:
+        assert act_result == exp_result
