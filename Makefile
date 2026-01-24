@@ -552,8 +552,8 @@ release_publish:
 	git pull
 	git tag -f $(VERSION)
 	git push -f --tags
-	git branch -D release_$(VERSION)
-	git branch -D -r origin/release_$(VERSION)
+	-git branch -D release_$(VERSION)
+	-git branch -D -r origin/release_$(VERSION)
 	rm -f branch.tmp
 	@echo "Done: Triggered the publish workflow - now wait for it to finish and verify the publishing."
 	@echo "Makefile: $@ done."
@@ -597,8 +597,8 @@ start_tag:
 	git pull
 	git tag -f $(VERSION)a0
 	git push -f --tags
-	git branch -D start_$(VERSION)
-	git branch -D -r origin/start_$(VERSION)
+	-git branch -D start_$(VERSION)
+	-git branch -D -r origin/start_$(VERSION)
 	rm -f branch.tmp
 	@echo "Done: Pushed the release start tag and cleaned up the release start branch."
 	@echo "Makefile: $@ done."
