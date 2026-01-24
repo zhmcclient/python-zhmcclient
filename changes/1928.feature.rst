@@ -1,0 +1,6 @@
+Test: Added support for a new function test concept where the testcases are
+defined in YAML test files. The communication to the HMC is mocked using
+the "requests_mock" Python package, and the testcases can define any reaction
+of the HMC on the request. Added testcases for
+:class:`zhmcclient.BaseResource`, :class:`zhmcclient.User`, for exceptions
+from the "requests" package, and for Unicode.

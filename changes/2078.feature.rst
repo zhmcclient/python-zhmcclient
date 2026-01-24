@@ -1,0 +1,2 @@
+Test: Improved some settings for coverage measurement, and enabled branch
+coverage reporting. This lowered the overall coverage percentage somewhat.
