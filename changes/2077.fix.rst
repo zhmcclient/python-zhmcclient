@@ -1,0 +1,3 @@
+Dev: Fixed the issue in the make targets "release_publish" and "start_tag"
+that manually cleaned up local release/start branches led to a failure. Local
+branch cleanup is now tolerated.
