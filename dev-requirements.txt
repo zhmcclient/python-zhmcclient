@@ -46,17 +46,11 @@ pluggy>=1.5.0
 # decorator: covered in requirements.txt
 
 # Coverage reporting (no imports, invoked via coveralls script):
-# coveralls versions 4.0.0/4.0.1 have increased their pinning of coverage to <8,
-#   but they have also added a constraint for Python to <3.13. Due to that
-#   Python pinning, we need to use the older coverage and coveralls versions on
-#   Python>=3.13.
-# Note: The earlier repetition of pinnings to avoid pip backtracking no longer
-#       seems to be needed.
-coverage>=7.8.0,<8.0; python_version <= '3.12'
-coverage>=6.5.0,<7.0; python_version >= '3.13'
-coveralls>=4.0.1; python_version <= '3.12'
-coveralls>=3.3.0; python_version >= '3.13'
-# PyYAML: covered in direct deps for development
+# coveralls versions 4.0.0/4.0.1 require Python>=3.8 and pin Python<=3.12.
+# coveralls version 4.0.2 requires Python>=3.10 and no longer pins to a Python 3.x version.
+coverage>=7.8.0
+coveralls>=4.0.1; python_version == '3.9'
+coveralls>=4.0.2; python_version >= '3.10'
 
 # Safety CI by pyup.io
 # safety 3.6.1 fixes the issue with typer >=0.17.0, see https://github.com/pyupio/safety/issues/778
