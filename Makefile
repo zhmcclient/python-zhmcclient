@@ -220,9 +220,6 @@ test_common_py_files := \
 # Directory for .done files
 done_dir := done
 
-# Determine whether pytest has the --no-print-logs option.
-pytest_no_log_opt := $(shell pytest --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
-
 # Flake8 config file
 flake8_rc_file := .flake8
 
@@ -256,10 +253,11 @@ check_py_files := \
 # Packages whose dependencies are checked using pip-missing-reqs
 check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint jupyter notebook safety bandit towncrier sphinx
 
+pytest_general_opts := -s --color=yes
 ifdef TESTCASES
-  pytest_opts := $(TESTOPTS) -k '$(TESTCASES)'
+  pytest_test_opts := $(TESTOPTS) -k '$(TESTCASES)'
 else
-  pytest_opts := $(TESTOPTS)
+  pytest_test_opts := $(TESTOPTS)
 endif
 
 coverage_config_file := .coveragerc
@@ -692,13 +690,13 @@ endif
 
 .PHONY: unittest
 unittest: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(coverage_config_file)
-	bash -c "PYTHONPATH=. coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -s $(pytest_opts) $(test_dir)/unit"
+	bash -c "PYTHONPATH=. coverage run --append -m pytest $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/unit"
 	coverage html
 	@echo "Makefile: $@ done."
 
 .PHONY: functiontest
 functiontest: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_function_py_files) $(test_function_yaml_files) $(test_common_py_files) $(coverage_config_file)
-	bash -c "PYTHONPATH=. coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -s $(pytest_opts) $(test_dir)/function"
+	bash -c "PYTHONPATH=. coverage run --append -m pytest $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/function"
 	coverage html
 	@echo "Makefile: $@ done."
 
@@ -717,14 +715,14 @@ endif
 
 .PHONY:	end2end
 end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file)
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(pytest_opts) $(test_dir)/end2end"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	coverage html
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
 end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(pytest_opts) $(test_dir)/end2end"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	coverage html
 	@echo "Makefile: $@ done."
 
@@ -750,5 +748,5 @@ end2end_show:
 .PHONY:	end2end_check
 end2end_check: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	bash -c "TESTEND2END_LOAD=true TESTCASES=test_hmcdef_check_all_hmcs coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m check_hmcs $(pytest_opts) $(test_dir)/end2end"
+	bash -c "TESTEND2END_LOAD=true TESTCASES=test_hmcdef_check_all_hmcs coverage run --append -m pytest -v -m check_hmcs $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	@echo "Makefile: $@ done."

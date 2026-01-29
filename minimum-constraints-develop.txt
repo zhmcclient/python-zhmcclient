@@ -39,10 +39,9 @@ rfc3986-validator==0.1.1
 # decorator: covered in direct deps for installation
 
 # Coverage reporting (no imports, invoked via coveralls script):
-coverage==7.8.0; python_version <= '3.12'
-coverage==6.5.0; python_version >= '3.13'
-coveralls==4.0.1; python_version <= '3.12'
-coveralls==3.3.0; python_version >= '3.13'
+coverage==7.8.0
+coveralls==4.0.1; python_version == '3.9'
+coveralls==4.0.2; python_version >= '3.10'
 
 # Safety CI by pyup.io
 safety==3.6.2
