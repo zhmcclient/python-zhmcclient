@@ -21,6 +21,7 @@ Shreejit Nair <shreejit.nair1@ibm.com>
 Simon Spinner <sspinner@de.ibm.com>
 Sreeram Vancheeswaran <sreeram.vancheeswaran@in.ibm.com>
 Viktor Mihajlovski <mihajlov@linux.vnet.ibm.com>
+Vonteddu Chaithra <Vonteddu.Chaithra1@ibm.com>
 dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
 renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
 ```
