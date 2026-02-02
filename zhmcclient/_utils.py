@@ -839,30 +839,32 @@ def get_headers_message(frame_args):
     Transform STOMP event method parameters to a tuple(headers, message),
     dependent on the stomp-py version that is used.
 
+    A message that is the empty string is returned as `None`.
+
     Parameters:
 
       frame_args: The STOMP frame, represented depending on the stomp-py
         package version as follows:
 
-          * if stomp-py uses Frames, a single stomp.Frame object:
+          * On stomp.py >= 7.0.0, a stomp.Frame object with STOMP message
+            headers and message body in attributes 'headers' and 'body'.
 
-            frame (stomp.Frame): Object with STOMP message headers and
-              message body.
+          * On stomp.py < 7.0.0, a tuple(headers, body).
 
-          * else, a tuple(headers, message):
+        In both cases, the STOMP headers and body are represented as follows:
 
-            headers (dict): STOMP message headers.
-              The headers are described in the `headers` tuple item
-              returned by the
-              :meth:`~zhmcclient.NotificationReceiver.notifications`
-              method.
+          headers (dict): STOMP message headers.
+            The headers are described in the `headers` tuple item
+            returned by the
+            :meth:`~zhmcclient.NotificationReceiver.notifications`
+            method.
 
-            message (string): STOMP message body as a string, which
-              contains a serialized JSON object.
-              The JSON object is described in the `message` tuple item
-              returned by the
-              :meth:`~zhmcclient.NotificationReceiver.notifications`
-              method.
+          message (str): STOMP message body as a Unicode string, which
+            contains a serialized JSON object or the empty string.
+            The JSON object is described in the `message` tuple item
+            returned by the
+            :meth:`~zhmcclient.NotificationReceiver.notifications`
+            method.
     """
     if len(frame_args) == 1:
         frame = frame_args[0]
@@ -870,4 +872,6 @@ def get_headers_message(frame_args):
         message = frame.body
     else:
         headers, message = frame_args
+    if message == '':
+        message = None
     return headers, message
