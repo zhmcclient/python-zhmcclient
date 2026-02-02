@@ -1,0 +1,2 @@
+Fixed a JSONDecodeError when a STOMP notification from the HMC contained the
+empty string as the message body, by tolerating that.
