@@ -627,9 +627,9 @@ class NotificationReceiver:
             "Message format" in chapter 4. "Asynchronous notification" in the
             :term:`HMC API` book.
 
-          * message (:term:`JSON object`): Body of the HMC notification,
-            converted into a JSON object. `None` for notifications that
-            have no content in their response body.
+          * message (:term:`JSON object` or `None`): Body of the HMC
+            notification, converted into a JSON object. `None` for notifications
+            that have no content in their response body.
 
             The properties of the JSON object vary by notification type.
 
@@ -688,13 +688,16 @@ class NotificationReceiver:
 
             # Now we have an item from the listener
             if item.msgtype == 'message':
-                try:
-                    msg_obj = json.loads(item.message)
-                except Exception as exc:
-                    raise NotificationParseError(
-                        "Cannot convert JMS message body to JSON: "
-                        f"{exc.__class__.__name__}: {exc}",
-                        item.message)
+                if item.message is None:
+                    msg_obj = None
+                else:
+                    try:
+                        msg_obj = json.loads(item.message)
+                    except Exception as exc:
+                        raise NotificationParseError(
+                            "Cannot convert JMS message body to JSON: "
+                            f"{exc.__class__.__name__}: {exc}",
+                            item.message)
             elif item.msgtype == 'error':
                 if 'message' in item.headers:
                     # Not sure that is always the case, but it was the case
