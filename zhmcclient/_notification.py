@@ -582,7 +582,7 @@ class NotificationReceiver:
         return self._id_value(sub_id)
 
     @logged_api_call
-    def notifications(self):
+    def notifications(self, stop_event=None):
         """
         Generator method that yields all HMC notifications (= JMS messages)
         received by this notification receiver.
@@ -597,8 +597,18 @@ class NotificationReceiver:
         thread; any errors do not cause the method to return but always cause
         an exception to be raised.
 
+        If a stop event is provided, the method performs checking for a stop.
+        This is done by testing whether the stop event is set. If so, this
+        method returns and the iteration of the caller on this method will end.
+
         For an example how to use this method, see
         :ref:`Notifications` or the example scripts.
+
+        Parameters:
+
+          stop_event (threading.Event): Stop event that is checked. This can
+            be used to end the iteration over the HMC notifications.
+            If None, no stop checking is performed.
 
         Yields:
 
@@ -638,10 +648,6 @@ class NotificationReceiver:
             formats" in chapter 4. "Asynchronous notification" in the
             :term:`HMC API` book.
 
-        Returns:
-
-            None
-
         Raises:
 
             :exc:`~zhmcclient.NotificationJMSError`: Received JMS error from
@@ -678,12 +684,22 @@ class NotificationReceiver:
                 try:
                     item = self._handover_queue.get(timeout=ho_get_timeout)
                 except queue.Empty:
+
+                    if stop_event and stop_event.is_set():
+                        break
+
                     # This check detects a disconnect only when heartbeating is
                     # enabled in the stomp retry/timeout configuration.
                     if not self._conn.is_connected():
                         raise NotificationConnectionError(
                             "Lost STOMP connection to HMC")
                     continue
+                break
+
+            if stop_event and stop_event.is_set():
+                # This will cause the generator to return to Python. Python
+                # will raise StopIteration, and the user loop on this method
+                # will simply end.
                 break
 
             # Now we have an item from the listener
