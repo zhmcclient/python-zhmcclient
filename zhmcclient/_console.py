@@ -30,6 +30,7 @@ from ._utils import timestamp_from_datetime, divide_filter_args, \
     make_query_str, matches_filters, RC_CONSOLE
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
+from ._tape_library import TapeLibraryManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -210,6 +211,7 @@ class Console(BaseResource):
         # The manager objects for child resources (with lazy initialization):
         self._storage_groups = None
         self._storage_group_templates = None
+        self._tape_library = None
         self._partition_links = None
         self._users = None
         self._user_roles = None
@@ -246,6 +248,18 @@ class Console(BaseResource):
         if not self._storage_group_templates:
             self._storage_group_templates = StorageGroupTemplateManager(self)
         return self._storage_group_templates
+
+    @property
+    def tape_library(self):
+        """
+        :class:`~zhmcclient.TapeLibraryManager`: Access to the
+        :term:`TapeLibrary <TapeLibrary>` in this
+        Console.
+        """
+        # We do here some lazy loading.
+        if not self._tape_library:
+            self._tape_library = TapeLibraryManager(self)
+        return self._tape_library
 
     @property
     def partition_links(self):

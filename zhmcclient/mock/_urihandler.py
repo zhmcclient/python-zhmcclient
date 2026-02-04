@@ -5461,6 +5461,126 @@ class StorageTemplateVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class TapeLibrariesHandler:
+    """
+    Handler class for HTTP methods on set of TapeLibraries resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name', 'state']
+
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'state']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Tape Library (always global but with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_tape_libraries = []
+        for tl in hmc.consoles.console.tape_library.list(filter_args):
+            result_tl = {}
+            for prop in cls.returned_props:
+                result_tl[prop] = prop_copy(tl.properties.get(prop))
+            result_tape_libraries.append(result_tl)
+        return {'tape-libraries': result_tape_libraries}
+
+
+class TapeLibraryHandler(GenericGetPropertiesHandler,
+                         GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single TapeLibrary resource.
+    """
+    pass
+
+
+class TapeLibraryUndefineHandler():
+    """
+    Handler class for operation: Undefine Tape Library.
+    """
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Request Tape Library Undefine"""
+        try:
+            tape_library_id = uri_parms[0]  # Extract from regex capture group
+            tape_library_uri = f'/api/tape-libraries/{tape_library_id}'
+            tape_library = hmc.lookup_by_uri(tape_library_uri)
+        except KeyError:
+
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        print("resource object " + str(tape_library))
+        tape_library.manager.remove(tape_library.oid)
+
+
+class TapeLibraryRequestZoningHandler:
+    """
+    Handler class for HTTP methods on set of TapeLibrary resources.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Request Tape Library Zoning"""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body,
+                              ['cpc-uri'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        if cpc.adapters.list():
+            print('This is CPC Adapters', str(cpc.adapters.list()))
+            cpc.properties['management-world-wide-port-name'] =\
+                'a1b2c3d4e5f60002'
+            return {}
+        raise ConflictError(
+            method, uri, reason=487,
+            message=f"The CPC with the {cpc_uri} does not have any "
+                    "adapters configured as FCP")
+
+
+class TapeLibraryDiscoverHandler:
+    """
+    Handler class for HTTP methods on set of TapeLibrary resources.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Request Tape Library Zoning"""
+        assert wait_for_completion is True  # async not yet supported
+        check_required_fields(method, uri, body, ['cpc-uri'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        if cpc.properties['management-world-wide-port-name']:
+            return {}
+
+        raise ConflictError(
+            method, uri, reason=501,
+            message=f"The CPC with the {cpc_uri} has not been zoned.")
+
+
 class CapacityGroupsHandler:
     """
     Handler class for HTTP methods on set of CapacityGroup resources.
@@ -6769,6 +6889,17 @@ URIS = (
      StorageTemplateVolumesHandler),
     (r'/api/storage-templates/([^/]+)/storage-template-volumes/'
      r'([^?/]+)(?:\?(.*))?', StorageTemplateVolumeHandler),
+
+    (r'/api/tape-libraries(?:\?(.*))?',
+     TapeLibrariesHandler),
+    (r'/api/tape-libraries/([^?/]+)(?:\?(.*))?',
+     TapeLibraryHandler),
+    (r'/api/tape-libraries/([^/]+)/operations/undefine',
+     TapeLibraryUndefineHandler),
+    (r'/api/tape-libraries/operations/request-tape-library-zoning',
+     TapeLibraryRequestZoningHandler),
+    (r'/api/tape-libraries/operations/discover-tape-libraries',
+     TapeLibraryDiscoverHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^?/]+)(?:\?(.*))?',
