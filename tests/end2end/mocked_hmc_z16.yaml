@@ -319,7 +319,6 @@ hmc_definition:
             primary-hostname-ipaddr: 10.11.12.13
             search-distinguished-name: "test{0}"
             replication-overwrite-possible: false
-            description: "LSD 1"
             connection-port: null
             backup-hostname-ipaddr: null
             use-ssl: false
@@ -355,6 +354,16 @@ hmc_definition:
                 device-number: '1300'
                 adapter-port-uri: /api/adapters/fcp1
                 partition-uri: /api/partitions/part1
+
+      tape_library:
+        - properties:
+            # class : created automatically
+            # parent : created automatically
+            # object-uri: created automatically
+            object-id : tl1
+            name : Tape Library
+            description : Tape Library resource 1
+            cpc-uri : /api/cpcs/cpc_dpm
 
       hw_messages:
         - properties:

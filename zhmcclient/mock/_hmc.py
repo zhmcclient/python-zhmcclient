@@ -53,6 +53,7 @@ __all__ = ['InputError',
            'FakedStorageVolumeManager', 'FakedStorageVolume',
            'FakedVirtualStorageResourceManager', 'FakedVirtualStorageResource',
            'FakedStorageGroupTemplateManager', 'FakedStorageGroupTemplate',
+           'FakedTapeLibraryManager', 'FakedTapeLibrary',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            'FakedCapacityGroupManager', 'FakedCapacityGroup',
@@ -1138,6 +1139,8 @@ class FakedConsole(FakedBaseResource):
             hmc=manager.hmc, console=self)
         self._storage_group_templates = FakedStorageGroupTemplateManager(
             hmc=manager.hmc, console=self)
+        self._tape_library = FakedTapeLibraryManager(
+            hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
         self._user_patterns = FakedUserPatternManager(
@@ -1201,6 +1204,14 @@ class FakedConsole(FakedBaseResource):
         the faked Storage Group Template resources of this Console.
         """
         return self._storage_group_templates
+
+    @property
+    def tape_library(self):
+        """
+        :class:`~zhmcclient.mock.FakedTapeLibraryManager`: Access to
+        the faked Storage Group Template resources of this Console.
+        """
+        return self._tape_library
 
     @property
     def users(self):
@@ -3659,6 +3670,76 @@ class FakedStorageVolumeTemplate(FakedBaseResource):
             f"  _properties = {repr_dict(self._properties, indent=2)}\n"
             ")")
         return ret
+
+
+class FakedTapeLibraryManager(FakedBaseManager):
+    """
+    A manager for faked Tape Library resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedTapeLibrary,
+            base_uri='/api/tape-libraries',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='tape-library',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked Tape Library resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'tape-library',
+              if not specified.
+            * All of the other class-soecific resource properties will be set
+              to a default value consistent with the HMC data model.
+
+        Returns:
+
+          :class:`~zhmcclient.mock.FakedTapeLibrary`: The faked
+          TapeLibrary resource.
+        """
+        new_tlib = super().add(properties)
+
+        # Resource type specific default values
+        # 'name' is required
+        new_tlib.properties.setdefault('description', '')
+
+        return new_tlib
+
+
+class FakedTapeLibrary(FakedBaseResource):
+    """
+    A faked Tape Library resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
 
 
 class FakedCapacityGroupManager(FakedBaseManager):
