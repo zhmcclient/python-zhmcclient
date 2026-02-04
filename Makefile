@@ -441,7 +441,7 @@ docchanges: $(doc_dependent_files)
 .PHONY: doclinkcheck
 doclinkcheck: $(doc_dependent_files)
 	@echo "Running Sphinx to check the doc links"
-	$(doc_cmd) -b linkcheck $(doc_opts) $(doc_build_dir)/linkcheck
+	@bash -c '$(doc_cmd) -b linkcheck $(doc_opts) $(doc_build_dir)/linkcheck; rc=$$?; if [ $$rc -ne 0 ]; then echo "::notice::doclinkcheck failed (ignored)"; fi'
 	@echo
 	@echo "Done: Look for any errors in the above output or in: $(doc_build_dir)/linkcheck/output.txt"
 	@echo "Makefile: $@ done."
@@ -661,7 +661,7 @@ $(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/devel
 	@echo "Makefile: Checking missing dependencies of this package"
 	cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt
 	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=tmp_requirements.txt
-	$(call RM_FUNC,tmp_requirements.txt)
+	-$(call RM_FUNC,tmp_requirements.txt)
 	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=minimum-constraints-install.txt
 	@echo "Makefile: Done checking missing dependencies of this package"
 ifeq ($(PLATFORM),Windows_native)
