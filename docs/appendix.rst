@@ -539,6 +539,13 @@ Resources scoped to CPCs in DPM mode
 
   Storage Volume Template
      A template for :term:`Storage Volumes <Storage Volume>`.
+   
+   Tape library
+     A Tape Library represents one physical tape storage unit connected to
+     a CPC.Tape libraries are automatically discovered,but discovery requires
+     preprocessing,A single Worldwide Port Name (WWPN) must be zoned so the CPC
+     can see the tape library.
+     For details, see section :ref:`Tape Library`.
 
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always

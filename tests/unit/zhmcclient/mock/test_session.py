@@ -128,6 +128,16 @@ HMC1_RESOURCES = {
                     ],
                 },
             ],
+            'tape_library': [
+                {
+                    'properties': {
+                        'object-id': 'tl1',
+                        'name': 'Tape Library 1',
+                        'cpc-uri': '/api/cpcs/cpc1',
+                        'state': 'complete',
+                    },
+                },
+            ],
         },
     ],
     'cpcs': [
