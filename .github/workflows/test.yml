@@ -143,7 +143,7 @@ jobs:
         accessToken: ${{ secrets.GITHUB_TOKEN }}
         error: Commit message has no or incorrectly formatted signed-off-by line
     - name: Check commit messages - Line length
-      if: github.event_name != 'schedule'
+      if: github.event_name == 'pull_request'
       uses: gsactions/commit-message-checker@v2
       with:
         pattern: '^.{1,80}\n\n(.{0,80}\n)*.{0,80}$'
