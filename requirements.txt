@@ -35,7 +35,7 @@ certifi>=2024.07.04
 # Functional dependencies on urllib3 versions:
 # - IncompleteRead fix: Distinguishing too much from not enough response data
 #   requires >=2.2.1
-urllib3>=2.6.0
+urllib3>=2.6.3
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)

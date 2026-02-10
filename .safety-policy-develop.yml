@@ -18,7 +18,9 @@ security:
     ignore-cvss-unknown-severity: False
 
     # Ignore unpinned requirements.
-    # Should be set to False.
+    # Default is true. "Unpinned" in this case means anything else but "==".
+    # Since we are checking against the minimum-constraints file, this check
+    # is enabled (false).
     ignore-unpinned-requirements: False
 
     # List of specific vulnerabilities to ignore.
@@ -30,6 +32,8 @@ security:
             reason: Disputed issue in jinja2 version 3.1.3 - No known fix
         79993:
             reason: Fixed jupyterlab version 4.4.8 requires Python>=3.9 and other upgrades
+        82754:
+            reason: Fixed filelock version 3.20.1 requires Python>=3.10 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False

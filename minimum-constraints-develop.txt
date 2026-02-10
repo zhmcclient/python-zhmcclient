@@ -50,7 +50,7 @@ dparse==0.6.4
 ruamel.yaml==0.17.21
 click==8.0.2
 Authlib==1.6.5
-marshmallow==3.15.0
+marshmallow==3.26.2
 pydantic==2.12.0
 pydantic_core==2.41.1
 typer==0.16.0
@@ -112,7 +112,7 @@ notebook==7.2.2; sys_platform != 'win32' or python_version <= '3.12'
 jupyter==1.0.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyter-console==6.6.3; sys_platform != 'win32' or python_version <= '3.12'
 ipywidgets==8.0.5; sys_platform != 'win32' or python_version <= '3.12'
-nbconvert==7.2.10; sys_platform != 'win32' or python_version <= '3.12'
+nbconvert==7.17.0; sys_platform != 'win32' or python_version <= '3.12'
 nbclient==0.7.4; sys_platform != 'win32' or python_version <= '3.12'
 nbformat==5.8.0; sys_platform != 'win32' or python_version <= '3.12'
 qtconsole==5.4.2; sys_platform != 'win32' or python_version <= '3.12'
@@ -170,8 +170,8 @@ dataclasses==0.8
 decorator==4.0.11
 defusedxml==0.7.1
 distlib==0.3.7
-# safety 3.4.0 depends on filelock~=3.16.1
-filelock==3.16.1
+filelock==3.16.1; python_version == '3.9'
+filelock==3.20.1; python_version >= '3.10'
 gitdb==4.0.8
 gitdb2==2.0.0
 html5lib==1.1
