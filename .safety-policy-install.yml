@@ -18,7 +18,9 @@ security:
     ignore-cvss-unknown-severity: False
 
     # Ignore unpinned requirements.
-    # Should be set to False.
+    # Default is true. "Unpinned" in this case means anything else but "==".
+    # Since we are checking against the minimum-constraints file, this check
+    # is enabled (false).
     ignore-unpinned-requirements: False
 
     # List of specific vulnerabilities to ignore.
