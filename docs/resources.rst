@@ -338,6 +338,26 @@ Storage Volumes
    :special-members: __str__
 
 
+.. _`Tape Libraries`:
+
+Tape Libraries
+-----------------
+
+.. automodule:: zhmcclient._tape_library
+
+.. autoclass:: zhmcclient.TapeLibraryManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.TapeLibrary
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Virtual Storage Resources`:
 
 Virtual Storage Resources

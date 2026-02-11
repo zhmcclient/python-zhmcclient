@@ -225,6 +225,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageGroup"
                     },
                 },
+                "tape_library": {
+                    "description": "The Tape Library defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TapeLibrary"
+                    },
+                },
                 "hw_messages": {
                     "description": "The hardware mesages for this Console",
                     "type": "array",
@@ -383,6 +390,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
             "description": "A VSR of a storage group",
             "type": "object",
             "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "TapeLibrary": {
+            "description": "An Tape Library on an HMC",
+            "type": "object",
+            "additionalProperties": True,
             "required": [
                 "properties",
             ],
