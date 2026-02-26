@@ -1643,6 +1643,7 @@ class Console(BaseResource):
                 "sso_server_definitions": [...],
                 "unmanaged_cpcs": [...],
                 "storage_groups": [...],
+                "tape_libraries": [...],
             }
 
         Returns:
@@ -1681,6 +1682,9 @@ class Console(BaseResource):
         storage_groups = self.storage_groups.dump()
         if storage_groups:
             resource_dict['storage_groups'] = storage_groups
+        tape_libraries = self.tape_library.dump()
+        if tape_libraries:
+            resource_dict['tape_libraries'] = tape_libraries
 
         # Note: Unmanaged CPCs are not dumped, since their properties cannot
         #       be retrieved.
