@@ -138,7 +138,7 @@ ruff>=0.3.5
 #       dependency resolution, so for now we pin notebook to <6.5.
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
 #       https://github.com/mhammond/pywin32/issues/2367
-notebook>=7.2.2; sys_platform != 'win32' or python_version <= '3.12'
+notebook>=7.4.2; sys_platform != 'win32' or python_version <= '3.12'
 jupyter>=1.0.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyter-console>=6.6.3; sys_platform != 'win32' or python_version <= '3.12'
 ipywidgets>=8.0.5; sys_platform != 'win32' or python_version <= '3.12'
@@ -154,7 +154,7 @@ jupyter-core>=5.3.0; sys_platform != 'win32' or python_version <= '3.12'
 ipython-genutils>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
 ipython>=8.10.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyter-server>=2.14.1; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab>=4.2.5; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab>=4.4.8; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab-server>=2.27.1; sys_platform != 'win32' or python_version <= '3.12'
 notebook-shim>=0.2.3; sys_platform != 'win32' or python_version <= '3.12'
 
@@ -168,7 +168,7 @@ pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.5
+tornado>=6.5.3
 
 # pyzmq 26.1.0 added wheel archives for Python 3.13
 # pyzmq 27.0.1 added wheel archives for Python 3.14
