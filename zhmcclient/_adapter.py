@@ -87,8 +87,8 @@ class AdapterManager(BaseManager):
             # is rolled out broadly enough.
             # 'adapter-id',
 
-            'adapter-family',
             'type',
+            'adapter-family',
             'status',
         ]
 
