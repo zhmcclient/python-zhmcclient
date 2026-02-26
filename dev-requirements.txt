@@ -7,7 +7,7 @@
 # PEP517 package builder, used in Makefile
 build>=1.0.0
 # build requires virtualenv.cli_run which was added in virtualenv 20.1
-virtualenv>=20.26.6
+virtualenv>=20.36.1
 pyproject-hooks>=1.1.0
 
 # six (only needed by packages that still support Python 2)
@@ -66,11 +66,11 @@ safety-schemas>=0.0.16
 dparse>=0.6.4
 ruamel.yaml>=0.17.21
 click>=8.0.2
-Authlib>=1.6.5
+Authlib>=1.6.6
 marshmallow>=3.26.2
 pydantic>=2.12.0
 pydantic_core>=2.41.1
-#safety 3.6.1 depends on typer>=0.16.0
+# safety 3.6.1 depends on typer>=0.16.0
 typer>=0.16.0
 typer-cli>=0.16.0
 typer-slim>=0.16.0
