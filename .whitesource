@@ -1,13 +1,9 @@
 {
   "settingsInheritedFrom": "whitesource-config/whitesource-config@master",
   "scanSettings": {
-    "configMode": "LOCAL",
     "includes": [
       "**/*requirements*.txt",
       "**/*minimum-constraints*.txt"
-    ],
-    "configExternalURL": "",
-    "projectToken": "",
-    "baseBranches": []
+    ]
   }
 }
