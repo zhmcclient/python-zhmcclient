@@ -1,9 +1,3 @@
 {
-  "settingsInheritedFrom": "whitesource-config/whitesource-config@main",
-  "scanSettings": {
-    "includes": [
-      "**/*requirements*.txt",
-      "**/*minimum-constraints*.txt"
-    ]
-  }
+  "settingsInheritedFrom": "whitesource-config/whitesource-config@main"
 }
