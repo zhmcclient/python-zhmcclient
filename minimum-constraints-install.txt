@@ -7,7 +7,7 @@
 
 # Base dependencies
 
-pip==25.2
+pip==26.0
 setuptools==78.1.1
 # Note on not specifying 'setuptools-scm[toml]': Extras cannot be in constraints files
 setuptools-scm==9.2.0
