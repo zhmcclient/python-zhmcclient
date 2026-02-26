@@ -16,7 +16,7 @@ wheel==0.46.2
 
 # Direct dependencies for install (must be consistent with requirements.txt)
 
-requests==2.32.4
+requests==2.32.5
 stomp-py==8.1.1
 immutabledict==4.2.0
 nocasedict==1.0.2
