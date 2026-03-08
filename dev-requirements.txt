@@ -182,4 +182,4 @@ pip-check-reqs>=2.5.1
 # pywinpty>=1.0 requires maturin to build. Meanwhile, it works.
 # pywinpty 2.0.12/13 has the above issue on Python 3.13
 pywinpty>=2.0.12; os_name == "nt" and python_version <= '3.12'
-pywinpty>=3.0.0; os_name == "nt" and python_version >= '3.13'
+pywinpty>=3.0.2; os_name == "nt" and python_version >= '3.13'

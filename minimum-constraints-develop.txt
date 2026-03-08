@@ -146,7 +146,7 @@ pip-check-reqs==2.5.1
 
 # pywinpty is used by terminado <- notebook <- jupyter
 pywinpty==2.0.12; os_name == "nt" and python_version <= '3.12'
-pywinpty==3.0.0; os_name == "nt" and python_version >= '3.13'
+pywinpty==3.0.2; os_name == "nt" and python_version >= '3.13'
 
 # Indirect dependencies for development that are not in dev-requirements.txt
 
@@ -200,6 +200,7 @@ pkginfo==1.4.2
 pyproject-api==1.6.1  # used by tox since its 4.0.0
 pyrsistent==0.20.0  # used by jsonschema>3.0,<4.18
 python-dateutil==2.8.2
+python-discovery==1.1.1
 prometheus-client==0.13.1
 ptyprocess==0.5.1
 pyparsing==3.0.7
@@ -216,7 +217,8 @@ tenacity==8.5.0
 terminado==0.8.3
 testpath==0.3
 toml==0.10.0
-tomli==2.0.1
+tomli==2.0.1  # used by towncrier
+tomli-w==1.2.0  # used by tox>=4.48.0
 tornado==6.5.3
 tqdm==4.66.3
 traitlets==5.6.0
