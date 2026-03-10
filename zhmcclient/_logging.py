@@ -73,12 +73,14 @@ Examples:
       logging.basicConfig(format=format_string, level=logging.DEBUG)
 """
 
+import re
 import logging
 import inspect
 import functools
 from collections.abc import Mapping, Sequence
 
-from ._constants import API_LOGGER_NAME, BLANKED_OUT_STRING
+from ._constants import API_LOGGER_NAME, BLANKED_OUT_STRING, \
+    BLANKED_OUT_PROPERTY_PATTERN, BLANKED_OUT_PROPERTY_REPLACE
 
 __all__ = []
 
@@ -114,6 +116,8 @@ def logged_api_call(
 
     The logger's name is the dotted module name of the module defining the
     decorated function (e.g. 'zhmcclient._cpc').
+
+    The values of sensitive properties will be blanked out.
 
     Parameters:
 
@@ -277,22 +281,43 @@ def logged_api_call(
                         blanked_dict(args[properties_pos])
             return tuple(logged_args), logged_kwargs
 
+        def log_repr(obj, name, trunc):
+            """
+            Return a Python repr() representation of the object, with
+            sensitive properties blanked out.
+            """
+            obj_str = log_escaped(repr(obj))
+            obj_str = re.sub(BLANKED_OUT_PROPERTY_PATTERN,
+                             BLANKED_OUT_PROPERTY_REPLACE, obj_str)
+            obj_len = len(obj_str)
+            if obj_len > trunc > 0:
+                obj_str = (f"{name} (first {trunc} B of {obj_len} B): "
+                           f"{obj_str[0:trunc]} ...(truncated)")
+            else:
+                obj_str = f"{name}: {obj_str}"
+            return obj_str
+
         def log_call(args, kwargs):
             """
             Log the call to the API function.
             """
-            logged_args, logged_kwargs = blanked_args(args, kwargs)
-            logger.debug("Called: %s, args: %.500s, kwargs: %.500s",
-                         apifunc_str,
-                         log_escaped(repr(logged_args)),
-                         log_escaped(repr(logged_kwargs)))
+            trunc = 500
+            # We are calling log_trunc() also on args, because their values
+            # (in theory) may contain dicts with sensitive properties.
+            _args, _kwargs = blanked_args(args, kwargs)
+            args_str = log_repr(_args, "args", trunc)
+            kwargs_str = log_repr(_kwargs, "kwargs", trunc)
+            logger.debug("Called: %s, %s, %s",
+                         apifunc_str, args_str, kwargs_str)
 
         def log_return(result):
             """
             Log the return from the API function.
             """
-            logger.debug("Return: %s, result: %.1000s",
-                         apifunc_str, log_escaped(repr(result)))
+            trunc = 1000
+            result_str = log_repr(result, "result", trunc)
+            logger.debug("Return: %s, %s",
+                         apifunc_str, result_str)
 
         @functools.wraps(func)
         def log_api_call(*args, **kwargs):
