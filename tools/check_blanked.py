@@ -27,10 +27,17 @@ PROPERTY_NAME_ENDS = [
 
 # Pattern for matching a single property name and value
 PROPERTY_PATTERN = re.compile(
+    # Property name, including quotes
     rf"""(['"])([^'"]*({'|'.join(PROPERTY_NAME_ENDS)}))\1"""
+    # Separator
     r"""\s*:\s*"""
+    # Property value, including quotes
     r"""('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|None|null)"""
 )
+
+# On Python 3.9, f-strings must not contain backslashes literally, so we set
+# the backslash sequence in a variable.
+NL_SEP = "\n  "
 
 
 def parse_args():
@@ -46,7 +53,7 @@ blanked-out value.
 
 The properties that are checked are those whose names end with:
 
-  {'\n  '.join(PROPERTY_NAME_ENDS)}
+  {NL_SEP.join(PROPERTY_NAME_ENDS)}
 
 The following syntax forms for the properties in the file are supported:
 
@@ -56,8 +63,12 @@ The following syntax forms for the properties in the file are supported:
   "name": "value"
 """)
 
+    parser.add_argument("--accept-null", action="store_true",
+                        help="accept 'null', 'None' or None as blanked-out "
+                        "values.")
+
     parser.add_argument(dest="file", metavar='FILE',
-                        help="Path name of the zhmcclient log file to be "
+                        help="path name of the zhmcclient log file to be "
                         "checked")
 
     return parser.parse_args(sys.argv[1:])
@@ -69,6 +80,8 @@ def main():
     """
     args = parse_args()
     file = args.file
+    accept_null = args.accept_null
+
     print(f"Checking blanked properties in file: {file}")
 
     checked_pnames = set()
@@ -79,7 +92,9 @@ def main():
                 pname = match.group(2)
                 pvalue = match.group(4).strip('"').strip("'")
                 checked_pnames.add(pname)
-                if pvalue != BLANKED_OUT_STRING:
+                if not (pvalue == BLANKED_OUT_STRING or
+                        accept_null and (pvalue is None or pvalue == "None" or
+                                         pvalue == "null")):
                     rc = 1
                     print(f"{file}({lineno}): Found property {pname!r} with "
                           f"non-blanked value {pvalue!r}")
