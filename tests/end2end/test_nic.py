@@ -27,7 +27,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -49,12 +49,13 @@ def se_version_info(cpc):
     return list(map(int, cpc.prop('se-version').split('.')))
 
 
-def test_nic_find_list(dpm_mode_cpcs):
+def test_nic_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -70,9 +71,9 @@ def test_nic_find_list(dpm_mode_cpcs):
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_warn(
-                f"No partitions with NICs on CPC {cpc.name} managed by HMC "
-                f"{hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with NICs on CPC {cpc.name} managed by "
+                     f"HMC {hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
@@ -83,12 +84,13 @@ def test_nic_find_list(dpm_mode_cpcs):
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
 
 
-def test_nic_property(dpm_mode_cpcs):
+def test_nic_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -104,8 +106,9 @@ def test_nic_property(dpm_mode_cpcs):
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_warn(f"No partitions with NICs on CPC {cpc.name} managed by "
-                      f"HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with NICs on CPC {cpc.name} managed by "
+                     f"HMC {hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
@@ -118,12 +121,13 @@ def test_nic_property(dpm_mode_cpcs):
             runtest_get_properties(nic.manager, non_list_prop)
 
 
-def test_nic_crud(dpm_mode_cpcs):
+def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a NIC (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -131,7 +135,8 @@ def test_nic_crud(dpm_mode_cpcs):
         if se_version_info(cpc) >= [2, 17]:
             # TODO: Enable this case again once create_hipersocket() has been
             #       reimplemented using partition links.
-            pytest.skip("create_hipersocket() is not supported on z17 CPCs")
+            skip_log(zhmc_logger,
+                     "create_hipersocket() is not supported on z17 CPCs")
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -253,7 +258,8 @@ def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
     Test Nic.backing_port() for port-based NICs (e.g. RoCE, CNA).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
     zhmc_logger.debug("Testing with CPC %s", cpc.name)
@@ -276,8 +282,9 @@ def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
             break
 
     if not port_nics:
-        pytest.skip(f"CPC {cpc.name} does not have any partitions with "
-                    "port-based NICs")
+        skip_log(zhmc_logger,
+                 f"CPC {cpc.name} does not have any partitions with "
+                 "port-based NICs")
 
     # Pick the port-based NIC to test with
     nic = random.choice(port_nics)
@@ -313,7 +320,8 @@ def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
     Test Nic.backing_port() for vswitch-based NICs (e.g. OSA, HS).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
     zhmc_logger.debug("Testing with CPC %s", cpc.name)
@@ -336,8 +344,9 @@ def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
             break
 
     if not vswitch_nics:
-        pytest.skip(f"CPC {cpc.name} does not have any partitions with "
-                    "vswitch-based NICs")
+        skip_log(zhmc_logger,
+                 f"CPC {cpc.name} does not have any partitions with "
+                 "vswitch-based NICs")
 
     # Pick the vswitch-based NIC to test with
     nic = random.choice(vswitch_nics)

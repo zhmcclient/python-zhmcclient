@@ -29,9 +29,10 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     skipif_no_partition_link_feature, runtest_find_list, \
     runtest_get_properties, assert_properties, standard_partition_props
+
 
 urllib3.disable_warnings()
 
@@ -92,16 +93,17 @@ def replace_expressions(obj, replacements):
         'smc-d',
         'ctc'
     ])
-def test_partlink_find_list(dpm_mode_cpcs, pl_type):
+def test_partlink_find_list(zhmc_logger, dpm_mode_cpcs, pl_type):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_partition_link_feature(cpc)
+        skipif_no_partition_link_feature(zhmc_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -114,8 +116,9 @@ def test_partlink_find_list(dpm_mode_cpcs, pl_type):
         }
         partlink_list = console.partition_links.list(filter_args=filter_args)
         if not partlink_list:
-            skip_warn(f"No partition links of type {pl_type} associated to "
-                      f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partition links of type {pl_type} associated to "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         partlink_list = pick_test_resources(partlink_list)
 
         for partlink in partlink_list:
@@ -133,16 +136,17 @@ def test_partlink_find_list(dpm_mode_cpcs, pl_type):
         'smc-d',
         'ctc'
     ])
-def test_partlink_property(dpm_mode_cpcs, pl_type):
+def test_partlink_property(zhmc_logger, dpm_mode_cpcs, pl_type):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_partition_link_feature(cpc)
+        skipif_no_partition_link_feature(zhmc_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -155,8 +159,9 @@ def test_partlink_property(dpm_mode_cpcs, pl_type):
         }
         partlink_list = console.partition_links.list(filter_args=filter_args)
         if not partlink_list:
-            skip_warn(f"No partition links of type {pl_type} associated to "
-                      f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partition links of type {pl_type} associated to "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         partlink_list = pick_test_resources(partlink_list)
 
         for partlink in partlink_list:
@@ -175,16 +180,17 @@ def test_partlink_property(dpm_mode_cpcs, pl_type):
         'smc-d',
         'ctc'
     ])
-def test_partlink_crud(dpm_mode_cpcs, pl_type):
+def test_partlink_crud(zhmc_logger, dpm_mode_cpcs, pl_type):
     """
     Test create, read, update and delete a partition link.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_partition_link_feature(cpc)
+        skipif_no_partition_link_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -210,8 +216,9 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):
             adapters = cpc.adapters.list(
                 filter_args={'type': 'fc', 'state': 'online'})
             if len(adapters) < 1:
-                pytest.skip(f"CPC {cpc.name} has no online FC adapters "
-                            "for CTC partition link creation")
+                skip_log(zhmc_logger,
+                         f"CPC {cpc.name} has no online FC adapters "
+                         "for CTC partition link creation")
             adapter = random.choice(adapters)
 
             part1_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
@@ -379,18 +386,19 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
     "desc, pl_type, input_props, exp_props, exp_exc_type",
     PARTLINK_CREATE_DELETE_TESTCASES)
 def test_partlink_create_delete(
-        dpm_mode_cpcs,
+        zhmc_logger, dpm_mode_cpcs,
         desc, pl_type, input_props, exp_props, exp_exc_type):
     # pylint: disable=unused-argument
     """
     Test creation of a partition link (and deletion, for cleanup)
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_partition_link_feature(cpc)
+        skipif_no_partition_link_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -406,8 +414,9 @@ def test_partlink_create_delete(
             adapters = cpc.adapters.list(
                 filter_args={'type': 'fc', 'state': 'online'})
             if len(adapters) < 2:
-                pytest.skip(f"CPC {cpc.name} has no two online FC adapters "
-                            "for CTC partition link creation")
+                skip_log(zhmc_logger,
+                         f"CPC {cpc.name} has no two online FC adapters "
+                         "for CTC partition link creation")
             adapter_1, adapter_2 = random.choices(adapters, k=2)
             replacements['adapter_1'] = adapter_1
             replacements['adapter_2'] = adapter_2
@@ -493,17 +502,18 @@ def test_partlink_create_delete(
                 console.partition_links.find(name=partlink_name)
 
 
-def test_partlink_zzz_cleanup(dpm_mode_cpcs):
+def test_partlink_zzz_cleanup(zhmc_logger, dpm_mode_cpcs):
     """
     Cleanup any created partitions and partition links that may have not been
     cleaned up by the other testcase functions.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_partition_link_feature(cpc)
+        skipif_no_partition_link_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 

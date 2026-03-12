@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -41,7 +41,7 @@ PWRULE_LIST_PROPS = ['element-uri', 'name', 'type']
 PWRULE_VOLATILE_PROPS = []
 
 
-def test_pwrule_find_list(hmc_session):
+def test_pwrule_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -53,14 +53,15 @@ def test_pwrule_find_list(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet support "
-            "password rules")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "password rules")
 
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
-        skip_warn(f"No password rules defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No password rules defined on HMC {hd.host}")
     pwrule_list = pick_test_resources(pwrule_list)
 
     for pwrule in pwrule_list:
@@ -71,7 +72,7 @@ def test_pwrule_find_list(hmc_session):
             PWRULE_LIST_PROPS)
 
 
-def test_pwrule_property(hmc_session):
+def test_pwrule_property(zhmc_logger, hmc_session):
     """
     Test property related methods
     """
@@ -83,14 +84,15 @@ def test_pwrule_property(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet support "
-            "password rules")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "password rules")
 
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
-        skip_warn(f"No password rules defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No password rules defined on HMC {hd.host}")
     pwrule_list = pick_test_resources(pwrule_list)
 
     for pwrule in pwrule_list:
@@ -102,7 +104,7 @@ def test_pwrule_property(hmc_session):
         runtest_get_properties(pwrule.manager, non_list_prop)
 
 
-def test_pwrule_crud(hmc_session):
+def test_pwrule_crud(zhmc_logger, hmc_session):
     """
     Test create, read, update and delete a password rule.
     """
@@ -114,9 +116,9 @@ def test_pwrule_crud(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet support "
-            "password rules")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "password rules")
 
     pwrule_name = TEST_PREFIX + ' test_pwrule_crud pwrule1'
     pwrule_name_new = pwrule_name + ' new'
@@ -150,9 +152,9 @@ def test_pwrule_crud(hmc_session):
             pwrule_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn(
-                f"HMC userid {hd.userid!r} is not authorized for task "
-                f"'Manage Password Rules' on HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"HMC userid {hd.userid!r} is not authorized for task "
+                     f"'Manage Password Rules' on HMC {hd.host}")
         else:
             raise
 

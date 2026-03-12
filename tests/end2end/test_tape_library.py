@@ -24,7 +24,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, \
+from .utils import skip_log, pick_test_resources, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -39,7 +39,7 @@ TL_LIST_PROPS = ['object-uri', 'cpc-uri', 'name', 'state']
 TL_VOLATILE_PROPS = []
 
 
-def test_tl_find_list(hmc_session):
+def test_tl_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -50,7 +50,8 @@ def test_tl_find_list(hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No Tape Library defined on HMC {hd.host}")
     tl_list = pick_test_resources(tl_list)
 
     for tl in tl_list:
@@ -61,7 +62,7 @@ def test_tl_find_list(hmc_session):
             TL_MINIMAL_PROPS, TL_LIST_PROPS)
 
 
-def test_tl_property(hmc_session):
+def test_tl_property(zhmc_logger, hmc_session):
     """
     Test property related methods
     """
@@ -72,7 +73,8 @@ def test_tl_property(hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No Tape Library defined on HMC {hd.host}")
     tl_list = pick_test_resources(tl_list)
 
     for tl in tl_list:
@@ -84,7 +86,7 @@ def test_tl_property(hmc_session):
         runtest_get_properties(tl.manager, non_list_prop)
 
 
-def test_tl_crud(hmc_session):
+def test_tl_crud(zhmc_logger, hmc_session):
     """
     Test  update Tape Library
     """
@@ -96,7 +98,8 @@ def test_tl_crud(hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No Tape Library defined on HMC {hd.host}")
     tl = tl_list[0]
 
     # Test updating a property of the Tape Library

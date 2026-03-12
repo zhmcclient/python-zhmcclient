@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, skipif_storage_mgmt_feature, \
     runtest_find_list, runtest_get_properties
 
@@ -42,16 +42,17 @@ HBA_LIST_PROPS = ['element-uri', 'name', 'description', 'wwpn']
 HBA_VOLATILE_PROPS = []
 
 
-def test_hba_find_list(dpm_mode_cpcs):
+def test_hba_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_storage_mgmt_feature(cpc)
+        skipif_storage_mgmt_feature(zhmc_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -64,9 +65,9 @@ def test_hba_find_list(dpm_mode_cpcs):
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_warn(
-                f"No partitions with HBAs on CPC {cpc.name} managed by HMC "
-                f"{hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with HBAs on CPC {cpc.name} managed by "
+                     f"HMC {hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
@@ -77,12 +78,13 @@ def test_hba_find_list(dpm_mode_cpcs):
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
 
 
-def test_hba_property(dpm_mode_cpcs):
+def test_hba_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -98,9 +100,9 @@ def test_hba_property(dpm_mode_cpcs):
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_warn(
-                f"No partitions with HBAs on CPC {cpc.name} managed by "
-                f"HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with HBAs on CPC {cpc.name} managed by "
+                     f"HMC {hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
@@ -113,16 +115,17 @@ def test_hba_property(dpm_mode_cpcs):
             runtest_get_properties(hba.manager, non_list_prop)
 
 
-def test_hba_crud(dpm_mode_cpcs):
+def test_hba_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a HBA (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_storage_mgmt_feature(cpc)
+        skipif_storage_mgmt_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 

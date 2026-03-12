@@ -22,7 +22,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import pick_test_resources, runtest_find_list, skip_warn, \
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
     skipif_no_secure_boot_feature, standard_partition_props, \
     cleanup_and_import_example_certificate
 
@@ -41,15 +41,16 @@ CERT_ADDITIONAL_PROPS = ['description', 'assigned']
 CERT_VOLATILE_PROPS = []
 
 
-def test_certificates_find_list(all_cpcs):
+def test_certificates_find_list(zhmc_logger, all_cpcs):
     """
     Test list(), find(), findall().
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any defined CPCs.")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any defined CPCs.")
 
     for cpc in all_cpcs:
-        skipif_no_secure_boot_feature(cpc)
+        skipif_no_secure_boot_feature(zhmc_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -58,8 +59,9 @@ def test_certificates_find_list(all_cpcs):
         # Pick the certificates to test with
         cert_list = console.certificates.list()
         if not cert_list:
-            skip_warn(
-                f"No certificates on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No certificates on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
         cert_list = pick_test_resources(cert_list)
 
         for cert in cert_list:
@@ -71,16 +73,17 @@ def test_certificates_find_list(all_cpcs):
                 CERT_ADDITIONAL_PROPS)
 
 
-def test_cert_crud(all_cpcs):
+def test_cert_crud(zhmc_logger, all_cpcs):
     """
     Test create, read, update and delete a certificate.
     For DPM cpcs, also create a partition and assign/unassign certificates.
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any defined CPCs.")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any defined CPCs.")
 
     for cpc in all_cpcs:
-        skipif_no_secure_boot_feature(cpc)
+        skipif_no_secure_boot_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 

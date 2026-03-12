@@ -28,24 +28,26 @@ from requests.packages import urllib3
 import zhmcclient
 from zhmcclient.mock import FakedSession
 
-from .utils import TEST_PREFIX, standard_partition_props, skip_warn
+from .utils import skip_log, TEST_PREFIX, standard_partition_props
 
 urllib3.disable_warnings()
 
 
-def test_autoupdate_prop(dpm_mode_cpcs):
+def test_autoupdate_prop(zhmc_logger, dpm_mode_cpcs):
     """
     Test auto-updated partitions when updating a property.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         if isinstance(cpc.manager.client.session, FakedSession):
-            pytest.skip("Auto-update test requires notifications which are "
-                        "not supported by zhmcclient.mock")
+            skip_log(zhmc_logger,
+                     "Auto-update test requires notifications which are "
+                     "not supported by zhmcclient.mock")
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -202,19 +204,21 @@ def test_autoupdate_prop(dpm_mode_cpcs):
                     raise
 
 
-def test_autoupdate_list(dpm_mode_cpcs):
+def test_autoupdate_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list() with auto-updated Partition manager.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         if isinstance(cpc.manager.client.session, FakedSession):
-            pytest.skip("Auto-update test requires notifications which are "
-                        "not supported by zhmcclient.mock")
+            skip_log(zhmc_logger,
+                     "Auto-update test requires notifications which are "
+                     "not supported by zhmcclient.mock")
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -224,8 +228,9 @@ def test_autoupdate_list(dpm_mode_cpcs):
         # Get the initial set of partitions, for later comparison
         initial_part_list = cpc.partitions.list()
         if not initial_part_list:
-            skip_warn(
-                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
         initial_part_names = {p.name for p in initial_part_list}
 
         # Enable auto-updating on partition manager and check partition list

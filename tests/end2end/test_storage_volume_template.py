@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -41,16 +41,17 @@ STOVOLTPL_LIST_PROPS = ['element-uri', 'name', 'size', 'usage']
 STOVOLTPL_VOLATILE_PROPS = []
 
 
-def test_stovoltpl_find_list(dpm_mode_cpcs):
+def test_stovoltpl_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -65,9 +66,9 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_warn(
-                "No storage group templates with volumes associated to "
-                f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No storage group templates with volumes associated to "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
@@ -80,16 +81,17 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):
                 STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS)
 
 
-def test_stovoltpl_property(dpm_mode_cpcs):
+def test_stovoltpl_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -104,9 +106,9 @@ def test_stovoltpl_property(dpm_mode_cpcs):
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_warn(
-                "No storage group templates with volumes associated to "
-                f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No storage group templates with volumes associated to "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
@@ -120,17 +122,18 @@ def test_stovoltpl_property(dpm_mode_cpcs):
             runtest_get_properties(stovoltpl.manager, non_list_prop)
 
 
-def test_stovoltpl_crud(dpm_mode_cpcs):
+def test_stovoltpl_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a storage volume template in a storage
     group template.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 
