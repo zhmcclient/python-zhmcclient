@@ -5670,6 +5670,325 @@ class TapeLibraryDiscoverHandler:
             message=f"The CPC with the {cpc_uri} has not been zoned.")
 
 
+class TapeLinksHandler:
+    """
+    Handler class for HTTP methods on set of TapeLink resources.
+    """
+
+    valid_query_parms_get = ['tape-library-uri', 'partition-uri', 'name']
+
+    returned_props = ['element-uri', 'tape-library-uri', 'partition-uri',
+                      'name', 'description']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Tape Links."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        # Extract tape library OID from URI
+        tape_library_oid = uri_parms[0]
+        tape_library_uri = f'/api/tape-libraries/{tape_library_oid}'
+
+        try:
+            tape_library = hmc.lookup_by_uri(tape_library_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        filter_args = query_parms
+
+        result_tape_links = []
+        for tl in tape_library.tape_links.list(filter_args):
+            result_tl = {}
+            for prop in cls.returned_props:
+                result_tl[prop] = prop_copy(tl.properties.get(prop))
+            result_tape_links.append(result_tl)
+        return {'tape-links': result_tape_links}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Tape Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # Extract tape library OID from URI
+        tape_library_oid = uri_parms[0]
+        tape_library_uri = f'/api/tape-libraries/{tape_library_oid}'
+
+        try:
+            tape_library = hmc.lookup_by_uri(tape_library_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        check_required_fields(method, uri, body, ['partition-uri'])
+
+        # Verify partition exists
+        partition_uri = body['partition-uri']
+        try:
+            hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Create the tape link
+        body2 = body.copy()
+        body2.setdefault('name', f'tape-link-{uuid.uuid4()}')
+        body2.setdefault('description', '')
+        body2['tape-library-uri'] = tape_library_uri
+
+        new_tape_link = tape_library.tape_links.add(body2)
+
+        return {
+            'element-uri': new_tape_link.uri,
+        }
+
+
+class TapeLinkHandler(GenericGetPropertiesHandler,
+                      GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single TapeLink resource.
+    """
+    pass
+
+
+class TapeLinkDeleteHandler:
+    """
+    Handler class for operation: Delete Tape Link.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Delete Tape Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_library_uri = f'/api/tape-libraries/{tape_library_oid}'
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            tape_library = hmc.lookup_by_uri(tape_library_uri)
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Reflect the result of deleting the tape link
+        tape_library.tape_links.remove(tape_link.oid)
+
+
+class TapeLinkGetPartitionsHandler:
+    """
+    Handler class for operation: Get Partitions for a Tape Link.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Partitions for a Tape Link."""
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Get the partition URI from the tape link
+        partition_uri = tape_link.properties.get('partition-uri')
+        if not partition_uri:
+            return {'partitions': []}
+
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            return {'partitions': []}
+
+        # Return partition information
+        partition_info = {
+            'object-uri': partition.uri,
+            'name': partition.properties.get('name'),
+            'status': partition.properties.get('status'),
+        }
+
+        return {'partitions': [partition_info]}
+
+
+class TapeLinkGetHistoriesHandler:
+    """
+    Handler class for operation: Get Tape Link Histories.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Tape Link Histories."""
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Return mock history data
+        # In a real implementation, this would return actual history records
+        return {
+            'tape-link-histories': []
+        }
+
+
+class TapeLinkGetEnvironmentReportHandler:
+    """
+    Handler class for operation: Get Tape Link Environment Report.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Tape Link Environment Report."""
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Return mock environment report
+        # In a real implementation, this would return actual environment data
+        report = tape_link.properties.get('environment-report', {})
+        if not report:
+            report = {
+                'status': 'ok',
+                'last-updated': '2024-01-01T00:00:00Z',
+                'details': {}
+            }
+
+        return report
+
+
+class TapeLinkUpdateEnvironmentReportHandler:
+    """
+    Handler class for operation: Update Tape Link Environment Report.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update Tape Link Environment Report."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Update the environment report in the tape link properties
+        if body:
+            tape_link.properties['environment-report'] = body
+
+        return {}
+
+
+class VirtualTapeResourcesHandler:
+    """
+    Handler class for HTTP methods on set of VirtualTapeResource resources.
+    """
+
+    valid_query_parms_get = [
+        'name', 'device-number', 'adapter-port-uri', 'partition-uri']
+
+    returned_props = [
+        'element-uri', 'name', 'device-number',
+        'adapter-port-uri', 'partition-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Virtual Tape Resources of a Tape Link."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        # Extract tape library and tape link OIDs from URI
+        tape_library_oid = uri_parms[0]
+        tape_link_oid = uri_parms[1]
+        tape_link_uri = (
+            f'/api/tape-libraries/{tape_library_oid}/'
+            f'tape-links/{tape_link_oid}')
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        filter_args = query_parms
+
+        result_vtrs = []
+        for vtr in tape_link.virtual_tape_resources.list(filter_args):
+            result_vtr = {}
+            for prop in cls.returned_props:
+                result_vtr[prop] = prop_copy(vtr.properties.get(prop))
+            result_vtrs.append(result_vtr)
+        return {'virtual-tape-resources': result_vtrs}
+
+
+class VirtualTapeResourceHandler(GenericGetPropertiesHandler,
+                                 GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single VirtualTapeResource resource.
+    """
+    pass
+
+
 class CapacityGroupsHandler:
     """
     Handler class for HTTP methods on set of CapacityGroup resources.
@@ -6994,6 +7313,33 @@ URIS = (
      TapeLibraryRequestZoningHandler),
     (r'/api/tape-libraries/operations/discover-tape-libraries',
      TapeLibraryDiscoverHandler),
+
+    (r'/api/tape-libraries/([^/]+)/tape-links(?:\?(.*))?',
+     TapeLinksHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^?/]+)(?:\?(.*))?',
+     TapeLinkHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'operations/delete',
+     TapeLinkDeleteHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'operations/get-partitions(?:\?(.*))?',
+     TapeLinkGetPartitionsHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'operations/get-tape-link-histories(?:\?(.*))?',
+     TapeLinkGetHistoriesHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'operations/get-tape-link-environment-report(?:\?(.*))?',
+     TapeLinkGetEnvironmentReportHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'operations/update-tape-link-environment-report(?:\?(.*))?',
+     TapeLinkUpdateEnvironmentReportHandler),
+
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'virtual-tape-resources(?:\?(.*))?',
+     VirtualTapeResourcesHandler),
+    (r'/api/tape-libraries/([^/]+)/tape-links/([^/]+)/'
+     r'virtual-tape-resources/([^?/]+)(?:\?(.*))?',
+     VirtualTapeResourceHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^?/]+)(?:\?(.*))?',

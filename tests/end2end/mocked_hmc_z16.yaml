@@ -364,6 +364,69 @@ hmc_definition:
             name : Tape Library
             description : Tape Library resource 1
             cpc-uri : /api/cpcs/cpc_dpm
+          tape_links:
+            - properties:
+                # class: created automatically
+                # parent: created automatically
+                # element-uri: created automatically
+                element-id: tlink1
+                name: "Tape Link 1"
+                description: "Tape link connecting Tape Library to PART1"
+                partition-uri: /api/partitions/part1
+                tape-library-uri: /api/tape-libraries/tl1
+              virtual_tape_resources:
+                - properties:
+                    # class: created automatically
+                    # parent: created automatically
+                    # element-uri: created automatically
+                    element-id: vtr1
+                    name: "Virtual Tape Resource 1"
+                    description: "Virtual tape resource 1"
+                    device-number: "0001"
+                    adapter-port-uri: /api/adapters/fcp1/storage-ports/0
+                    partition-uri: /api/partitions/part1
+                    world-wide-port-name-info:
+                      status: validated
+                      world-wide-port-name: "c05076ffe8000001"
+                    degraded-reasons: []
+                - properties:
+                    # class: created automatically
+                    # parent: created automatically
+                    # element-uri: created automatically
+                    element-id: vtr2
+                    name: "Virtual Tape Resource 2"
+                    description: "Virtual tape resource 2"
+                    device-number: "0002"
+                    adapter-port-uri: /api/adapters/fcp1/storage-ports/1
+                    partition-uri: /api/partitions/part1
+                    world-wide-port-name-info:
+                      status: validated
+                      world-wide-port-name: "c05076ffe8000002"
+                    degraded-reasons: []
+            - properties:
+                # class: created automatically
+                # parent: created automatically
+                # element-uri: created automatically
+                element-id: tlink2
+                name: "Tape Link 2"
+                description: "Tape link for testing"
+                partition-uri: /api/partitions/part1
+                tape-library-uri: /api/tape-libraries/tl1
+              virtual_tape_resources:
+                - properties:
+                    # class: created automatically
+                    # parent: created automatically
+                    # element-uri: created automatically
+                    element-id: vtr3
+                    name: "Virtual Tape Resource 3"
+                    description: "Virtual tape resource 3"
+                    device-number: "0003"
+                    adapter-port-uri: /api/adapters/fcp1/storage-ports/0
+                    partition-uri: /api/partitions/part1
+                    world-wide-port-name-info:
+                      status: not-validated
+                      world-wide-port-name: "c05076ffe8000003"
+                    degraded-reasons: []
 
       hw_messages:
         - properties:

@@ -358,6 +358,46 @@ Tape Libraries
    :special-members: __str__
 
 
+.. _`Tape Links`:
+
+Tape Links
+----------
+
+.. automodule:: zhmcclient._tape_link
+
+.. autoclass:: zhmcclient.TapeLinkManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.TapeLink
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Virtual Tape Resources`:
+
+Virtual Tape Resources
+----------------------
+
+.. automodule:: zhmcclient._virtual_tape_resource
+
+.. autoclass:: zhmcclient.VirtualTapeResourceManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.VirtualTapeResource
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Virtual Storage Resources`:
 
 Virtual Storage Resources
