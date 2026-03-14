@@ -323,8 +323,8 @@ hmc_definition:
             backup-hostname-ipaddr: null
             use-ssl: false
             tolerate-untrusted-certificates: null
-            bind-distinguished-name: null
-            bind-password: null
+            bind-distinguished-name: abc
+            bind-password: bla
             location-method: null
             search-scope: null
             search-filter: null
@@ -374,7 +374,6 @@ hmc_definition:
             text: foo
             timestamp: 1744826146533
             service-supported: true
-
   cpcs:
     - properties:
         # class: created automatically
@@ -587,10 +586,26 @@ hmc_definition:
             description: "Lpar LPAR2 on CPC_CLA"
             partition-number: 0x42
             partition-identifier: 0x42
-            status: "not-activated"
-            activation-mode: "not-set"
+            status: "operating"
+            activation-mode: "ssc"
             next-activation-profile-name: "LPAR2"
             last-used-activation-profile: "LPAR2"
+            has-unacceptable-status: false
+            has-operating-system-messages: true
+            ssc-host-name: lpar2
+            ssc-master-userid: sscuser
+            ssc-master-pw: sscpass
+            ssc-boot-selection: installer
+        - properties:
+            object-id: lpar9
+            name: "LPAR9"
+            description: "Lpar LPAR9 on CPC_CLA"
+            partition-number: 0x49
+            partition-identifier: 0x49
+            status: "not-activated"
+            activation-mode: "not-set"
+            next-activation-profile-name: "LPAR9"
+            last-used-activation-profile: "LPAR9"
             has-unacceptable-status: true
             has-operating-system-messages: false
       reset_activation_profiles:
@@ -615,11 +630,25 @@ hmc_definition:
       image_activation_profiles:
         - properties:
             name: "LPAR1"
-            description: "Image activation profile LPAR1"
+            description: "Image activation profile LPAR1 for Linux"
+            operating-mode: "linux-only"
             # TODO: Add more properties
         - properties:
             name: "LPAR2"
-            description: "Image activation profile LPAR2"
+            description: "Image activation profile LPAR2 for SSC"
+            operating-mode: "ssc"
+            ssc-host-name: lpar2
+            ssc-master-userid: sscuser
+            ssc-master-pw: sscpass
+            ssc-boot-selection: installer
+            # TODO: Add more properties
+        - properties:
+            name: "ZAWARE"
+            description: "Image activation profile for zAware"
+            operating-mode: "zaware"
+            zaware-host-name: zaware
+            zaware-master-userid: zawareuser
+            zaware-master-pw: zawarepass
             # TODO: Add more properties
       hw_messages:
         - properties:
@@ -630,7 +659,6 @@ hmc_definition:
             text: foo
             timestamp: 1744826146533
             service-supported: true
-
     - properties:
         # class: created automatically
         # parent: created automatically
@@ -1075,8 +1103,14 @@ hmc_definition:
             status: stopped
             threads-per-processor: 1
             type: ssc
+            ssc-host-name: part2
+            ssc-master-userid: sscuser
+            ssc-master-pw: sscpass
+            ssc-boot-selection: installer
             ssc-ipv4-gateway: 10.11.12.13
             ssc-ipv6-gateway: "10::11"
+            ssc-dns-servers:
+              - 10.11.12.2
             available-features-list:
               - name: dpm-storage-management
                 description: The DPM storage management approach in which FCP and FICON
