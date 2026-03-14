@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -43,7 +43,7 @@ MFASRVDEF_LIST_PROPS = ['element-uri', 'name']
 MFASRVDEF_VOLATILE_PROPS = []
 
 
-def test_mfasrvdef_find_list(hmc_session):
+def test_mfasrvdef_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -55,13 +55,15 @@ def test_mfasrvdef_find_list(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support MFA server definitions")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support MFA server definitions")
 
     # Pick the MFA server definitions to test with
     mfasrvdef_list = console.mfa_server_definitions.list()
     if not mfasrvdef_list:
-        skip_warn(f"No MFA server definitions defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No MFA server definitions defined on HMC {hd.host}")
     mfasrvdef_list = pick_test_resources(mfasrvdef_list)
 
     for mfasrvdef in mfasrvdef_list:
@@ -72,7 +74,7 @@ def test_mfasrvdef_find_list(hmc_session):
             MFASRVDEF_MINIMAL_PROPS, MFASRVDEF_LIST_PROPS)
 
 
-def test_mfasrvdef_property(hmc_session):
+def test_mfasrvdef_property(zhmc_logger, hmc_session):
     """
     Test property related methods
     """
@@ -84,13 +86,15 @@ def test_mfasrvdef_property(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support MFA server definitions")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support MFA server definitions")
 
     # Pick the MFA server definitions to test with
     mfasrvdef_list = console.mfa_server_definitions.list()
     if not mfasrvdef_list:
-        skip_warn(f"No MFA server definitions defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No MFA server definitions defined on HMC {hd.host}")
     mfasrvdef_list = pick_test_resources(mfasrvdef_list)
 
     for mfasrvdef in mfasrvdef_list:
@@ -102,7 +106,7 @@ def test_mfasrvdef_property(hmc_session):
         runtest_get_properties(mfasrvdef.manager, non_list_prop)
 
 
-def test_mfasrvdef_crud(hmc_session):
+def test_mfasrvdef_crud(zhmc_logger, hmc_session):
     """
     Test create, read, update and delete a MFA server definition.
     """
@@ -114,8 +118,9 @@ def test_mfasrvdef_crud(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support MFA server definitions")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support MFA server definitions")
 
     mfasrvdef_name = TEST_PREFIX + ' test_mfasrvdef_crud mfasrvdef1'
     mfasrvdef_name_new = mfasrvdef_name + ' new'
@@ -153,9 +158,10 @@ def test_mfasrvdef_crud(hmc_session):
                 mfasrvdef_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(f"HMC userid {hd.userid!r} is not authorized for "
-                          "task 'Manage Multi-factor Authentication' on HMC "
-                          f"{hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for "
+                         "task 'Manage Multi-factor Authentication' on HMC "
+                         f"{hd.host}")
             else:
                 raise
 

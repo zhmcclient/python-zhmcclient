@@ -30,6 +30,18 @@ LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
 LOG_DATETIME_TIMEZONE = time.gmtime
 
 
+def has_file_handler(logger, log_file):
+    """
+    Returns whether a Python logger has a FileHandler for the specified log
+    file.
+    """
+    abs_log_file = os.path.abspath(log_file)
+    return any(
+        isinstance(h, logging.FileHandler) and h.baseFilename == abs_log_file
+        for h in logger.handlers
+    )
+
+
 @pytest.fixture(scope='function')
 def zhmc_logger(request):
     # Note: The first paragraph is shown by 'pytest --fixtures'
@@ -54,6 +66,9 @@ def zhmc_logger(request):
     Returns:
         logging.Logger: Logger for the test function
     """
+    testfunc_name = request.function.__name__
+    testfunc_logger = logging.getLogger(testfunc_name)
+
     log_file = os.getenv('TESTLOGFILE', None)
     if log_file:
         logging.Formatter.converter = LOG_DATETIME_TIMEZONE
@@ -61,20 +76,14 @@ def zhmc_logger(request):
             LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
         log_handler = logging.FileHandler(log_file, encoding='utf-8')
         log_handler.setFormatter(log_formatter)
-
-    testfunc_name = request.function.__name__
-    testfunc_logger = logging.getLogger(testfunc_name)
-
-    if log_file and log_handler not in testfunc_logger.handlers:
-        testfunc_logger.addHandler(log_handler)
-
-    if log_file:
+        if not has_file_handler(testfunc_logger, log_file):
+            testfunc_logger.addHandler(log_handler)
         testfunc_logger.setLevel(logging.DEBUG)
     else:
         testfunc_logger.setLevel(logging.NOTSET)
 
-    testfunc_logger.debug("Entered test function")
+    testfunc_logger.debug("Entered test function for %s", request.node.name)
     try:
         yield testfunc_logger
     finally:
-        testfunc_logger.debug("Leaving test function")
+        testfunc_logger.debug("Leaving test function for %s", request.node.name)

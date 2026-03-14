@@ -27,7 +27,7 @@ from requests.packages import urllib3
 import zhmcclient
 
 from .utils import (
-    skip_warn,
+    skip_log,
     pick_test_resources,
     TEST_PREFIX,
     runtest_find_list,
@@ -48,7 +48,7 @@ SSOSRVDEF_LIST_PROPS = ["element-uri", "name", "type"]
 SSOSRVDEF_VOLATILE_PROPS = []
 
 
-def test_ssosrvdef_find_list(hmc_session):
+def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -60,15 +60,15 @@ def test_ssosrvdef_find_list(hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet "
-            "support SSO server definitions"
-        )
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support SSO server definitions")
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
     if not ssosrvdef_list:
-        skip_warn(f"No SSO server definitions defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No SSO server definitions defined on HMC {hd.host}")
     ssosrvdef_list = pick_test_resources(ssosrvdef_list)
 
     for ssosrvdef in ssosrvdef_list:
@@ -85,7 +85,7 @@ def test_ssosrvdef_find_list(hmc_session):
         )
 
 
-def test_ssosrvdef_property(hmc_session):
+def test_ssosrvdef_property(zhmc_logger, hmc_session):
     """
     Test property related methods
     """
@@ -97,15 +97,15 @@ def test_ssosrvdef_property(hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet "
-            "support SSO server definitions"
-        )
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support SSO server definitions")
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
     if not ssosrvdef_list:
-        skip_warn(f"No SSO server definitions defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No SSO server definitions defined on HMC {hd.host}")
     ssosrvdef_list = pick_test_resources(ssosrvdef_list)
 
     for ssosrvdef in ssosrvdef_list:
@@ -117,7 +117,7 @@ def test_ssosrvdef_property(hmc_session):
         runtest_get_properties(ssosrvdef.manager, non_list_prop)
 
 
-def test_ssosrvdef_crud(hmc_session):
+def test_ssosrvdef_crud(zhmc_logger, hmc_session):
     """
     Test create, read, update and delete a SSO server definition.
     """
@@ -129,10 +129,9 @@ def test_ssosrvdef_crud(hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet "
-            "support SSO server definitions"
-        )
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet "
+                 "support SSO server definitions")
 
     ssosrvdef_name = TEST_PREFIX + " test_ssosrvdef_crud ssosrvdef1"
     ssosrvdef_name_new = ssosrvdef_name + " new"
@@ -179,10 +178,9 @@ def test_ssosrvdef_crud(hmc_session):
         ssosrvdef = console.sso_server_definitions.create(ssosrvdef_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn(
-                f"HMC userid {hd.userid!r} is not authorized for task "
-                f"'Manage Single Sign-On Servers' on HMC {hd.host}"
-            )
+            skip_log(zhmc_logger,
+                     f"HMC userid {hd.userid!r} is not authorized for task "
+                     f"'Manage Single Sign-On Servers' on HMC {hd.host}")
         else:
             raise
 

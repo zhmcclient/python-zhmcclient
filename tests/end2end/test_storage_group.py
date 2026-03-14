@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -42,16 +42,17 @@ STOGRP_LIST_PROPS = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state',
 STOGRP_VOLATILE_PROPS = []
 
 
-def test_stogrp_find_list(dpm_mode_cpcs):
+def test_stogrp_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -60,8 +61,9 @@ def test_stogrp_find_list(dpm_mode_cpcs):
         # Pick the storage groups to test with
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
-            skip_warn(f"No storage groups associated to CPC {cpc.name} "
-                      f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         stogrp_list = pick_test_resources(stogrp_list)
 
         for stogrp in stogrp_list:
@@ -73,16 +75,17 @@ def test_stogrp_find_list(dpm_mode_cpcs):
                 STOGRP_LIST_PROPS)
 
 
-def test_stogrp_property(dpm_mode_cpcs):
+def test_stogrp_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -90,8 +93,9 @@ def test_stogrp_property(dpm_mode_cpcs):
         # Pick the storage groups to test with
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
-            skip_warn(f"No storage groups associated to CPC {cpc.name} "
-                      f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         stogrp_list = pick_test_resources(stogrp_list)
 
         for stogrp in stogrp_list:
@@ -104,16 +108,17 @@ def test_stogrp_property(dpm_mode_cpcs):
             runtest_get_properties(stogrp.manager, non_list_prop)
 
 
-def test_stogrp_crud(dpm_mode_cpcs):
+def test_stogrp_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a storage group.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         print(f"Testing on CPC {cpc.name}")
 

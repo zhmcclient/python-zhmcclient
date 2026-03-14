@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -41,12 +41,13 @@ CAPGRP_LIST_PROPS = ['element-uri', 'name']
 CAPGRP_VOLATILE_PROPS = []
 
 
-def test_capgrp_find_list(dpm_mode_cpcs):
+def test_capgrp_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -57,8 +58,9 @@ def test_capgrp_find_list(dpm_mode_cpcs):
         # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
-            skip_warn(f"No capacity groups defined on CPC {cpc.name} managed "
-                      f"by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No capacity groups defined on CPC {cpc.name} managed "
+                     f"by HMC {hd.host}")
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:
@@ -70,12 +72,13 @@ def test_capgrp_find_list(dpm_mode_cpcs):
                 CAPGRP_LIST_PROPS)
 
 
-def test_capgrp_property(dpm_mode_cpcs):
+def test_capgrp_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -86,8 +89,9 @@ def test_capgrp_property(dpm_mode_cpcs):
         # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
-            skip_warn(f"No capacity groups defined on CPC {cpc.name} managed "
-                      f"by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No capacity groups defined on CPC {cpc.name} managed "
+                     f"by HMC {hd.host}")
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:
@@ -100,12 +104,13 @@ def test_capgrp_property(dpm_mode_cpcs):
             runtest_get_properties(capgrp.manager, non_list_prop)
 
 
-def test_capgrp_crud(dpm_mode_cpcs):
+def test_capgrp_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a capacity group.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled

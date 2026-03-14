@@ -26,8 +26,9 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
     runtest_get_properties, End2endTestWarning, skip_missing_api_feature
+
 
 urllib3.disable_warnings()
 
@@ -81,14 +82,15 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
     Test create, read, update and delete an activation profile.
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
         console = cpc.manager.console
         skip_missing_api_feature(
-            console, 'create-delete-activation-profiles',
+            zhmc_logger, console, 'create-delete-activation-profiles',
             cpc, 'create-delete-activation-profiles')
 
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
@@ -163,12 +165,13 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_find_list(classic_mode_cpcs, profile_type):
+def test_actprof_find_list(zhmc_logger, classic_mode_cpcs, profile_type):
     """
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -180,9 +183,9 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_warn(
-                f"No {profile_type} activation profiles on CPC {cpc.name} "
-                f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No {profile_type} activation profiles on CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
@@ -201,12 +204,13 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_property(classic_mode_cpcs, profile_type):
+def test_actprof_property(zhmc_logger, classic_mode_cpcs, profile_type):
     """
     Test property related methods
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -218,9 +222,9 @@ def test_actprof_property(classic_mode_cpcs, profile_type):
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_warn(
-                f"No {profile_type} activation profiles on CPC {cpc.name} "
-                f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No {profile_type} activation profiles on CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:

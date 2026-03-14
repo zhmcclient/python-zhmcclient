@@ -38,7 +38,8 @@ CONSOLE_LIST_PROPS = ['object-uri']
 CONSOLE_VOLATILE_PROPS = []
 
 
-def test_console_find_list(hmc_session):
+def test_console_find_list(zhmc_logger, hmc_session):
+    # pylint: disable=unused-argument
     """
     Test list(), find(), findall().
     """
@@ -53,7 +54,8 @@ def test_console_find_list(hmc_session):
         CONSOLE_LIST_PROPS)
 
 
-def test_console_property(hmc_session):
+def test_console_property(zhmc_logger, hmc_session):
+    # pylint: disable=unused-argument
     """
     Test property related methods
     """
@@ -65,7 +67,8 @@ def test_console_property(hmc_session):
     runtest_get_properties(client.consoles, non_list_prop)
 
 
-def test_console_features(hmc_session):
+def test_console_features(zhmc_logger, hmc_session):
+    # pylint: disable=unused-argument
     """
     Tests Console feature methods:
     - For API features:

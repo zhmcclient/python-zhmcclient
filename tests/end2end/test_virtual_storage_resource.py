@@ -19,10 +19,9 @@ These tests do not change any existing VSRs.
 """
 
 
-import pytest
 from requests.packages import urllib3
 
-from .utils import skip_warn, pick_test_resources, \
+from .utils import skip_log, pick_test_resources, \
     skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -41,16 +40,17 @@ VSR_LIST_PROPS = ['element-uri', 'name', 'device-number', 'adapter-port-uri',
 VSR_VOLATILE_PROPS = []
 
 
-def test_vsr_find_list(dpm_mode_cpcs):
+def test_vsr_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -64,8 +64,9 @@ def test_vsr_find_list(dpm_mode_cpcs):
             for vsr in vsr_list:
                 grp_vol_tuples.append((stogrp, vsr))
         if not grp_vol_tuples:
-            skip_warn("No storage groups with VSRs associated to CPC "
-                      f"{cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No storage groups with VSRs associated to CPC "
+                     f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrp, vsr in grp_vol_tuples:
@@ -78,16 +79,17 @@ def test_vsr_find_list(dpm_mode_cpcs):
                 unique_name=True)
 
 
-def test_vsr_property(dpm_mode_cpcs):
+def test_vsr_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(cpc)
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -101,8 +103,9 @@ def test_vsr_property(dpm_mode_cpcs):
             for vsr in vsr_list:
                 grp_vol_tuples.append((stogrp, vsr))
         if not grp_vol_tuples:
-            skip_warn("No storage groups with VSRs associated to CPC "
-                      f"{cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No storage groups with VSRs associated to CPC "
+                     f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrp, vsr in grp_vol_tuples:
