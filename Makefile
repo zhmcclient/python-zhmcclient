@@ -715,7 +715,7 @@ end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_f
 	-$(call RM_FUNC,end2end.log)
 	bash -c "PYTHONPATH=. TESTLOGFILE=end2end.log TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	coverage html
-	-bash -c "tools/check_blanked.py --accept-null end2end.log"
+	bash -c "tools/check_blanked.py --accept-null end2end.log"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
