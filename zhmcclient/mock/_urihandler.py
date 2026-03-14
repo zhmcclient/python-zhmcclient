@@ -465,6 +465,43 @@ def prop_copy(prop):
     return copy.deepcopy(prop)
 
 
+def without_names(names, remove_names):
+    """
+    Return a copy of the input names, with the specified names removed.
+
+    Parameters:
+        names (iterable of str): Input names
+        remove_names (iterable of str): Names to be removed
+    """
+    ret_names = []
+    for name in names:
+        if name in remove_names:
+            continue
+        ret_names.append(name)
+    return ret_names
+
+
+def get_additional_properties(query_parms, wo_properties=None):
+    """
+    Return the names of any additional-properties specified in the query
+    parameter, not including the specified write-only properties.
+
+    The 'additional-properties' query parameter is remmoved from the
+    query_parms parameter, if present.
+
+    Parameters:
+      query_parms (dict): Query parameters
+      wo_properties (iterable of str): Write-only properties
+    """
+    if 'additional-properties' in query_parms:
+        add_props = query_parms.pop('additional-properties').split(',')
+        if wo_properties:
+            add_props = without_names(add_props, wo_properties)
+    else:
+        add_props = []
+    return add_props
+
+
 class UriHandler:
     """
     Handle HTTP methods against a set of known URIs and invoke respective
@@ -531,6 +568,10 @@ class GenericGetPropertiesHandler:
     Handler class for generic get of resource properties.
     """
 
+    # Write-only properties.
+    # Is overridden by derived classes.
+    wo_properties = []
+
     # List of supported query parameters for the 'Get Properties' operation
     # of the resource type using this class.
     # Must be overridden in the derived resource handler class, if it supports
@@ -554,22 +595,28 @@ class GenericGetPropertiesHandler:
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
 
-        subset_pnames = query_parms.get('properties', None)
-        if subset_pnames:
-            subset_pnames = subset_pnames.split(',')
-            ret_props = {}
-            for pname in subset_pnames:
-                try:
-                    ret_props[pname] = resource.properties[pname]
-                except KeyError:
-                    new_exc = BadRequestError(
-                        method, uri, reason=14,
-                        message=f"Invalid property {pname!r} in 'properties' "
-                        f"query parameter for resource with URI {uri!r}")
-                    new_exc.__cause__ = None
-                    raise new_exc  # BadRequestError
-            return ret_props
-        return properties_copy(resource.properties)
+        pnames = query_parms.get('properties', None)
+        if pnames:
+            pnames = pnames.split(',')
+        else:
+            pnames = resource.properties.keys()
+        ret_props = {}
+        for pname in pnames:
+            if pname in cls.wo_properties:
+                # Do not return write-only properties .
+                # In case a write-only property is specified in the 'properties'
+                # query parm, it should be ignored without raising an error.
+                continue
+            try:
+                ret_props[pname] = resource.properties[pname]
+            except KeyError:
+                new_exc = BadRequestError(
+                    method, uri, reason=14,
+                    message=f"Invalid property {pname!r} in 'properties' "
+                    f"query parameter for resource with URI {uri!r}")
+                new_exc.__cause__ = None
+                raise new_exc  # BadRequestError
+        return ret_props
 
 
 class GenericUpdatePropertiesHandler:
@@ -896,10 +943,8 @@ class ConsoleListPermittedPartitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(
+            query_parms, PartitionHandler.wo_properties)
         filter_args = query_parms
 
         result_partitions = []
@@ -951,10 +996,8 @@ class ConsoleListPermittedLparsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(
+            query_parms, LparHandler.wo_properties)
         filter_args = query_parms
 
         result_lpars = []
@@ -1011,10 +1054,9 @@ class ConsoleListPermittedAdaptersHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(
+            query_parms, PartitionHandler.wo_properties)
+
         filter_args = query_parms
 
         result_adapters = []
@@ -1158,6 +1200,8 @@ class UserHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single User resource.
     """
+
+    wo_properties = ["password"]
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -1787,6 +1831,8 @@ class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
     """
     Handler class for HTTP methods on single LdapServerDefinition resource.
     """
+
+    wo_properties = ["bind-password"]
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -3394,10 +3440,7 @@ class AdaptersHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(query_parms)
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -3812,10 +3855,8 @@ class PartitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(
+            query_parms, PartitionHandler.wo_properties)
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -4057,6 +4098,8 @@ class PartitionHandler(GenericGetPropertiesHandler,
     """
 
     valid_query_parms_get = ['properties']
+
+    wo_properties = ["boot-ftp-password", "ssc-master-pw"]
 
     # TODO: Add check_valid_cpc_status() in Update Partition Properties
     # TODO: Add check_partition_status(transitional) in Update Partition Props
@@ -4830,10 +4873,7 @@ class VirtualSwitchesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(query_parms)
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -5717,6 +5757,8 @@ class LparHandler(GenericGetPropertiesHandler):
 
     valid_query_parms_get = ['properties', 'cached-acceptable', 'group-uri']
 
+    wo_properties = ["ssc-master-pw"]
+
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
@@ -6379,10 +6421,8 @@ class ImageActProfilesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        if 'additional-properties' in query_parms:
-            add_props = query_parms.pop('additional-properties').split(',')
-        else:
-            add_props = []
+        add_props = get_additional_properties(
+            query_parms, ImageActProfileHandler.wo_properties)
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -6410,6 +6450,8 @@ class ImageActProfileHandler(GenericGetPropertiesHandler,
     """
 
     valid_query_parms_get = ['properties', 'cached-acceptable']
+
+    wo_properties = ["ssc-master-pw", "zaware-master-pw"]
 
 
 class LoadActProfilesHandler:
