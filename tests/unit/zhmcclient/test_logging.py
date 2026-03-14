@@ -162,7 +162,7 @@ def assert_log_capture(
     enter_record = log_capture.records[0]
     assert enter_record.name == _EXP_LOGGER_NAME
     assert enter_record.levelname == _EXP_LOG_LEVEL
-    assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.msg)
+    assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.getMessage())
     func_str, args_str, kwargs_str = enter_record.args
     if func_pattern:
         assert re.search(func_pattern, func_str)
@@ -174,7 +174,7 @@ def assert_log_capture(
     leave_record = log_capture.records[1]
     assert leave_record.name == _EXP_LOGGER_NAME
     assert leave_record.levelname == _EXP_LOG_LEVEL
-    assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.msg)
+    assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.getMessage())
     func_str, return_str = leave_record.args
     if func_pattern:
         assert re.search(func_pattern, func_str)

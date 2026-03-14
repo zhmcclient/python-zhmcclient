@@ -178,8 +178,7 @@ class PartitionManager(BaseManager):
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
 
-    @logged_api_call(blanked_properties=['boot-ftp-password', 'ssc-master-pw'],
-                     properties_pos=1)
+    @logged_api_call
     def create(self, properties):
         """
         Create and configure a Partition in this CPC.
@@ -703,8 +702,7 @@ class Partition(BaseResource):
             self.get_properties_local(self.manager._name_prop, None))
         self.cease_existence_local()
 
-    @logged_api_call(blanked_properties=['boot-ftp-password', 'ssc-master-pw'],
-                     properties_pos=1)
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Partition.

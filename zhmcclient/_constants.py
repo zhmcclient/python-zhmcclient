@@ -23,6 +23,8 @@ For technical reasons, the online documentation shows these constants in the
 ``zhmcclient`` namespace and should be used from there.
 """
 
+import re
+
 __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_CONNECT_RETRIES',
            'DEFAULT_HMC_PORT',
@@ -52,7 +54,9 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'HTML_REASON_OTHER',
            'STOMP_MIN_CONNECTION_CHECK_TIME',
            'DEFAULT_WS_TIMEOUT',
-           'BLANKED_OUT_STRING']
+           'BLANKED_OUT_STRING',
+           'BLANKED_OUT_PROPERTY_PATTERN',
+           'BLANKED_OUT_PROPERTY_REPLACE']
 
 
 #: Default HMC port number
@@ -210,3 +214,14 @@ DEFAULT_WS_TIMEOUT = 5
 #: Replacement string for blanked out sensitive values in log entries, such as
 #: passwords or session tokens.
 BLANKED_OUT_STRING = '********'
+
+#: Regexp pattern for properties in the JSON or dict representation string that
+#: contains sensitive data and will be blanked out in any logs.
+BLANKED_OUT_PROPERTY_PATTERN = re.compile(
+    r"""(['"])"""
+    r"""([^'"]*(authentication-code|credential|key|passcode|password|pw"""
+    r"""|secret|session))"""
+    r"""\1\s*:\s*('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|None|null)""")
+
+#: The replacement string corresponding to the regexp pattern.
+BLANKED_OUT_PROPERTY_REPLACE = rf"\1\2\1: \1{BLANKED_OUT_STRING}\1"

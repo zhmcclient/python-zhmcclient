@@ -225,8 +225,7 @@ class ActivationProfileManager(BaseManager):
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
 
-    @logged_api_call(blanked_properties=['ssc-master-pw', 'zaware-master-pw'],
-                     properties_pos=1)
+    @logged_api_call
     def create(self, properties):
         """
         Create and configure an Activation Profiles on this CPC, of the profile
@@ -346,8 +345,7 @@ class ActivationProfile(BaseResource):
             self.get_properties_local(self.manager._name_prop, None))
         self.cease_existence_local()
 
-    @logged_api_call(blanked_properties=['ssc-master-pw', 'zaware-master-pw'],
-                     properties_pos=1)
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Activation Profile.
