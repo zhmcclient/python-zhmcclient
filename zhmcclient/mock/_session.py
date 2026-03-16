@@ -400,9 +400,49 @@ FAKED_HMC_DEFINITION_SCHEMA = {
             },
         },
         "TapeLibrary": {
-            "description": "An Tape Library on an HMC",
+            "description": "A Tape Library on an HMC",
             "type": "object",
-            "additionalProperties": True,
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "tape_links": {
+                    "description": "The tape links of this tape library",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TapeLink"
+                    },
+                },
+            },
+        },
+        "TapeLink": {
+            "description": "A tape link of a tape library",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "virtual_tape_resources": {
+                    "description": "Virtual tape resources of this tape link",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VirtualTapeResource"
+                    },
+                },
+            },
+        },
+        "VirtualTapeResource": {
+            "description": "A virtual tape resource of a tape link",
+            "type": "object",
+            "additionalProperties": False,
             "required": [
                 "properties",
             ],
