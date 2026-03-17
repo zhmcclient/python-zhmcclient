@@ -46,8 +46,8 @@ __all__ = ["TapeLibraryManager", "TapeLibrary"]
 
 class TapeLibraryManager(BaseManager):
     """
-     Manager providing access to the
-    :term:`tape libraries <tape libraries>` of the HMC.
+    Manager providing access to the
+    :term:`tape libraries <tape library>` of the HMC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -133,19 +133,19 @@ class TapeLibraryManager(BaseManager):
         The listing of resources is handled in an optimized way:
 
         * If this manager is enabled for :ref:`auto-updating`, a locally
-        maintained resource list is used (which is automatically updated via
-        inventory notifications from the HMC) and the provided filter
-        arguments are applied.
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
 
         * Otherwise, if the filter arguments specify the resource name as a
-        single filter argument with a straight match string (i.e. without
-        regular expressions), an optimized lookup is performed based on a
-        locally maintained name-URI cache.
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
 
         * Otherwise, the HMC List operation is performed with the subset of the
-        provided filter arguments that can be handled on the HMC side and the
-        remaining filter arguments are applied on the client side on the list
-        result.
+          provided filter arguments that can be handled on the HMC side and the
+          remaining filter arguments are applied on the client side on the list
+          result.
 
         HMC/SE version requirements:
 
@@ -154,16 +154,16 @@ class TapeLibraryManager(BaseManager):
         Authorization requirements:
 
         * Object-access permission to any tape libraries to be included in the
-        result.
+          result.
 
         Parameters:
 
-        full_properties (bool):
+          full_properties (bool):
             Controls that the full set of resource properties for each returned
             tape library is being retrieved, vs. only the following short
             set: "object-uri", "cpc-uri", "name", and "state".
 
-        filter_args (dict):
+          filter_args (dict):
             Filter arguments that narrow the list of returned resources to
             those that match the specified filter arguments. For details, see
             :ref:`Filtering`.
@@ -172,15 +172,15 @@ class TapeLibraryManager(BaseManager):
 
         Returns:
 
-        : A list of :class:`~zhmcclient.TapeLibrary` objects.
+          : A list of :class:`~zhmcclient.TapeLibrary` objects.
 
         Raises:
 
-        :exc:`~zhmcclient.HTTPError`
-        :exc:`~zhmcclient.ParseError`
-        :exc:`~zhmcclient.AuthError`
-        :exc:`~zhmcclient.ConnectionError`
-        :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
 
         result_prop = "tape-libraries"
@@ -190,9 +190,7 @@ class TapeLibraryManager(BaseManager):
         )
 
     @logged_api_call
-    def request_zoning(
-        self, email_to_addresses=None, email_cc_addresses=None
-    ):
+    def request_zoning(self, email_to_addresses=None, email_cc_addresses=None):
         """
         Request tape library zoning configuration by sending email notifications
         to storage administrators.
@@ -212,26 +210,26 @@ class TapeLibraryManager(BaseManager):
 
         Parameters:
 
-        email_to_addresses (:term:`iterable` of :term:`string`): Email
+          email_to_addresses (:term:`iterable` of :term:`string`): Email
             addresses of one or more storage administrators to be notified.
             If `None` or empty, no email will be sent.
 
-        email_cc_addresses (:term:`iterable` of :term:`string`): Email
+          email_cc_addresses (:term:`iterable` of :term:`string`): Email
             addresses of one or more storage administrators to be copied
             on the notification email.
             If `None` or empty, nobody will be copied on the email.
 
         Returns:
 
-        dict: A dictionary with the operation results.
+          dict: A dictionary with the operation results.
 
         Raises:
 
-        :exc:`~zhmcclient.HTTPError`: HTTP status 409, reason 487 if no FCP
-            adapters are available on the CPC.
-        :exc:`~zhmcclient.ParseError`
-        :exc:`~zhmcclient.AuthError`
-        :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.HTTPError`: HTTP status 409, reason 487 if no FCP
+              adapters are available on the CPC.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
 
         body = {}
@@ -273,21 +271,21 @@ class TapeLibraryManager(BaseManager):
 
         * Object-access permission to the CPC.
         * Task permission to the "Configure Storage - System Programmer" task
-        or to the "Configure Storage - Storage Administrator" task.
+          or to the "Configure Storage - Storage Administrator" task.
 
         Parameters:
 
-        force_restart (bool):
+          force_restart (bool):
             Indicates if there is an in-progress discovery operation for the
             CPC, it should be terminated and started again.
             If `False` or there is no in-progress discovery operation,
             a new one is started.
 
-        wait_for_completion (bool):
+          wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
             of the asynchronous job performing the discovery.
 
-        operation_timeout (:term:`number`):
+          operation_timeout (:term:`number`):
             Timeout in seconds, for waiting for completion of the asynchronous
             job performing the discovery. The special value 0 means that no
             timeout is set. `None` means that the default async operation
@@ -297,24 +295,22 @@ class TapeLibraryManager(BaseManager):
 
         Returns:
 
-        `None` or :class:`~zhmcclient.Job`:
-
-            If `wait_for_completion` is `True`, returns nothing.
-
-            If `wait_for_completion` is `False`, returns a
-            :class:`~zhmcclient.Job` object representing the asynchronously
-            executing job on the HMC.
-            This job does not support cancellation.
+          `None` or :class:`~zhmcclient.Job`:
+          If `wait_for_completion` is `True`, returns nothing.
+          If `wait_for_completion` is `False`, returns a
+          :class:`~zhmcclient.Job` object representing the asynchronously
+          executing job on the HMC.
+          This job does not support cancellation.
 
         Raises:
 
-        :exc:`~zhmcclient.HTTPError`: HTTP status 409, reason 501 if the CPC
-            does not have a management-world-wide-port-name configured.
-        :exc:`~zhmcclient.ParseError`
-        :exc:`~zhmcclient.AuthError`
-        :exc:`~zhmcclient.ConnectionError`
-        :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
-            waiting for completion of the operation.
+          :exc:`~zhmcclient.HTTPError`: HTTP status 409, reason 501 if the CPC
+              does not have a management-world-wide-port-name configured.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+              waiting for completion of the operation.
         """
 
         body = {}
@@ -383,14 +379,14 @@ class TapeLibrary(BaseResource):
 
         * Object-access permission to this tape library.
         * Task permissions are: "Configure Storage – System Programmer" or
-         "Configure Storage – Storage Administrator"
+          "Configure Storage – Storage Administrator"
 
         Raises:
 
-        :exc:`~zhmcclient.HTTPError`
-        :exc:`~zhmcclient.ParseError`
-        :exc:`~zhmcclient.AuthError`
-        :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(uri=self.uri + "/operations/undefine",
                                   resource=self)
@@ -419,17 +415,17 @@ class TapeLibrary(BaseResource):
 
         Parameters:
 
-        properties (dict): New values for the properties to be updated.
+          properties (dict): New values for the properties to be updated.
             Properties not to be updated are omitted.
             Allowable properties are the writeable properties defined for
             the tape library resource in the :term:`HMC API` book.
 
         Raises:
 
-        :exc:`~zhmcclient.HTTPError`
-        :exc:`~zhmcclient.ParseError`
-        :exc:`~zhmcclient.AuthError`
-        :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         result = self.manager.session.post(self.uri,
                                            resource=self, body=properties)

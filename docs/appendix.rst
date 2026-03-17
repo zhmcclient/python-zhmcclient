@@ -400,11 +400,11 @@ Resources scoped to the HMC
   MFA Server Definition
      The information in an HMC about an MFA server that may be used for
      HMC user authorization purposes.
-     
+
   SSO Server Definition
      The information in an HMC about an SSO server that may be used for
      HMC user authorization purposes.
- 
+
   Password Rule
      A rule which HMC users need to follow when creating a HMC logon password.
 
@@ -539,13 +539,13 @@ Resources scoped to CPCs in DPM mode
 
   Storage Volume Template
      A template for :term:`Storage Volumes <Storage Volume>`.
-   
-   Tape library
+
+  Tape library
      A Tape Library represents one physical tape storage unit connected to
      a CPC.Tape libraries are automatically discovered,but discovery requires
      preprocessing,A single Worldwide Port Name (WWPN) must be zoned so the CPC
      can see the tape library.
-     For details, see section :ref:`Tape Library`.
+     For details, see section :ref:`Tape Libraries`.
 
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always

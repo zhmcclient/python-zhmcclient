@@ -255,8 +255,7 @@ class Console(BaseResource):
     def tape_library(self):
         """
         :class:`~zhmcclient.TapeLibraryManager`: Access to the
-        :term:`TapeLibrary <TapeLibrary>` in this
-        Console.
+        :term:`tape libraries <tape library>` of this Console.
         """
         # We do here some lazy loading.
         if not self._tape_library:
