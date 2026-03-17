@@ -933,7 +933,27 @@ local clone of the python-zhmcclient Git repo.
 
     Roll back the PR into any maintained stable branches.
 
-4.  Create and push the release branch (replace M,N,U accordingly):
+4.  Check for any Mend issues
+
+    1. Push the ``master`` branch to the internal repo to bring it in sync with
+       the public repo. This only makes a change for Mend if the pip
+       requirements or constraints files have changed, but we do it always:
+
+       .. code-block:: sh
+
+           git checkout master
+           git pull
+           git push ibmfork master
+
+    2. Process any Mend issues in the internal repo.
+
+       If there are any Mend issues in the
+       `internal issue tracker <https://github.ibm.com/zhmcclient/python-zhmcclient/issues>`_,
+       fix them in a separate PR or PRs.
+
+       Roll back the PR(s) into any maintained stable branches.
+
+5.  Create and push the release branch (replace M,N,U accordingly):
 
     .. code-block:: sh
 
@@ -960,7 +980,7 @@ local clone of the python-zhmcclient Git repo.
     If this command fails, the fix can be committed to the release branch
     and the command above can be retried.
 
-5.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
+6.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: GitHub uses ``master`` as the default target branch. When
     releasing based on a stable branch, you need to change the target branch
@@ -975,18 +995,18 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-6.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+7.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-7.  On GitHub, close milestone ``M.N.U``.
+8.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix (probably step 1 was not performed).
 
-8.  Publish the package (replace M,N,U accordingly):
+9.  Publish the package (replace M,N,U accordingly):
 
     .. code-block:: sh
 
@@ -1008,7 +1028,7 @@ local clone of the python-zhmcclient Git repo.
     GitHub, and finally creates a new stable branch on GitHub if the master
     branch was released.
 
-9.  Verify the publishing
+10. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -1021,7 +1041,7 @@ local clone of the python-zhmcclient Git repo.
     * Verify that the new version has a release on GitHub at
       https://github.com/zhmcclient/python-zhmcclient/releases
 
-10. Verify the documentation on ReadTheDocs
+11. Verify the documentation on ReadTheDocs
 
     ReadTheDocs automatically activates the new version and sets it as a
     default version. Branches such as 'master' or 'stable' are no longer
@@ -1036,7 +1056,7 @@ local clone of the python-zhmcclient Git repo.
       the URL for the new version. This verifies that it has been activated and
       set as the default version.
 
-11. Hide previous fix version on ReadTheDocs
+12. Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
     https://readthedocs.org/accounts/login/, go to
