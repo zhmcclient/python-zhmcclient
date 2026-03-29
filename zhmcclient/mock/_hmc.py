@@ -1830,7 +1830,9 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
         # pylint: disable=useless-super-delegation
         """
         Add a faked SSO Server Definition resource.
+
         Parameters:
+
           properties (dict):
             Resource properties.
             Special handling and requirements for certain properties:
@@ -1842,7 +1844,9 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
               if not specified.
             * All of the other class-soecific resource properties will be set
               to a default value consistent with the HMC data model.
+
         Returns:
+
           :class:`~zhmcclient.mock.FakedSSOServerDefinition`: The faked
           SSOServerDefinition resource.
         """
