@@ -252,7 +252,7 @@ jobs:
         COVERALLS_SERVICE_NAME: github
         COVERALLS_SERVICE_JOB_ID: "${{ github.run_id }}"
         COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
-      uses: nick-fields/retry@v3
+      uses: nick-fields/retry@v4
       with:
         timeout_seconds: 30
         max_attempts: 3
@@ -309,7 +309,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
-      uses: nick-fields/retry@v3
+      uses: nick-fields/retry@v4
       with:
         timeout_seconds: 30
         max_attempts: 3
