@@ -37,6 +37,7 @@ import copy
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._tape_link import TapeLinkManager
 from ._logging import logged_api_call
 from ._utils import RC_TAPE_LIBRARY
 
@@ -364,8 +365,20 @@ class TapeLibrary(BaseResource):
         )
         super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
+        self._tape_links = None
         self._tape_library = None
         self._cpc = None
+
+    @property
+    def tape_links(self):
+        """
+        :class:`~zhmcclient.TapeLinkManager`: Access to the
+        :term:`tape links <tape link>` in this tape library.
+        """
+        # We do here some lazy loading.
+        if not self._tape_links:
+            self._tape_links = TapeLinkManager(self)
+        return self._tape_links
 
     @logged_api_call
     def undefine(self):
