@@ -539,13 +539,36 @@ Resources scoped to CPCs in DPM mode
 
   Storage Volume Template
      A template for :term:`Storage Volumes <Storage Volume>`.
-
-  Tape library
+   
+   Tape Library
      A Tape Library represents one physical tape storage unit connected to
-     a CPC.Tape libraries are automatically discovered,but discovery requires
-     preprocessing,A single Worldwide Port Name (WWPN) must be zoned so the CPC
+     a CPC. Tape libraries are automatically discovered, but discovery requires
+     preprocessing. A single Worldwide Port Name (WWPN) must be zoned so the CPC
      can see the tape library.
      For details, see section :ref:`Tape Libraries`.
+
+     Tape Link
+      A Tape Link represents a single tape link associated with a DPM-enabled
+      :term:`CPC`. Tape links define pathways to :term:`Tape Library` storage
+      that can be attached to :term:`Partitions <Partition>`.
+
+      When a tape link is attached to a partition, its fulfilled resources are
+      virtualized and the partition's view of them is represented by
+      :term:`Virtual Tape Resources <Virtual Tape Resource>`.
+
+      Tape Link resources are top-level resources whose conceptual parent is
+      the :term:`Console`; a linked tape library is identified by the
+      ``tape-library-uri`` property of the tape link.
+
+      For details, see section :ref:`Tape Links`..
+
+   Virtual Tape Resource
+     A representation of a tape-related z/Architecture device in a :term:`Partition`.
+     A Virtual Tape Resource object represents access to a tape drive through a
+     :term:`Tape Link`. Each virtual tape resource is associated with a specific
+     adapter port and provides the partition with a device number for accessing
+     the tape drive.
+     For details, see section :ref:`Virtual Tape Resources`.
 
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always
