@@ -31,6 +31,7 @@ from ._utils import timestamp_from_datetime, divide_filter_args, \
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._tape_library import TapeLibraryManager
+from ._tape_link import TapeLinkManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -213,6 +214,7 @@ class Console(BaseResource):
         self._storage_groups = None
         self._storage_group_templates = None
         self._tape_library = None
+        self._tape_links = None
         self._partition_links = None
         self._users = None
         self._user_roles = None
@@ -261,6 +263,17 @@ class Console(BaseResource):
         if not self._tape_library:
             self._tape_library = TapeLibraryManager(self)
         return self._tape_library
+
+    @property
+    def tape_links(self):
+        """
+        :class:`~zhmcclient.StorageGroupManager`:
+          Manager object for the Storage Groups in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._tape_links:
+            self._tape_links = TapeLinkManager(self)
+        return self._tape_links
 
     @property
     def partition_links(self):
@@ -1643,6 +1656,7 @@ class Console(BaseResource):
                 "unmanaged_cpcs": [...],
                 "storage_groups": [...],
                 "tape_libraries": [...],
+                "tape_links": [...],
             }
 
         Returns:
@@ -1684,6 +1698,9 @@ class Console(BaseResource):
         tape_libraries = self.tape_library.dump()
         if tape_libraries:
             resource_dict['tape_libraries'] = tape_libraries
+        tape_links = self.tape_links.dump()
+        if tape_links:
+            resource_dict['tape_links'] = tape_links
 
         # Note: Unmanaged CPCs are not dumped, since their properties cannot
         #       be retrieved.

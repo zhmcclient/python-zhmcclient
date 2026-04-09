@@ -30,15 +30,10 @@ from tests.common.utils import assert_resources
 # Object IDs and names of our faked resources:
 CPC_OID = 'fake-cpc1-oid'
 CPC_URI = f'/api/cpcs/{CPC_OID}'
-PARTITION_OID = 'partition1-oid'
-PARTITION_URI = f'/api/partitions/{PARTITION_OID}'
-TL_OID = 'tape-library1-oid'
-TL_NAME = 'tape-library 1'
-TL_URI = f'/api/tape-libraries/{TL_OID}'
-TLINK1_OID = 'tlink1-oid'
-TLINK1_NAME = 'tape link 1'
-TLINK2_OID = 'tlink2-oid'
-TLINK2_NAME = 'tape link 2'
+TLINK1_OID = 'tl1-oid'
+TLINK1_NAME = 'tl 1'
+TLINK2_OID = 'tl2-oid'
+TLINK2_NAME = 'tl 2'
 
 
 class TestTapeLink:
@@ -63,26 +58,17 @@ class TestTapeLink:
             'parent': None,
             'class': 'cpc',
             'name': 'fake-cpc1-name',
-            'description': 'CPC #1 (DPM mode)',
+            'description': 'CPC #1 (DPM mode,storage mgmt feature enabled)',
             'status': 'active',
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
+            'available-features-list': [
+                dict(name='dpm-storage-management', state=True),
+            ],
         })
         assert self.faked_cpc.uri == CPC_URI
         self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
-
-        # Add a faked partition
-        self.faked_partition = self.faked_cpc.partitions.add({
-            'object-id': PARTITION_OID,
-            # object-uri is set up automatically
-            'parent': CPC_URI,
-            'class': 'partition',
-            'name': 'fake-partition1-name',
-            'description': 'Partition #1',
-            'status': 'stopped',
-        })
-        assert self.faked_partition.uri == PARTITION_URI
 
         # Add a faked console
         self.faked_console = self.session.hmc.consoles.add({
@@ -95,69 +81,61 @@ class TestTapeLink:
         })
         self.console = self.client.consoles.console
 
-        # Add a faked tape library
-        self.faked_tape_library = self.faked_console.tape_library.add({
-            'object-id': TL_OID,
+    def add_tape_link1(self):
+        """Add tape link 1."""
+
+        faked_tape_link = self.faked_console.tape_links.add({
+            'object-id': TLINK1_OID,
             # object-uri will be automatically set
             # parent will be automatically set
             # class will be automatically set
             'cpc-uri': CPC_URI,
-            'name': TL_NAME,
-            'description': 'Tape Library #1',
-            'state': 'online',
-        })
-        assert self.faked_tape_library.uri == TL_URI
-        self.tape_library = self.console.tape_library.find(name=TL_NAME)
-
-    def add_tape_link1(self):
-        """Add tape link 1."""
-
-        faked_tape_link = self.faked_tape_library.tape_links.add({
-            'element-id': TLINK1_OID,
-            # element-uri will be automatically set
-            # parent will be automatically set
-            # class will be automatically set
             'name': TLINK1_NAME,
             'description': 'Tape Link #1',
-            'partition-uri': PARTITION_URI,
+            'max-partitions': 2,
+            'fulfillment-state': 'complete',
+            'connectivity': 4,
         })
         return faked_tape_link
 
     def add_tape_link2(self):
         """Add tape link 2."""
 
-        faked_tape_link = self.faked_tape_library.tape_links.add({
-            'element-id': TLINK2_OID,
-            # element-uri will be automatically set
+        faked_tape_link = self.faked_console.tape_links.add({
+            'object-id': TLINK2_OID,
+            # object-uri will be automatically set
             # parent will be automatically set
             # class will be automatically set
+            'cpc-uri': CPC_URI,
             'name': TLINK2_NAME,
             'description': 'Tape Link #2',
-            'partition-uri': PARTITION_URI,
+            'max-partitions': 2,
+            'fulfillment-state': 'complete',
+            'connectivity': 4,
         })
         return faked_tape_link
 
     def test_tlm_initial_attrs(self):
         """Test initial attributes of TapeLinkManager."""
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         assert isinstance(tape_link_mgr, TapeLinkManager)
 
         # Verify all public properties of the manager object
         assert tape_link_mgr.resource_class == TapeLink
         assert tape_link_mgr.session == self.session
-        assert tape_link_mgr.parent == self.tape_library
-        assert tape_link_mgr.tape_library == self.tape_library
+        assert tape_link_mgr.parent == self.console
+        assert tape_link_mgr.console == self.console
 
     # TODO: Test for TapeLinkManager.__repr__()
 
     testcases_tlm_list_full_properties = (
         "full_properties_kwargs, prop_names", [
             ({},
-             ['element-uri', 'name', 'partition-uri']),
+             ['object-uri', 'cpc-uri', 'name', 'fulfillment-state']),
             (dict(full_properties=False),
-             ['element-uri', 'name', 'partition-uri']),
+             ['object-uri', 'cpc-uri', 'name', 'fulfillment-state']),
         ]
     )
 
@@ -173,7 +151,7 @@ class TestTapeLink:
         faked_tape_link2 = self.add_tape_link2()
 
         exp_faked_tape_links = [faked_tape_link1, faked_tape_link2]
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         # Execute the code to be tested
         tape_links = tape_link_mgr.list(**full_properties_kwargs)
@@ -182,19 +160,19 @@ class TestTapeLink:
 
     testcases_tlm_list_filter_args = (
         "filter_args, exp_names", [
-            ({'element-id': TLINK1_OID},
+            ({'object-id': TLINK1_OID},
              [TLINK1_NAME]),
-            ({'element-id': TLINK2_OID},
+            ({'object-id': TLINK2_OID},
              [TLINK2_NAME]),
-            ({'element-id': [TLINK1_OID, TLINK2_OID]},
+            ({'object-id': [TLINK1_OID, TLINK2_OID]},
              [TLINK1_NAME, TLINK2_NAME]),
-            ({'element-id': [TLINK1_OID, TLINK1_OID]},
+            ({'object-id': [TLINK1_OID, TLINK1_OID]},
              [TLINK1_NAME]),
-            ({'element-id': TLINK1_OID + 'foo'},
+            ({'object-id': TLINK1_OID + 'foo'},
              []),
-            ({'element-id': [TLINK1_OID, TLINK2_OID + 'foo']},
+            ({'object-id': [TLINK1_OID, TLINK2_OID + 'foo']},
              [TLINK1_NAME]),
-            ({'element-id': [TLINK2_OID + 'foo', TLINK1_OID]},
+            ({'object-id': [TLINK2_OID + 'foo', TLINK1_OID]},
              [TLINK1_NAME]),
             ({'name': TLINK1_NAME},
              [TLINK1_NAME]),
@@ -210,31 +188,31 @@ class TestTapeLink:
              [TLINK1_NAME]),
             ({'name': [TLINK1_NAME, TLINK1_NAME]},
              [TLINK1_NAME]),
-            ({'name': '.*tape link 1'},
+            ({'name': '.*tl 1'},
              [TLINK1_NAME]),
-            ({'name': 'tape link 1.*'},
+            ({'name': 'tl 1.*'},
              [TLINK1_NAME]),
-            ({'name': 'tape link .'},
+            ({'name': 'tl .'},
              [TLINK1_NAME, TLINK2_NAME]),
-            ({'name': '.ape link 1'},
+            ({'name': '.l 1'},
              [TLINK1_NAME]),
             ({'name': '.+'},
              [TLINK1_NAME, TLINK2_NAME]),
-            ({'name': 'tape link 1.+'},
+            ({'name': 'tl 1.+'},
              []),
-            ({'name': '.+tape link 1'},
+            ({'name': '.+tl 1'},
              []),
             ({'name': TLINK1_NAME,
-              'element-id': TLINK1_OID},
+              'object-id': TLINK1_OID},
              [TLINK1_NAME]),
             ({'name': TLINK1_NAME,
-              'element-id': TLINK1_OID + 'foo'},
+              'object-id': TLINK1_OID + 'foo'},
              []),
             ({'name': TLINK1_NAME + 'foo',
-              'element-id': TLINK1_OID},
+              'object-id': TLINK1_OID},
              []),
             ({'name': TLINK1_NAME + 'foo',
-              'element-id': TLINK1_OID + 'foo'},
+              'object-id': TLINK1_OID + 'foo'},
              []),
         ]
     )
@@ -250,7 +228,7 @@ class TestTapeLink:
         self.add_tape_link1()
         self.add_tape_link2()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         # Execute the code to be tested
         tape_links = tape_link_mgr.list(filter_args=filter_args)
@@ -272,8 +250,8 @@ class TestTapeLink:
              None,
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'name': 'fake-tlink-x',
-              'partition-uri': PARTITION_URI},
-             ['element-uri', 'name', 'partition-uri'],
+              'cpc-uri': CPC_URI},
+             ['object-uri', 'name', 'cpc-uri'],
              None),
         ]
     )
@@ -285,7 +263,7 @@ class TestTapeLink:
             self, input_props, exp_prop_names, exp_exc):
         """Test TapeLinkManager.create()."""
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         if exp_exc is not None:
 
@@ -303,7 +281,7 @@ class TestTapeLink:
 
             # Execute the code to be tested.
             # Note: the TapeLink object returned by TapeLink.create()
-            # has the input properties plus 'element-uri'.
+            # has the input properties plus 'object-uri'.
             tape_link = tape_link_mgr.create(properties=input_props)
 
             # Check the resource for consistency within itself
@@ -312,7 +290,7 @@ class TestTapeLink:
             exp_tape_link_name = tape_link.properties['name']
             assert tape_link_name == exp_tape_link_name
             tape_link_uri = tape_link.uri
-            exp_tape_link_uri = tape_link.properties['element-uri']
+            exp_tape_link_uri = tape_link.properties['object-uri']
             assert tape_link_uri == exp_tape_link_uri
 
             # Check the properties against the expected names and values
@@ -335,21 +313,21 @@ class TestTapeLink:
         faked_tape_link = self.add_tape_link1()
         tape_link_oid = faked_tape_link.oid
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         # Execute the code to be tested
         tape_link = tape_link_mgr.resource_object(tape_link_oid)
 
-        tape_link_uri = f"{TL_URI}/tape-links/{tape_link_oid}"
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
 
         assert isinstance(tape_link, TapeLink)
 
         # Note: Properties inherited from BaseResource are tested there,
         # but we test them again:
-        assert tape_link.properties['element-uri'] == tape_link_uri
-        assert tape_link.properties['element-id'] == tape_link_oid
+        assert tape_link.properties['object-uri'] == tape_link_uri
+        assert tape_link.properties['object-id'] == tape_link_oid
         assert tape_link.properties['class'] == 'tape-link'
-        assert tape_link.properties['parent'] == TL_URI
+        assert tape_link.properties['parent'] == self.console.uri
 
     def test_tl_repr(self):
         """Test TapeLink.__repr__()."""
@@ -357,7 +335,7 @@ class TestTapeLink:
         # Add a faked tape link
         faked_tape_link = self.add_tape_link1()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=faked_tape_link.name)
 
         # Execute the code to be tested
@@ -377,7 +355,7 @@ class TestTapeLink:
         faked_tape_link = self.add_tape_link1()
         self.add_tape_link2()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
 
         tape_link = tape_link_mgr.find(name=faked_tape_link.name)
 
@@ -400,7 +378,7 @@ class TestTapeLink:
         tl3_props = copy.deepcopy(faked_tape_link.properties)
         tl3_props['description'] = 'Third tape link'
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=tape_link_name)
 
         # Execute the deletion code to be tested.
@@ -446,7 +424,7 @@ class TestTapeLink:
         self.add_tape_link1()
         self.add_tape_link2()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=tape_link_name)
 
         tape_link.pull_full_properties()
@@ -487,7 +465,7 @@ class TestTapeLink:
         faked_tape_link = self.add_tape_link1()
         tape_link_name = faked_tape_link.name
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=tape_link_name)
 
         new_tape_link_name = "new-" + tape_link_name
@@ -530,46 +508,13 @@ class TestTapeLink:
         assert new_tape_link_list.properties['name'] == \
             new_tape_link_name
 
-    def test_tl_get_partitions(self):
-        """Test TapeLink.get_partitions()."""
-
-        # Add a faked tape link
-        faked_tape_link = self.add_tape_link1()
-
-        tape_link_mgr = self.tape_library.tape_links
-        tape_link = tape_link_mgr.find(name=faked_tape_link.name)
-
-        # Execute the code to be tested
-        partitions = tape_link.get_partitions()
-
-        # Verify the result
-        assert isinstance(partitions, list)
-        # The partition should be in the list
-        assert len(partitions) >= 0
-
-    def test_tl_get_partitions_with_filters(self):
-        """Test TapeLink.get_partitions() with name and status filters."""
-
-        # Add a faked tape link
-        faked_tape_link = self.add_tape_link1()
-
-        tape_link_mgr = self.tape_library.tape_links
-        tape_link = tape_link_mgr.find(name=faked_tape_link.name)
-
-        # Execute the code to be tested with filters
-        partitions = tape_link.get_partitions(
-            name='fake-partition.*', status='stopped')
-
-        # Verify the result
-        assert isinstance(partitions, list)
-
     def test_tl_get_histories(self):
         """Test TapeLink.get_histories()."""
 
         # Add a faked tape link
         faked_tape_link = self.add_tape_link1()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=faked_tape_link.name)
 
         # Execute the code to be tested
@@ -586,7 +531,7 @@ class TestTapeLink:
         # Add a faked tape link
         faked_tape_link = self.add_tape_link1()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=faked_tape_link.name)
 
         # Execute the code to be tested
@@ -603,7 +548,7 @@ class TestTapeLink:
         # Add a faked tape link
         faked_tape_link = self.add_tape_link1()
 
-        tape_link_mgr = self.tape_library.tape_links
+        tape_link_mgr = self.console.tape_links
         tape_link = tape_link_mgr.find(name=faked_tape_link.name)
 
         # Prepare update properties
@@ -619,19 +564,3 @@ class TestTapeLink:
         assert isinstance(result, dict)
         # The result should contain operation results
         # (actual structure depends on HMC API response)
-
-    def test_tl_partition_property(self):
-        """Test TapeLink.partition property."""
-
-        # Add a faked tape link
-        faked_tape_link = self.add_tape_link1()
-
-        tape_link_mgr = self.tape_library.tape_links
-        tape_link = tape_link_mgr.find(name=faked_tape_link.name)
-
-        # Execute the code to be tested
-        partition = tape_link.partition
-
-        # Verify the result
-        assert partition is not None
-        assert partition.uri == PARTITION_URI

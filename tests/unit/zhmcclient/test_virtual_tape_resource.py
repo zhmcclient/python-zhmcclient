@@ -40,7 +40,7 @@ TL_NAME = 'tape-library 1'
 TL_URI = f'/api/tape-libraries/{TL_OID}'
 TLINK_OID = 'tlink1-oid'
 TLINK_NAME = 'tape link 1'
-TLINK_URI = f'{TL_URI}/tape-links/{TLINK_OID}'
+TLINK_URI = f'/api/tape-links/{TLINK_OID}'
 VTR1_OID = 'vtr1-oid'
 VTR1_NAME = 'virtual tape resource 1'
 VTR2_OID = 'vtr2-oid'
@@ -131,17 +131,18 @@ class TestVirtualTapeResource:
         self.tape_library = self.console.tape_library.find(name=TL_NAME)
 
         # Add a faked tape link
-        self.faked_tape_link = self.faked_tape_library.tape_links.add({
-            'element-id': TLINK_OID,
-            # element-uri will be automatically set
+        self.faked_tape_link = self.faked_console.tape_links.add({
+            'object-id': TLINK_OID,
+            # object-uri will be automatically set
             # parent will be automatically set
             # class will be automatically set
+            'cpc-uri': CPC_URI,
             'name': TLINK_NAME,
             'description': 'Tape Link #1',
             'partition-uri': PARTITION_URI,
         })
         assert self.faked_tape_link.uri == TLINK_URI
-        self.tape_link = self.tape_library.tape_links.find(name=TLINK_NAME)
+        self.tape_link = self.console.tape_links.find(name=TLINK_NAME)
 
     def add_vtr1(self):
         """Add virtual tape resource 1."""
@@ -337,6 +338,7 @@ class TestVirtualTapeResource:
         assert vtr.properties['element-uri'] == vtr_uri
         assert vtr.properties['element-id'] == vtr_oid
         assert vtr.properties['class'] == 'virtual-tape-resource'
+        # Parent is the tape link URI
         assert vtr.properties['parent'] == TLINK_URI
 
     def test_vtr_repr(self):

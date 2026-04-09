@@ -48,42 +48,32 @@ def test_vtr_find_list(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get virtual tape resources for this tape link
+        vtr_list = tlink.virtual_tape_resources.list()
+        if not vtr_list:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        vtr_list = pick_test_resources(vtr_list)
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
-
-            # Get virtual tape resources for this tape link
-            vtr_list = tlink.virtual_tape_resources.list()
-            if not vtr_list:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
-
-            vtr_list = pick_test_resources(vtr_list)
-
-            for vtr in vtr_list:
-                print(f"Testing with Virtual Tape Resource "
-                      f"{vtr.name!r}")
-                runtest_find_list(
-                    hmc_session, tlink.virtual_tape_resources, vtr.name,
-                    'name', 'element-uri', VTR_VOLATILE_PROPS,
-                    VTR_MINIMAL_PROPS, VTR_LIST_PROPS)
+        for vtr in vtr_list:
+            print(f"Testing with Virtual Tape Resource "
+                  f"{vtr.name!r}")
+            runtest_find_list(
+                hmc_session, tlink.virtual_tape_resources, vtr.name,
+                'name', 'element-uri', VTR_VOLATILE_PROPS,
+                VTR_MINIMAL_PROPS, VTR_LIST_PROPS)
 
 
 def test_vtr_property(hmc_session):
@@ -94,43 +84,33 @@ def test_vtr_property(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get virtual tape resources for this tape link
+        vtr_list = tlink.virtual_tape_resources.list()
+        if not vtr_list:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        vtr_list = pick_test_resources(vtr_list)
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        for vtr in vtr_list:
+            print(f"Testing with Virtual Tape Resource "
+                  f"{vtr.name!r}")
 
-            # Get virtual tape resources for this tape link
-            vtr_list = tlink.virtual_tape_resources.list()
-            if not vtr_list:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
+            # Select a property that is not returned by list()
+            non_list_prop = 'class'
 
-            vtr_list = pick_test_resources(vtr_list)
-
-            for vtr in vtr_list:
-                print(f"Testing with Virtual Tape Resource "
-                      f"{vtr.name!r}")
-
-                # Select a property that is not returned by list()
-                non_list_prop = 'class'
-
-                runtest_get_properties(vtr.manager, non_list_prop)
+            runtest_get_properties(vtr.manager, non_list_prop)
 
 
 def test_vtr_update_properties(hmc_session):
@@ -141,66 +121,56 @@ def test_vtr_update_properties(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get virtual tape resources for this tape link
+        vtr_list = tlink.virtual_tape_resources.list()
+        if not vtr_list:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        vtr_list = pick_test_resources(vtr_list)
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        for vtr in vtr_list:
+            print(f"Testing with Virtual Tape Resource "
+                  f"{vtr.name!r}")
 
-            # Get virtual tape resources for this tape link
-            vtr_list = tlink.virtual_tape_resources.list()
-            if not vtr_list:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
+            # Get current properties
+            vtr.pull_full_properties()
+            original_desc = vtr.get_property('description')
 
-            vtr_list = pick_test_resources(vtr_list)
+            # Update description
+            new_desc = 'Updated by end2end test'
+            print(f"Updating description to: {new_desc!r}")
+            vtr.update_properties({'description': new_desc})
 
-            for vtr in vtr_list:
-                print(f"Testing with Virtual Tape Resource "
-                      f"{vtr.name!r}")
+            # Verify the update
+            vtr.pull_full_properties()
+            updated_desc = vtr.get_property('description')
+            assert updated_desc == new_desc, \
+                f"Description was not updated correctly: {updated_desc!r}"
 
-                # Get current properties
-                vtr.pull_full_properties()
-                original_desc = vtr.get_property('description')
+            # Restore original description
+            print(f"Restoring description to: {original_desc!r}")
+            vtr.update_properties({'description': original_desc})
 
-                # Update description
-                new_desc = 'Updated by end2end test'
-                print(f"Updating description to: {new_desc!r}")
-                vtr.update_properties({'description': new_desc})
+            # Verify restoration
+            vtr.pull_full_properties()
+            restored_desc = vtr.get_property('description')
+            assert restored_desc == original_desc, \
+                f"Description was not restored correctly: {restored_desc!r}"
 
-                # Verify the update
-                vtr.pull_full_properties()
-                updated_desc = vtr.get_property('description')
-                assert updated_desc == new_desc, \
-                    f"Description was not updated correctly: {updated_desc!r}"
-
-                # Restore original description
-                print(f"Restoring description to: {original_desc!r}")
-                vtr.update_properties({'description': original_desc})
-
-                # Verify restoration
-                vtr.pull_full_properties()
-                restored_desc = vtr.get_property('description')
-                assert restored_desc == original_desc, \
-                    f"Description was not restored correctly: {restored_desc!r}"
-
-                print(f"Successfully tested update_properties() for "
-                      f"Virtual Tape Resource {vtr.name!r}")
+            print(f"Successfully tested update_properties() for "
+                  f"Virtual Tape Resource {vtr.name!r}")
 
 
 def test_vtr_attached_partition(hmc_session):
@@ -211,49 +181,39 @@ def test_vtr_attached_partition(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get virtual tape resources for this tape link
+        vtr_list = tlink.virtual_tape_resources.list()
+        if not vtr_list:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        vtr_list = pick_test_resources(vtr_list)
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        for vtr in vtr_list:
+            print(f"Testing with Virtual Tape Resource "
+                  f"{vtr.name!r}")
 
-            # Get virtual tape resources for this tape link
-            vtr_list = tlink.virtual_tape_resources.list()
-            if not vtr_list:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
+            # Get the attached partition
+            partition = vtr.attached_partition
+            assert partition is not None, \
+                f"VTR {vtr.name!r} has no attached partition"
 
-            vtr_list = pick_test_resources(vtr_list)
-
-            for vtr in vtr_list:
-                print(f"Testing with Virtual Tape Resource "
-                      f"{vtr.name!r}")
-
-                # Get the attached partition
-                partition = vtr.attached_partition
-                assert partition is not None, \
-                    f"VTR {vtr.name!r} has no attached partition"
-
-                # Verify partition URI matches
-                vtr.pull_full_properties()
-                partition_uri = vtr.get_property('partition-uri')
-                assert partition.uri == partition_uri, \
-                    f"Partition URI mismatch for VTR {vtr.name!r}"
+            # Verify partition URI matches
+            vtr.pull_full_properties()
+            partition_uri = vtr.get_property('partition-uri')
+            assert partition.uri == partition_uri, \
+                f"Partition URI mismatch for VTR {vtr.name!r}"
 
 
 def test_vtr_adapter_port(hmc_session):
@@ -264,55 +224,45 @@ def test_vtr_adapter_port(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get virtual tape resources for this tape link
+        vtr_list = tlink.virtual_tape_resources.list()
+        if not vtr_list:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        vtr_list = pick_test_resources(vtr_list)
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        for vtr in vtr_list:
+            print(f"Testing with Virtual Tape Resource "
+                  f"{vtr.name!r}")
 
-            # Get virtual tape resources for this tape link
-            vtr_list = tlink.virtual_tape_resources.list()
-            if not vtr_list:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
+            # Get full properties to ensure adapter-port-uri is available
+            vtr.pull_full_properties()
+            adapter_port_uri = vtr.get_property('adapter-port-uri')
+
+            if adapter_port_uri is None:
+                print(f"Skipping VTR {vtr.name!r} - no adapter port URI")
                 continue
 
-            vtr_list = pick_test_resources(vtr_list)
+            # Get the adapter port
+            adapter_port = vtr.adapter_port
+            assert adapter_port is not None, \
+                f"Virtual Tape Resource {vtr.name!r} has no adapter port"
 
-            for vtr in vtr_list:
-                print(f"Testing with Virtual Tape Resource "
-                      f"{vtr.name!r}")
-
-                # Get full properties to ensure adapter-port-uri is available
-                vtr.pull_full_properties()
-                adapter_port_uri = vtr.get_property('adapter-port-uri')
-
-                if adapter_port_uri is None:
-                    print(f"Skipping VTR {vtr.name!r} - no adapter port URI")
-                    continue
-
-                # Get the adapter port
-                adapter_port = vtr.adapter_port
-                assert adapter_port is not None, \
-                    f"Virtual Tape Resource {vtr.name!r} has no adapter port"
-
-                # Verify adapter port URI matches
-                assert adapter_port.uri == adapter_port_uri, \
-                    f"Adapter port URI mismatch for VTR {vtr.name!r}"
+            # Verify adapter port URI matches
+            assert adapter_port.uri == adapter_port_uri, \
+                f"Adapter port URI mismatch for VTR {vtr.name!r}"
 
 
 def test_vtr_filter_by_device_number(hmc_session):
@@ -323,50 +273,40 @@ def test_vtr_filter_by_device_number(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get all virtual tape resources for this tape link
+        all_vtrs = tlink.virtual_tape_resources.list()
+        if not all_vtrs:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        # Pick one to test filtering
+        test_vtr = all_vtrs[0]
+        device_number = test_vtr.get_property('device-number')
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        print(f"Testing filter by device-number: {device_number!r}")
 
-            # Get all virtual tape resources for this tape link
-            all_vtrs = tlink.virtual_tape_resources.list()
-            if not all_vtrs:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
+        # Filter by device number
+        filtered_vtrs = tlink.virtual_tape_resources.list(
+            filter_args={'device-number': device_number})
 
-            # Pick one to test filtering
-            test_vtr = all_vtrs[0]
-            device_number = test_vtr.get_property('device-number')
+        assert len(filtered_vtrs) >= 1, \
+            f"No VTRs found with device-number {device_number!r}"
 
-            print(f"Testing filter by device-number: {device_number!r}")
-
-            # Filter by device number
-            filtered_vtrs = tlink.virtual_tape_resources.list(
-                filter_args={'device-number': device_number})
-
-            assert len(filtered_vtrs) >= 1, \
-                f"No VTRs found with device-number {device_number!r}"
-
-            # Verify all returned resources have the correct device number
-            for vtr in filtered_vtrs:
-                assert (vtr.get_property('device-number') ==
-                        device_number)
+        # Verify all returned resources have the correct device number
+        for vtr in filtered_vtrs:
+            assert (vtr.get_property('device-number') ==
+                    device_number)
 
 
 def test_vtr_filter_by_partition(hmc_session):
@@ -377,47 +317,37 @@ def test_vtr_filter_by_partition(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Pick the Tape Library to test with
-    tl_list = console.tape_library.list()
-    if not tl_list:
-        skip_warn(f"No Tape Library defined on HMC {hd.host}")
-    tl_list = pick_test_resources(tl_list)
+    # Get tape links from console
+    tlink_list = console.tape_links.list()
+    if not tlink_list:
+        skip_warn(f"No Tape Links defined on HMC {hd.host}")
 
-    for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+    tlink_list = pick_test_resources(tlink_list)
 
-        # Get tape links for this tape library
-        tlink_list = tl.tape_links.list()
-        if not tlink_list:
-            skip_warn(f"No Tape Links defined for Tape Library {tl.name!r}")
+    for tlink in tlink_list:
+        print(f"Testing with Tape Link {tlink.name!r}")
+
+        # Get all virtual tape resources for this tape link
+        all_vtrs = tlink.virtual_tape_resources.list()
+        if not all_vtrs:
+            skip_warn(f"No Virtual Tape Resources defined for "
+                      f"Tape Link {tlink.name!r}")
             continue
 
-        tlink_list = pick_test_resources(tlink_list)
+        # Pick one to test filtering
+        test_vtr = all_vtrs[0]
+        partition_uri = test_vtr.get_property('partition-uri')
 
-        for tlink in tlink_list:
-            print(f"Testing with Tape Link {tlink.name!r}")
+        print(f"Testing filter by partition-uri: {partition_uri!r}")
 
-            # Get all virtual tape resources for this tape link
-            all_vtrs = tlink.virtual_tape_resources.list()
-            if not all_vtrs:
-                skip_warn(f"No Virtual Tape Resources defined for "
-                          f"Tape Link {tlink.name!r}")
-                continue
+        # Filter by partition URI
+        filtered_vtrs = tlink.virtual_tape_resources.list(
+            filter_args={'partition-uri': partition_uri})
 
-            # Pick one to test filtering
-            test_vtr = all_vtrs[0]
-            partition_uri = test_vtr.get_property('partition-uri')
+        assert len(filtered_vtrs) >= 1, \
+            f"No VTRs found with partition-uri {partition_uri!r}"
 
-            print(f"Testing filter by partition-uri: {partition_uri!r}")
-
-            # Filter by partition URI
-            filtered_vtrs = tlink.virtual_tape_resources.list(
-                filter_args={'partition-uri': partition_uri})
-
-            assert len(filtered_vtrs) >= 1, \
-                f"No VTRs found with partition-uri {partition_uri!r}"
-
-            # Verify all returned resources have the correct partition URI
-            for vtr in filtered_vtrs:
-                assert (vtr.get_property('partition-uri') ==
-                        partition_uri)
+        # Verify all returned resources have the correct partition URI
+        for vtr in filtered_vtrs:
+            assert (vtr.get_property('partition-uri') ==
+                    partition_uri)
