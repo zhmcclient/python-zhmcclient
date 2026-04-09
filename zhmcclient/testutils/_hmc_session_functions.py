@@ -125,6 +125,36 @@ def setup_hmc_session(hd, rt_config=None, skip_on_failure=True):
         if skip_msg:
             pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
 
+    # Enable debug logging if specified
+    log_file = os.getenv('TESTLOGFILE', None)
+    if log_file:
+
+        logging.Formatter.converter = LOG_DATETIME_TIMEZONE
+        log_formatter = logging.Formatter(
+            LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
+        log_handler = logging.FileHandler(log_file, encoding='utf-8')
+        log_handler.setFormatter(log_formatter)
+
+        logger = logging.getLogger('zhmcclient.hmc')
+        if log_handler not in logger.handlers:
+            logger.addHandler(log_handler)
+        logger.setLevel(logging.DEBUG)
+
+        logger = logging.getLogger('zhmcclient.api')
+        if log_handler not in logger.handlers:
+            logger.addHandler(log_handler)
+        logger.setLevel(logging.DEBUG)
+
+        logger = logging.getLogger('zhmcclient.jms')
+        if log_handler not in logger.handlers:
+            logger.addHandler(log_handler)
+        logger.setLevel(logging.DEBUG)
+
+        logger = logging.getLogger('zhmcclient.os')
+        if log_handler not in logger.handlers:
+            logger.addHandler(log_handler)
+        logger.setLevel(logging.DEBUG)
+
     if hd.mock_file:
         # A mocked HMC
 
@@ -137,36 +167,6 @@ def setup_hmc_session(hd, rt_config=None, skip_on_failure=True):
 
     else:
         # A real HMC
-
-        # Enable debug logging if specified
-        log_file = os.getenv('TESTLOGFILE', None)
-        if log_file:
-
-            logging.Formatter.converter = LOG_DATETIME_TIMEZONE
-            log_formatter = logging.Formatter(
-                LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
-            log_handler = logging.FileHandler(log_file, encoding='utf-8')
-            log_handler.setFormatter(log_formatter)
-
-            logger = logging.getLogger('zhmcclient.hmc')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.api')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.jms')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.os')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
 
         if hd.password_command is not None:
             variables = dict(host=hd.host, userid=hd.userid)

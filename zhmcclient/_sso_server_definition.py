@@ -152,7 +152,7 @@ class SSOServerDefinitionManager(BaseManager):
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
-    @logged_api_call(blanked_properties=['client-secret'], properties_pos=1)
+    @logged_api_call
     def create(self, properties):
         """
         Create a new SSO Server Definition in this HMC.
@@ -258,7 +258,7 @@ class SSOServerDefinition(BaseResource):
             self.get_properties_local(self.manager._name_prop, None))
         self.cease_existence_local()
 
-    @logged_api_call(blanked_properties=['client-secret'], properties_pos=1)
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this SSO Server Definitions.

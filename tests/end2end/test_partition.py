@@ -29,7 +29,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
     pformat_as_dict, validate_firmware_features
 
@@ -79,12 +79,13 @@ def assert_ctc_partition_link(partlink, num_paths, num_partitions):
             f"{pformat_as_dict(partlink.properties)}")
 
 
-def test_part_find_list(dpm_mode_cpcs):
+def test_part_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -95,8 +96,9 @@ def test_part_find_list(dpm_mode_cpcs):
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn(f"No partitions on CPC {cpc.name} managed by "
-                      f"HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by "
+                     f"HMC {hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
@@ -107,12 +109,13 @@ def test_part_find_list(dpm_mode_cpcs):
                 PART_ADDITIONAL_PROPS)
 
 
-def test_part_property(dpm_mode_cpcs):
+def test_part_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -123,8 +126,9 @@ def test_part_property(dpm_mode_cpcs):
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn(f"No partitions on CPC {cpc.name} managed by HMC "
-                      f"{hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
@@ -136,12 +140,13 @@ def test_part_property(dpm_mode_cpcs):
             runtest_get_properties(part.manager, non_list_prop)
 
 
-def test_part_crud(dpm_mode_cpcs):
+def test_part_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a partition.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -229,7 +234,7 @@ def test_part_crud(dpm_mode_cpcs):
             cpc.partitions.find(name=part_name_new)
 
 
-def test_partition_features(dpm_mode_cpcs):
+def test_partition_features(zhmc_logger, dpm_mode_cpcs):
     """
     Test features of the CPC of a partition:
     - For firmware features:
@@ -238,7 +243,8 @@ def test_partition_features(dpm_mode_cpcs):
       - list_firmware_features()
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -249,8 +255,9 @@ def test_partition_features(dpm_mode_cpcs):
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn(
-                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
         part = random.choice(part_list)
 
         client = cpc.manager.client
@@ -330,7 +337,8 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
     Test "List OS Messages" operation on partitions
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -339,14 +347,16 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support 'List OS Messages' "
-                      "operation")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support 'List OS Messages' "
+                     "operation")
 
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn(
-                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
 
         test_part = None
         for part in part_list:
@@ -376,8 +386,9 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
                 part.name, len(all_messages))
 
         if test_part is None:
-            skip_warn(f"No partition on CPC {cpc.name} has the minimum number "
-                      "of 3 OS messages for the test")
+            skip_log(zhmc_logger,
+                     f"No partition on CPC {cpc.name} has the minimum number "
+                     "of 3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
@@ -411,12 +422,13 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
             assert message in all_messages
 
 
-def test_part_create_os_websocket(dpm_mode_cpcs):
+def test_part_create_os_websocket(zhmc_logger, dpm_mode_cpcs):
     """
     Test "Get ASCII Console WebSocket URI" operation on partitions
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -425,15 +437,16 @@ def test_part_create_os_websocket(dpm_mode_cpcs):
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support 'Get ASCII Console "
-                      "WebSocket URI' operation")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support 'Get ASCII Console "
+                     "WebSocket URI' operation")
 
         # Pick the partition to test with
         active_part_list = cpc.partitions.list(filter_args={'status': 'active'})
         if not active_part_list:
-            skip_warn(
-                f"No partitions on CPC {cpc.name} managed by HMC {hd.host} "
-                "with an active status")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host} with an active status")
 
         # Pick a random partition to test with
         part = random.choice(active_part_list)
@@ -499,13 +512,14 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
     "desc, input_kwargs, exp_props",
     LIST_PERMITTED_PARTITION_TESTCASES)
 def test_console_list_permitted_partitions(
-        desc, input_kwargs, exp_props, dpm_mode_cpcs):
+        zhmc_logger, desc, input_kwargs, exp_props, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test list permitted partitions on a cpc
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -517,12 +531,14 @@ def test_console_list_permitted_partitions(
         if 'additional_properties' in input_kwargs and \
                 'dpm-ctc-partition-link-management' not in features and \
                 'dpm-hipersockets-partition-link-management' not in features:
-            pytest.skip("HMC does not support additional-properties parameter.")
+            skip_log(zhmc_logger,
+                     "HMC does not support additional-properties parameter.")
 
         permitted_part_list = console.list_permitted_partitions(**input_kwargs)
         if not permitted_part_list:
-            skip_warn(f"No partitions on CPC {cpc.name} managed by HMC "
-                      f"{hd.host} for the user {session.userid}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host} for the user {session.userid}")
 
         permitted_part_list = pick_test_resources(permitted_part_list)
         for partition in permitted_part_list:
@@ -595,13 +611,14 @@ PART_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_PART_GET_SUSTAINABILITY_DATA)
 def test_part_get_sustainability_data(
-        tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
+        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Partition.get_sustainability_data(...)
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -610,14 +627,16 @@ def test_part_get_sustainability_data(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support "
-                      "Partition.get_sustainability_data()")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support "
+                     "Partition.get_sustainability_data()")
 
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn(
-                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions on CPC {cpc.name} managed by HMC "
+                     f"{hd.host}")
 
         # Pick a random partition to test with
         part = random.choice(part_list)
@@ -634,13 +653,13 @@ def test_part_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(
-                    f"HMC userid {hd.userid!r} is not authorized for task "
-                    f"'Environmental Dashboard' on HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for task "
+                         f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn(
-                    f"Partition {part.name} on HMC {hd.host} does not support "
-                    f"feature: {exc}")
+                skip_log(zhmc_logger,
+                         f"Partition {part.name} on HMC {hd.host} does not "
+                         f"support feature: {exc}")
             else:
                 raise
 
@@ -783,13 +802,15 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
     "desc, type, number_of_nics, nic_property_list",
     TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK)
 def test_part_attach_detach_network_link(
-        desc, type, number_of_nics, nic_property_list, dpm_mode_cpcs):
+        zhmc_logger, desc, type, number_of_nics, nic_property_list,
+        dpm_mode_cpcs):
     # pylint: disable=unused-argument,redefined-builtin
     """
     Test for Partition.attach/detach_network_link()
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -799,8 +820,9 @@ def test_part_attach_detach_network_link(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support "
-                      "Partition.attach/detach_network_link()")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support "
+                     "Partition.attach/detach_network_link()")
 
         part = None
         partlink = None
@@ -910,7 +932,8 @@ def test_part_attach_detach_ctc_link(
     Test for Partition.attach/detach_ctc_link()
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -922,8 +945,9 @@ def test_part_attach_detach_ctc_link(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support "
-                      "Partition.attach/detach_ctc_link()")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support "
+                     "Partition.attach/detach_ctc_link()")
 
         pl_parts = []
         partlink = None
@@ -938,8 +962,9 @@ def test_part_attach_detach_ctc_link(
             adapters = cpc.adapters.list(
                 filter_args={'type': 'fc', 'status': 'active'})
             if len(adapters) < num_paths:
-                pytest.skip(f"CPC {cpc.name} has less than {num_paths} "
-                            "online FC adapters for CTC")
+                skip_log(zhmc_logger,
+                         f"CPC {cpc.name} has less than {num_paths} "
+                         "online FC adapters for CTC")
             path_adapters = random.sample(adapters, num_paths)
 
             # Create the initial partitions for the partition link

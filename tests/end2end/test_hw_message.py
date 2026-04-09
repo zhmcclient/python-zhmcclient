@@ -25,7 +25,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import runtest_find_list, skip_warn, pick_test_resources
+from .utils import skip_log, runtest_find_list, pick_test_resources
 
 urllib3.disable_warnings()
 
@@ -43,7 +43,8 @@ HW_MESSAGE_VOLATILE_PROPS = []
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_find_list(hmc_session, parent):
+def test_hw_message_find_list(zhmc_logger, hmc_session, parent):
+    # pylint: disable=unused-argument
     """
     Test list(), find(), findall().
     """
@@ -81,7 +82,8 @@ def test_hw_message_find_list(hmc_session, parent):
 
     # Pick the hw_messages to test with
     if not hw_message_list:
-        skip_warn(f"No hardware messages for {parent_str} on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No hardware messages for {parent_str} on HMC {hd.host}")
     hw_message_list = pick_test_resources(hw_message_list)
 
     for hw_message in hw_message_list:
@@ -96,7 +98,8 @@ def test_hw_message_find_list(hmc_session, parent):
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_list_filtered(hmc_session, parent):
+def test_hw_message_list_filtered(zhmc_logger, hmc_session, parent):
+    # pylint: disable=unused-argument
     """
     Test list() with timestamp filtering.
     """
@@ -118,8 +121,9 @@ def test_hw_message_list_filtered(hmc_session, parent):
     exp_number = end_index - begin_index + 1
     min_number = exp_number + 2
     if len(sorted_message_list) < min_number:
-        skip_warn(f"Not enough hardware messages ({len(sorted_message_list)}) "
-                  "for timestamp filtering for {parent_str} on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"Not enough hardware messages ({len(sorted_message_list)}) "
+                 "for timestamp filtering for {parent_str} on HMC {hd.host}")
     begin_msg = sorted_message_list[begin_index]
     end_msg = sorted_message_list[end_index]
     begin_time = zhmcclient.datetime_from_timestamp(begin_msg.prop('timestamp'))

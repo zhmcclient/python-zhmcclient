@@ -19,10 +19,9 @@ These tests do not change any existing virtual switches.
 """
 
 
-import pytest
 from requests.packages import urllib3
 
-from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
     runtest_get_properties
 
 urllib3.disable_warnings()
@@ -40,12 +39,13 @@ VSWITCH_ADDITIONAL_PROPS = ['description', 'port']
 VSWITCH_VOLATILE_PROPS = []
 
 
-def test_vswitch_find_list(dpm_mode_cpcs):
+def test_vswitch_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -56,9 +56,9 @@ def test_vswitch_find_list(dpm_mode_cpcs):
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_warn(
-                "No virtual switches (= no OSA/HS network adapters) on "
-                f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No virtual switches (= no OSA/HS network adapters) on "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:
@@ -70,12 +70,13 @@ def test_vswitch_find_list(dpm_mode_cpcs):
                 VSWITCH_LIST_PROPS, VSWITCH_ADDITIONAL_PROPS)
 
 
-def test_vswitch_property(dpm_mode_cpcs):
+def test_vswitch_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -86,9 +87,9 @@ def test_vswitch_property(dpm_mode_cpcs):
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_warn(
-                "No virtual switches (= no OSA/HS network adapters) on "
-                f"CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     "No virtual switches (= no OSA/HS network adapters) on "
+                     f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:

@@ -1,0 +1,2 @@
+Fixed the issue that the zhmcclient mock support returned write-only properties
+of resources in Get and List operations.

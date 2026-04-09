@@ -7,7 +7,7 @@
 # PEP517 package builder, used in Makefile
 build>=1.0.0
 # build requires virtualenv.cli_run which was added in virtualenv 20.1
-virtualenv>=20.26.6
+virtualenv>=20.36.1
 pyproject-hooks>=1.1.0
 
 # six (only needed by packages that still support Python 2)
@@ -62,11 +62,11 @@ safety-schemas>=0.0.16
 dparse>=0.6.4
 ruamel.yaml>=0.17.21
 click>=8.0.2
-Authlib>=1.6.5
+Authlib>=1.6.6
 marshmallow>=3.26.2
 pydantic>=2.12.0
 pydantic_core>=2.41.1
-#safety 3.6.1 depends on typer>=0.16.0
+# safety 3.6.1 depends on typer>=0.16.0
 typer>=0.16.0
 typer-cli>=0.16.0
 typer-slim>=0.16.0
@@ -134,7 +134,7 @@ ruff>=0.3.5
 #       dependency resolution, so for now we pin notebook to <6.5.
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
 #       https://github.com/mhammond/pywin32/issues/2367
-notebook>=7.2.2; sys_platform != 'win32' or python_version <= '3.12'
+notebook>=7.4.2; sys_platform != 'win32' or python_version <= '3.12'
 jupyter>=1.0.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyter-console>=6.6.3; sys_platform != 'win32' or python_version <= '3.12'
 ipywidgets>=8.0.5; sys_platform != 'win32' or python_version <= '3.12'
@@ -150,7 +150,7 @@ jupyter-core>=5.3.0; sys_platform != 'win32' or python_version <= '3.12'
 ipython-genutils>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
 ipython>=8.10.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyter-server>=2.14.1; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab>=4.2.5; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab>=4.4.8; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab-server>=2.27.1; sys_platform != 'win32' or python_version <= '3.12'
 notebook-shim>=0.2.3; sys_platform != 'win32' or python_version <= '3.12'
 
@@ -164,7 +164,7 @@ pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.5
+tornado>=6.5.3
 
 # pyzmq 26.1.0 added wheel archives for Python 3.13
 # pyzmq 27.0.1 added wheel archives for Python 3.14
@@ -182,4 +182,4 @@ pip-check-reqs>=2.5.1
 # pywinpty>=1.0 requires maturin to build. Meanwhile, it works.
 # pywinpty 2.0.12/13 has the above issue on Python 3.13
 pywinpty>=2.0.12; os_name == "nt" and python_version <= '3.12'
-pywinpty>=3.0.0; os_name == "nt" and python_version >= '3.13'
+pywinpty>=3.0.2; os_name == "nt" and python_version >= '3.13'

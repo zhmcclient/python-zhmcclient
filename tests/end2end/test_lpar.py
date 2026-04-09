@@ -28,7 +28,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
     runtest_get_properties, ensure_lpar_inactive, set_resource_property
 
 urllib3.disable_warnings()
@@ -51,12 +51,13 @@ LPAR_LIST_PERMITTED_PROPS = [
 LPAR_VOLATILE_PROPS = []
 
 
-def test_lpar_find_list(classic_mode_cpcs):
+def test_lpar_find_list(zhmc_logger, classic_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -67,7 +68,8 @@ def test_lpar_find_list(classic_mode_cpcs):
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
@@ -77,12 +79,13 @@ def test_lpar_find_list(classic_mode_cpcs):
                 LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
 
 
-def test_lpar_property(classic_mode_cpcs):
+def test_lpar_property(zhmc_logger, classic_mode_cpcs):
     """
     Test property related methods
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -93,7 +96,8 @@ def test_lpar_property(classic_mode_cpcs):
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
@@ -174,7 +178,8 @@ def test_console_list_permitted_lpars(
     Test Console.list_permitted_lpars() method
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     zhmc_logger.debug(
         "Arguments: desc=%r, input_kwargs=%r, exp_prop_names=%r",
@@ -211,7 +216,8 @@ def test_lpar_list_os_messages(
     Test "List OS Messages" operation on LPARs
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -220,13 +226,15 @@ def test_lpar_list_os_messages(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support 'List OS Messages' "
-                      "operation")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support 'List OS Messages' "
+                     "operation")
 
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         test_lpar = None
         for lpar in lpar_list:
@@ -256,8 +264,9 @@ def test_lpar_list_os_messages(
                 lpar.name, len(all_messages))
 
         if test_lpar is None:
-            skip_warn(f"No LPAR on CPC {cpc.name} has the minimum number of "
-                      "3 OS messages for the test")
+            skip_log(zhmc_logger,
+                     f"No LPAR on CPC {cpc.name} has the minimum number of "
+                     "3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
@@ -549,10 +558,12 @@ def test_lpar_activate(
 
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     if not run:
-        skip_warn("Testcase is disabled in testcase definition")
+        skip_log(zhmc_logger,
+                 "Testcase is disabled in testcase definition")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -567,25 +578,25 @@ def test_lpar_activate(
         try:
             loadable_lpars = hd_cpc['loadable_lpars']
         except KeyError:
-            pytest.skip(
-                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
-                "not have a 'loadable_lpars' property in its entry for CPC "
-                f"{cpc.name!r}")
+            skip_log(zhmc_logger,
+                     f"Inventory file entry for HMC nickname {hd.nickname!r} "
+                     "does not have a 'loadable_lpars' property in its entry "
+                     f"for CPC {cpc.name!r}")
         try:
             load_profiles = hd_cpc['load_profiles']
         except KeyError:
-            pytest.skip(
-                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
-                "not have a 'load_profiles' property in its entry for "
-                f"CPC {cpc.name!r}")
+            skip_log(zhmc_logger,
+                     f"Inventory file entry for HMC nickname {hd.nickname!r} "
+                     "does not have a 'load_profiles' property in its entry "
+                     f"for CPC {cpc.name!r}")
 
         try:
             lpar_name = loadable_lpars[lpar_mode]
         except (KeyError, TypeError):
-            pytest.skip(
-                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
-                f"not have an entry for operating mode {lpar_mode!r} in its "
-                f"'loadable_lpars' property for CPC {cpc.name!r}")
+            skip_log(zhmc_logger,
+                     f"Inventory file entry for HMC nickname {hd.nickname!r} "
+                     f"does not have an entry for operating mode {lpar_mode!r} "
+                     f"in its 'loadable_lpars' property for CPC {cpc.name!r}")
 
         # Find the image profile corresponding to the LPAR, and the other
         # (wrong) image profile names for specific tests with that.
@@ -595,8 +606,9 @@ def test_lpar_activate(
         if len(lpar_iaps) >= 1:
             iap = lpar_iaps[0]
         else:
-            pytest.skip(f"Image activation profile {iap_name!r} does not exist "
-                        f"on CPC {cpc.name}.")
+            skip_log(zhmc_logger,
+                     f"Image activation profile {iap_name!r} does not exist "
+                     f"on CPC {cpc.name}.")
         wrong_iap_names = [_iap.name for _iap in all_iaps
                            if _iap.name != lpar_name]
 
@@ -608,10 +620,11 @@ def test_lpar_activate(
             try:
                 ap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                pytest.skip(
-                    f"Inventory file entry for HMC nickname {hd.nickname!r} "
-                    f"does not have an entry for operating mode {lpar_mode!r} "
-                    f"in its 'load_profiles' property for CPC {cpc.name!r}")
+                skip_log(zhmc_logger,
+                         f"Inventory file entry for HMC nickname "
+                         f"{hd.nickname!r} does not have an entry for "
+                         f"operating mode {lpar_mode!r} in its 'load_profiles' "
+                         f"property for CPC {cpc.name!r}")
         else:
             ap_name = None
 
@@ -621,25 +634,28 @@ def test_lpar_activate(
             try:
                 nap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                pytest.skip(
-                    f"Inventory file entry for HMC nickname {hd.nickname!r} "
-                    f"does not have an entry for operating mode {lpar_mode!r} "
-                    f"in its 'load_profiles' property for CPC {cpc.name!r}")
+                skip_log(zhmc_logger,
+                         f"Inventory file entry for HMC nickname "
+                         f"{hd.nickname!r} does not have an entry for "
+                         f"operating mode {lpar_mode!r} in its 'load_profiles' "
+                         "property for CPC {cpc.name!r}")
         else:
             nap_name = None
 
         try:
             lpar = cpc.lpars.find(name=lpar_name)
         except zhmcclient.NotFound:
-            pytest.skip(f"LPAR {lpar_name!r} does not exist on CPC {cpc.name}.")
+            skip_log(zhmc_logger,
+                     f"LPAR {lpar_name!r} does not exist on CPC {cpc.name}.")
 
         if ap_type == 'load' or nap_type == 'load':
             lap_name = load_profiles[lpar_mode]
             try:
                 cpc.load_activation_profiles.find(name=lap_name)
             except zhmcclient.NotFound:
-                pytest.skip(f"Load activation profile {lap_name!r} does not "
-                            f"exist on CPC {cpc.name}.")
+                skip_log(zhmc_logger,
+                         f"Load activation profile {lap_name!r} does not "
+                         f"exist on CPC {cpc.name}.")
 
         # pylint: disable=possibly-used-before-assignment
         op_mode = iap.get_property('operating-mode')
@@ -775,13 +791,15 @@ LPAR_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_LPAR_GET_SUSTAINABILITY_DATA)
 def test_lpar_get_sustainability_data(
-        tc, input_kwargs, exp_oldest, exp_delta, classic_mode_cpcs):
+        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta,
+        classic_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Lpar.get_sustainability_data(...)
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -790,13 +808,15 @@ def test_lpar_get_sustainability_data(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_warn("zhmcclient mock does not support "
-                      "Lpar.get_sustainability_data()")
+            skip_log(zhmc_logger,
+                     "zhmcclient mock does not support "
+                     "Lpar.get_sustainability_data()")
 
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         # Pick a random LPAR to test with
         lpar = random.choice(lpar_list)
@@ -813,13 +833,13 @@ def test_lpar_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(
-                    f"HMC userid {hd.userid!r} is not authorized for task "
-                    f"'Environmental Dashboard' on HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for task "
+                         f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn(
-                    f"LPAR {lpar.name} on HMC {hd.host} does not support "
-                    f"feature: {exc}")
+                skip_log(zhmc_logger,
+                         f"LPAR {lpar.name} on HMC {hd.host} does not support "
+                         f"feature: {exc}")
             else:
                 raise
 

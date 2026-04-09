@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -42,12 +42,13 @@ VFUNC_LIST_PROPS = ['element-uri', 'name', 'description']
 VFUNC_VOLATILE_PROPS = []
 
 
-def test_vfunc_find_list(dpm_mode_cpcs):
+def test_vfunc_find_list(zhmc_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -63,9 +64,9 @@ def test_vfunc_find_list(dpm_mode_cpcs):
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_warn(
-                f"No partitions with virtual functions on CPC {cpc.name} "
-                f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with virtual functions on CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
@@ -77,12 +78,13 @@ def test_vfunc_find_list(dpm_mode_cpcs):
                 VFUNC_LIST_PROPS)
 
 
-def test_vfunc_property(dpm_mode_cpcs):
+def test_vfunc_property(zhmc_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -98,9 +100,9 @@ def test_vfunc_property(dpm_mode_cpcs):
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_warn(
-                f"No partitions with virtual functions on CPC {cpc.name} "
-                f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No partitions with virtual functions on CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
@@ -113,12 +115,13 @@ def test_vfunc_property(dpm_mode_cpcs):
             runtest_get_properties(vfunc.manager, non_list_prop)
 
 
-def test_vfunc_crud(dpm_mode_cpcs):
+def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a virtual function (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -152,8 +155,9 @@ def test_vfunc_crud(dpm_mode_cpcs):
             # Pick a zEDC accelerator adapter that will back the virtual func.
             edc_adapters = cpc.adapters.findall(type='zedc')
             if not edc_adapters:
-                skip_warn(f"No zEDC accelerator adapters on CPC {cpc.name} "
-                          f"managed by HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"No zEDC accelerator adapters on CPC {cpc.name} "
+                         f"managed by HMC {hd.host}")
             edc_adapter = edc_adapters[-1]  # Pick the last one
 
             # Create a partition that will lateron contain the virtual function

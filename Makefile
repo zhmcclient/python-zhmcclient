@@ -295,12 +295,12 @@ help:
 	@echo "  unittest          - Run unit tests (adds to coverage results)"
 	@echo "  functiontest      - Run function tests (adds to coverage results)"
 	@echo "  test              - Run unit and function tests (adds to coverage results)"
-	@echo "  end2end_mocked    - Run end2end tests against example mock environments (adds to coverage results)"
+	@echo "  end2end_mocked    - Run end2end tests against example mock environments (adds to coverage results, checks blanked-out properties in log)"
 	@echo "  installtest       - Run install tests"
 	@echo "  build             - Build the distribution files in: $(dist_dir)"
 	@echo "  builddoc          - Build documentation in: $(doc_build_dir)"
 	@echo "  all               - Do all of the above"
-	@echo "  end2end           - Run end2end tests (adds to coverage results)"
+	@echo "  end2end           - Run end2end tests (adds to coverage results, checks blanked-out properties in log)"
 	@echo "  end2end_show      - Show HMCs defined for end2end tests"
 	@echo "  end2end_check     - Check access to all HMCs defined in your HMC inventory file for end2end tests"
 	@echo "  authors           - Generate AUTHORS.md file from git log"
@@ -703,15 +703,19 @@ endif
 
 .PHONY:	end2end
 end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file)
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
+	-$(call RM_FUNC,end2end.log)
+	bash -c "PYTHONPATH=. TESTLOGFILE=end2end.log TESTEND2END_LOAD=true coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	coverage html
+	bash -c "tools/check_blanked.py --accept-null end2end.log"
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
 end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
+	-$(call RM_FUNC,end2end.log)
+	bash -c "PYTHONPATH=. TESTLOGFILE=end2end.log TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest -v -m 'not check_hmcs' $(pytest_general_opts) $(pytest_test_opts) $(test_dir)/end2end"
 	coverage html
+	bash -c "tools/check_blanked.py --accept-null end2end.log"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors

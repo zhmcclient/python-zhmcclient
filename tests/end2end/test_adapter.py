@@ -28,7 +28,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -54,17 +54,19 @@ def se_version_info(cpc):
     return list(map(int, cpc.prop('se-version').split('.')))
 
 
-def test_adapter_find_list(all_cpcs):
+def test_adapter_find_list(zhmc_logger, all_cpcs):
     """
     Test list(), find(), findall().
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
-            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
-                        "mode does not support Adapter objects")
+            skip_log(zhmc_logger,
+                     f"CPC with SE {cpc.prop('se-version')} in classic "
+                     "mode does not support Adapter objects")
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -74,7 +76,8 @@ def test_adapter_find_list(all_cpcs):
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            skip_warn(f"No adapters on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No adapters on CPC {cpc.name} managed by HMC {hd.host}")
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
@@ -86,17 +89,19 @@ def test_adapter_find_list(all_cpcs):
                 ADAPTER_LIST_PROPS, ADAPTER_ADDITIONAL_PROPS)
 
 
-def test_adapter_property(all_cpcs):
+def test_adapter_property(zhmc_logger, all_cpcs):
     """
     Test property related methods
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
-            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
-                        "mode does not support Adapter objects")
+            skip_log(zhmc_logger,
+                     f"CPC with SE {cpc.prop('se-version')} in classic "
+                     "mode does not support Adapter objects")
         cpc_mode_str = "DPM" if cpc.dpm_enabled else "classic"
 
         session = cpc.manager.session
@@ -105,8 +110,9 @@ def test_adapter_property(all_cpcs):
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            skip_warn(f"No adapters on CPC {cpc.name} ({cpc_mode_str} mode) "
-                      f"managed by HMC {hd.host}")
+            skip_log(zhmc_logger,
+                     f"No adapters on CPC {cpc.name} ({cpc_mode_str} mode) "
+                     f"managed by HMC {hd.host}")
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
@@ -119,12 +125,13 @@ def test_adapter_property(all_cpcs):
             runtest_get_properties(adapter.manager, non_list_prop)
 
 
-def test_adapter_hs_crud(dpm_mode_cpcs):
+def test_adapter_hs_crud(zhmc_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a Hipersocket adapter.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -133,7 +140,8 @@ def test_adapter_hs_crud(dpm_mode_cpcs):
         if se_version_info(cpc) >= [2, 17]:
             # TODO: Enable this case again once create_hipersocket() has been
             #       reimplemented using partition links.
-            pytest.skip("create_hipersocket() is not supported on z17 CPCs")
+            skip_log(zhmc_logger,
+                     "create_hipersocket() is not supported on z17 CPCs")
 
         print(f"Testing on CPC {cpc.name} ({cpc_mode_str} mode)")
 
@@ -236,12 +244,13 @@ ADAPTER_FAMILIES = [
 @pytest.mark.parametrize(
     "test_family",
     ADAPTER_FAMILIES)
-def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):
+def test_adapter_list_assigned_part(zhmc_logger, dpm_mode_cpcs, test_family):
     """
     Test Adapter.list_assigned_partitions().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -264,8 +273,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):
             family_adapters.append(adapter)
 
         if not family_adapters:
-            pytest.skip(f"CPC {cpc.name} does not have any adapters with "
-                        f"family: {test_family} ")
+            skip_log(zhmc_logger,
+                     f"CPC {cpc.name} does not have any adapters with "
+                     f"family: {test_family} ")
 
         tmp_part = None
         try:
@@ -393,8 +403,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):
                     assigned_fcp_adapters.append(adapter)
 
                 if not assigned_fcp_adapters:
-                    pytest.skip(f"CPC {cpc.name} does not have FCP adapters "
-                                "assigned to partitions")
+                    skip_log(zhmc_logger,
+                             f"CPC {cpc.name} does not have FCP adapters "
+                             "assigned to partitions")
 
                 test_adapters = pick_test_resources(assigned_fcp_adapters)
                 for test_adapter in test_adapters:
@@ -476,8 +487,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):
                     assigned_crypto_adapters.append(adapter)
 
                 if not assigned_crypto_adapters:
-                    pytest.skip(f"CPC {cpc.name} does not have crypto adapters "
-                                "assigned to partitions")
+                    skip_log(zhmc_logger,
+                             f"CPC {cpc.name} does not have crypto adapters "
+                             "assigned to partitions")
 
                 test_adapters = pick_test_resources(assigned_crypto_adapters)
                 for test_adapter in test_adapters:
@@ -560,17 +572,19 @@ def base_adapter_id(adapter_id, family):
     return f'{base_pchid:03x}'
 
 
-def test_adapter_list_sibling_adapters(all_cpcs):
+def test_adapter_list_sibling_adapters(zhmc_logger, all_cpcs):
     """
     Test Adapter.list_sibling_adapters().
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
-            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
-                        "mode does not support Adapter objects")
+            skip_log(zhmc_logger,
+                     f"CPC with SE {cpc.prop('se-version')} in classic "
+                     "mode does not support Adapter objects")
 
         adapters = cpc.adapters.list()
 
@@ -683,14 +697,16 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
     "desc, input_kwargs, exp_props, exp_exc_type, run",
     LIST_PERMITTED_ADAPTERS_TESTCASES)
 def test_adapter_list_permitted(
-        desc, input_kwargs, exp_props, exp_exc_type, run, all_cpcs):
+        zhmc_logger, desc, input_kwargs, exp_props, exp_exc_type, run,
+        all_cpcs):
     # pylint: disable=unused-argument
     """
     Test Console.list_permitted_adapters() without filtering, but with
     different variations of returned properties.
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     console = all_cpcs[0].manager.console
     session = console.manager.session
@@ -698,15 +714,17 @@ def test_adapter_list_permitted(
     hd = session.hmc_definition
 
     if hd.mock_file:
-        skip_warn("zhmcclient mock does not support 'List Permitted Adapters' "
-                  "operation")
+        skip_log(zhmc_logger,
+                 "zhmcclient mock does not support 'List Permitted Adapters' "
+                 "operation")
 
     if run == 'pdb':
         # pylint: disable=forgotten-debug-statement
         pdb.set_trace()
 
     if not run:
-        skip_warn("Testcase is disabled in testcase definition")
+        skip_log(zhmc_logger,
+                 "Testcase is disabled in testcase definition")
 
     # Prepare what the managed CPCs support and from which CPCs adapters
     # are expected.
@@ -727,11 +745,13 @@ def test_adapter_list_permitted(
         cpc_by_name[cpc.name] = cpc
 
     if 'full_properties' in input_kwargs and not supports_full_properties:
-        skip_warn("The managed CPCs do not support full_properties=True in "
-                  "list_permitted_adapters()")
+        skip_log(zhmc_logger,
+                 "The managed CPCs do not support full_properties=True in "
+                 "list_permitted_adapters()")
     if 'additional_properties' in input_kwargs and not supports_add_properties:
-        skip_warn("The managed CPCs do not support additional_properties=True "
-                  "in list_permitted_adapters()")
+        skip_log(zhmc_logger,
+                 "The managed CPCs do not support additional_properties=True "
+                 "in list_permitted_adapters()")
 
     if exp_exc_type:
 

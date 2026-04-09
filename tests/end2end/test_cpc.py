@@ -24,7 +24,7 @@ import pytest
 from requests.packages import urllib3
 import zhmcclient
 
-from .utils import skip_warn, assert_res_prop, runtest_find_list, \
+from .utils import skip_log, assert_res_prop, runtest_find_list, \
     runtest_get_properties, validate_firmware_features, validate_api_features, \
     cleanup_and_import_example_certificate, has_api_feature
 
@@ -82,7 +82,8 @@ MAX_PARTS_BY_TYPE_MODEL = {
 }
 
 
-def test_cpc_find_list(hmc_session):
+def test_cpc_find_list(zhmc_logger, hmc_session):
+    # pylint: disable=unused-argument
     """
     Test find/list methods for CPCs (any mode).
     """
@@ -104,12 +105,13 @@ def test_cpc_find_list(hmc_session):
             CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, cpc_list_props)
 
 
-def test_cpc_property(all_cpcs):
+def test_cpc_property(zhmc_logger, all_cpcs):
     """
     Test property related methods
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         print(f"Testing with CPC {cpc.name}")
@@ -120,7 +122,7 @@ def test_cpc_property(all_cpcs):
         runtest_get_properties(cpc.manager, non_list_prop)
 
 
-def test_cpc_features(all_cpcs):
+def test_cpc_features(zhmc_logger, all_cpcs):
     """
     Test certain "features" of a CPC (any mode):
     - dpm_enabled property
@@ -135,7 +137,8 @@ def test_cpc_features(all_cpcs):
       - list_api_features() with name filter
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         print(f"Testing with CPC {cpc.name}")
@@ -248,7 +251,7 @@ def test_cpc_features(all_cpcs):
             assert enabled is True
 
 
-def test_cpc_export_profiles(classic_mode_cpcs):
+def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
     """
     Test for export_profiles(profile_area, wait_for_completion=True,
                              operation_timeout=None)
@@ -256,7 +259,8 @@ def test_cpc_export_profiles(classic_mode_cpcs):
     Only for CPCs in classic mode, skipped in DPM mode.
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -273,16 +277,17 @@ def test_cpc_export_profiles(classic_mode_cpcs):
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(
-                    f"HMC userid {hd.userid!r} is not authorized for task "
-                    f"'Export/Import Profile Data (API only)' on HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for task "
+                         "'Export/Import Profile Data (API only)' on HMC "
+                         f"{hd.host}")
             else:
                 raise
 
         # TODO: Complete this test
 
 
-def test_cpc_export_dpm_config(dpm_mode_cpcs):
+def test_cpc_export_dpm_config(zhmc_logger, dpm_mode_cpcs):
     """
     Test for export_dpm_configuration()
 
@@ -293,7 +298,8 @@ def test_cpc_export_dpm_config(dpm_mode_cpcs):
     for 5 to 20 minutes!
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -376,7 +382,7 @@ CPC_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_CPC_GET_SUSTAINABILITY_DATA)
 def test_cpc_get_sustainability_data(
-        tc, input_kwargs, exp_oldest, exp_delta, all_cpcs):
+        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta, all_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Cpc.get_sustainability_data(...)
@@ -395,13 +401,13 @@ def test_cpc_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(
-                    f"HMC userid {hd.userid!r} is not authorized for task "
-                    f"'Environmental Dashboard' on HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for task "
+                         f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn(
-                    f"CPC {cpc.name} on HMC {hd.host} does not support "
-                    f"feature: {exc}")
+                skip_log(zhmc_logger,
+                         f"CPC {cpc.name} on HMC {hd.host} does not support "
+                         f"feature: {exc}")
             else:
                 raise
 

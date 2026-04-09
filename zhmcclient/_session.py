@@ -20,6 +20,7 @@ Session class: A session to the HMC, optionally in context of an HMC user.
 import json
 import time
 import re
+import logging
 from copy import copy
 from collections.abc import Iterable
 import requests
@@ -38,7 +39,8 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
     DEFAULT_NAME_URI_CACHE_TIMETOLIVE, DEFAULT_LOG_CONTENT_TRUNCATE, \
     HMC_LOGGER_NAME, HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
-    DEFAULT_HMC_PORT, BLANKED_OUT_STRING
+    DEFAULT_HMC_PORT, BLANKED_OUT_STRING, BLANKED_OUT_PROPERTY_PATTERN, \
+    BLANKED_OUT_PROPERTY_REPLACE
 from ._utils import repr_obj_id
 from ._version import __version__
 
@@ -52,15 +54,6 @@ _STD_HEADERS = {
     'Content-type': 'application/json',
     'Accept': '*/*'
 }
-
-# Properties whose values are always blanked out in the HMC log entries
-BLANKED_OUT_PROPERTIES = [
-    'boot-ftp-password',    # partition create/update
-    'bind-password',        # LDAP server def. create/update
-    'ssc-master-pw',        # image profile cr/upd, part. cr/upd, LPAR upd
-    'password',             # user create/update
-    'zaware-master-pw',     # image profile create/update, LPAR update
-]
 
 # Name of the HMC property indicating internal inconsistencies
 IMPLEMENTATION_ERRORS_PROP = "@@implementation-errors"
@@ -961,6 +954,8 @@ class Session:
         """
         Log the HTTP request of an HMC REST API call, at the debug level.
 
+        The values of sensitive properties will be blanked out.
+
         Parameters:
 
           method (:term:`string`): HTTP method name in upper case, e.g. 'GET'
@@ -976,58 +971,52 @@ class Session:
             determining the length from the content string
         """
 
-        content_msg = None
-        if content is not None:
-            if isinstance(content, bytes):
-                content = content.decode('utf-8', errors='ignore')
-            assert isinstance(content, str)
-            if content_len is None:
-                content_len = len(content)  # may change after JSON conversion
-            try:
-                content_dict = json2dict(content)
-            except ValueError:
-                # If the content is not JSON, we assume it does not contain
-                # structured data such as a password or session IDs.
-                pass
-            else:
-                for pname in BLANKED_OUT_PROPERTIES:
-                    if pname in content_dict:
-                        content_dict[pname] = BLANKED_OUT_STRING
-                content = dict2json(content_dict)
-            trunc = self._retry_timeout_config.log_content_truncate
-            if content_len > trunc > 0:
-                content_label = f"content(first {trunc} B of {content_len} B)"
-                content_msg = content[0:trunc] + '...(truncated)'
-            else:
-                content_label = f'content({content_len} B)'
-                content_msg = content
-        else:
-            content_label = 'content'
-            content_msg = content
+        if HMC_LOGGER.isEnabledFor(logging.DEBUG):
 
-        if resource:
-            names = []
-            res_class = resource.manager.class_name
-            while resource:
-                # Using resource.name gets into an infinite recursion when
-                # the resource name is not present, due to pulling the
-                # properties in that case. We take the careful approach.
-                name_prop = resource.manager.name_prop
-                name = resource.properties.get(name_prop, '<unknown>')
-                names.insert(0, name)
-                resource = resource.manager.parent
-            res_str = f" ({res_class} {'.'.join(names)})"
-        else:
-            res_str = ""
+            if content is not None:
+                if isinstance(content, bytes):
+                    content = content.decode('utf-8', errors='ignore')
+                assert isinstance(content, str)
+                # Length may change after conversion to unicode string
+                content_len = len(content)
+                content = re.sub(BLANKED_OUT_PROPERTY_PATTERN,
+                                 BLANKED_OUT_PROPERTY_REPLACE, content)
+                trunc = self._retry_timeout_config.log_content_truncate
+                if content_len > trunc > 0:
+                    content_str = (f"content(first {trunc} B of {content_len} "
+                                   f"B): {repr(content[0:trunc])} "
+                                   "...(truncated)'")
+                else:
+                    content_str = f"content({content_len} B): {repr(content)}"
+            else:
+                content_str = f"content: {repr(content)}"
 
-        HMC_LOGGER.debug("Request: %s %s%s, headers: %r, %s: %r",
-                         method, url, res_str, _headers_for_logging(headers),
-                         content_label, content_msg)
+            if resource:
+                names = []
+                res_class = resource.manager.class_name
+                while resource:
+                    # Using resource.name gets into an infinite recursion when
+                    # the resource name is not present, due to pulling the
+                    # properties in that case. We take the careful approach.
+                    name_prop = resource.manager.name_prop
+                    name = resource.properties.get(name_prop, '<unknown>')
+                    names.insert(0, name)
+                    resource = resource.manager.parent
+                res_str = f" ({res_class} {'.'.join(names)})"
+            else:
+                res_str = ""
+
+            HMC_LOGGER.debug("Request: %s %s%s, headers: %r, %s",
+                             method, url, res_str,
+                             _headers_for_logging(headers),
+                             content_str)
 
     def _log_http_response(
             self, method, url, resource, status, headers=None, content=None):
         """
         Log the HTTP response of an HMC REST API call, at the debug level.
+
+        The values of sensitive properties will be blanked out.
 
         Parameters:
 
@@ -1043,64 +1032,51 @@ class Session:
             response (byte string or unicode string)
         """
 
-        if content is not None:
-            if isinstance(content, bytes):
-                content = content.decode('utf-8')
-            assert isinstance(content, str)
-            content_len = len(content)  # may change after JSON conversion
-            try:
-                content_dict = json2dict(content)
-            except ValueError:
-                # If the content is not JSON (e.g. response from metrics
-                # context retrieval), we assume it does not contain structured
-                # data such as a password or session IDs.
-                pass
-            else:
-                if 'request-headers' in content_dict:
-                    headers_dict = content_dict['request-headers']
-                    if 'x-api-session' in headers_dict:
-                        headers_dict['x-api-session'] = BLANKED_OUT_STRING
-                if 'api-session' in content_dict:
-                    content_dict['api-session'] = BLANKED_OUT_STRING
-                if 'session-credential' in content_dict:
-                    content_dict['session-credential'] = BLANKED_OUT_STRING
-                content = dict2json(content_dict)
-            if status >= 400:
-                content_label = 'content'
-                content_msg = content
-            else:
-                trunc = self._retry_timeout_config.log_content_truncate
-                if content_len > trunc > 0:
-                    content_label = \
-                        f"content(first {trunc} B of {content_len} B)"
-                    content_msg = content[0:trunc] + '...(truncated)'
+        if HMC_LOGGER.isEnabledFor(logging.DEBUG):
+
+            if content is not None:
+                if isinstance(content, bytes):
+                    content = content.decode('utf-8')
+                assert isinstance(content, str)
+                # Length may change after conversion to unicode string
+                content_len = len(content)
+                content = re.sub(BLANKED_OUT_PROPERTY_PATTERN,
+                                 BLANKED_OUT_PROPERTY_REPLACE, content)
+                if status >= 400:
+                    content_str = f"content: {repr(content)}"
                 else:
-                    content_label = f'content({len(content)} B)'
-                    content_msg = content
-        else:
-            content_label = 'content'
-            content_msg = content
+                    trunc = self._retry_timeout_config.log_content_truncate
+                    if content_len > trunc > 0:
+                        content_str = (f"content(first {trunc} B of "
+                                       f"{content_len} B): "
+                                       f"{repr(content[0:trunc])} "
+                                       "...(truncated)'")
+                    else:
+                        content_str = (f"content({content_len} B): "
+                                       f"{repr(content)}")
+            else:
+                content_str = f"content: {repr(content)}"
 
-        if resource:
-            names = []
-            res_class = resource.manager.class_name
-            while resource:
-                # Using resource.name gets into an infinite recursion when
-                # the resource name is not present, due to pulling the
-                # properties in that case. We take the careful approach.
-                name_prop = resource.manager.name_prop
-                name = resource.properties.get(name_prop, '<unknown>')
-                names.insert(0, name)
-                resource = resource.manager.parent
-            res_str = f" ({res_class} {'.'.join(names)})"
-        else:
-            res_str = ""
+            if resource:
+                names = []
+                res_class = resource.manager.class_name
+                while resource:
+                    # Using resource.name gets into an infinite recursion when
+                    # the resource name is not present, due to pulling the
+                    # properties in that case. We take the careful approach.
+                    name_prop = resource.manager.name_prop
+                    name = resource.properties.get(name_prop, '<unknown>')
+                    names.insert(0, name)
+                    resource = resource.manager.parent
+                res_str = f" ({res_class} {'.'.join(names)})"
+            else:
+                res_str = ""
 
-        HMC_LOGGER.debug("Respons: %s %s%s, status: %s, "
-                         "headers: %r, %s: %r",
-                         method, url, res_str, status,
-                         _headers_for_logging(headers),
-                         content_label, content_msg)
+            HMC_LOGGER.debug("Respons: %s %s%s, status: %s, "
+                             "headers: %r, %s",
+                             method, url, res_str, status,
+                             _headers_for_logging(headers),
+                             content_str)
 
     @logged_api_call
     def get(self, uri, resource=None, logon_required=True, renew_session=True):

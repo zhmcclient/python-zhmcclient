@@ -26,8 +26,8 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    skip_warn, skipif_no_group_support
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
+    TEST_PREFIX, skipif_no_group_support
 
 urllib3.disable_warnings()
 
@@ -41,7 +41,7 @@ GROUP_LIST_PROPS = ['object-uri', 'name']
 GROUP_VOLATILE_PROPS = []
 
 
-def test_group_find_list(hmc_session):
+def test_group_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -49,12 +49,13 @@ def test_group_find_list(hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    skipif_no_group_support(client)
+    skipif_no_group_support(zhmc_logger, client)
 
     # Pick the groups to test with
     group_list = console.groups.list()
     if not group_list:
-        skip_warn(f"No groups defined on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"No groups defined on HMC {hd.host}")
     group_list = pick_test_resources(group_list)
 
     for group in group_list:
@@ -65,7 +66,7 @@ def test_group_find_list(hmc_session):
             GROUP_LIST_PROPS)
 
 
-def test_group_crud(hmc_session):
+def test_group_crud(zhmc_logger, hmc_session):
     """
     Test create, read, update and delete a group.
     """
@@ -73,11 +74,12 @@ def test_group_crud(hmc_session):
     hd = hmc_session.hmc_definition
     console = client.consoles.console
 
-    skipif_no_group_support(client)
+    skipif_no_group_support(zhmc_logger, client)
 
     # TODO: Get group issue on T224 HMC resolved.
     if hd.host == '9.114.87.7':
-        skip_warn(f"Issues with group support on HMC {hd.host}")
+        skip_log(zhmc_logger,
+                 f"Issues with group support on HMC {hd.host}")
 
     group_name = TEST_PREFIX + ' test_group_crud group'
 
@@ -108,9 +110,9 @@ def test_group_crud(hmc_session):
             group = console.groups.create(group_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn(
-                    f"HMC userid {hd.userid!r} is not authorized for task "
-                    f"'Grouping' on HMC {hd.host}")
+                skip_log(zhmc_logger,
+                         f"HMC userid {hd.userid!r} is not authorized for task "
+                         f"'Grouping' on HMC {hd.host}")
             else:
                 raise
 

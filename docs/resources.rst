@@ -341,7 +341,7 @@ Storage Volumes
 .. _`Tape Libraries`:
 
 Tape Libraries
------------------
+--------------
 
 .. automodule:: zhmcclient._tape_library
 
@@ -636,7 +636,7 @@ LDAP Server Definition
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
-   
+
 
 .. _`SSO Server Definition`:
 

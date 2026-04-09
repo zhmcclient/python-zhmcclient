@@ -23,7 +23,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+from .utils import skip_log, pick_test_resources, runtest_find_list, \
     runtest_get_properties
 
 urllib3.disable_warnings()
@@ -38,7 +38,7 @@ TASK_LIST_PROPS = ['element-uri', 'name']
 TASK_VOLATILE_PROPS = []
 
 
-def test_task_find_list(hmc_session):
+def test_task_find_list(zhmc_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -50,9 +50,9 @@ def test_task_find_list(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet support "
-            "tasks")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "tasks")
 
     # Pick the tasks to test with
     task_list = console.tasks.list()
@@ -66,7 +66,7 @@ def test_task_find_list(hmc_session):
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
 
 
-def test_task_property(hmc_session):
+def test_task_property(zhmc_logger, hmc_session):
     """
     Test property related methods
     """
@@ -78,9 +78,9 @@ def test_task_property(hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC {hd.host} of version {hmc_version} does not yet support "
-            "tasks")
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "tasks")
 
     # Pick the tasks to test with
     task_list = console.tasks.list()

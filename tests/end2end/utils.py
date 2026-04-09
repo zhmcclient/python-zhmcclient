@@ -569,28 +569,30 @@ def validate_firmware_features(api_version_info, features):
                 f"HMC did not return firmware feature {name!r} as enabled")
 
 
-def skipif_no_storage_mgmt_feature(cpc):
+def skipif_no_storage_mgmt_feature(logger, cpc):
     """
     Skip the test if the "DPM Storage Management" feature is not enabled for
     the specified CPC, or if the CPC does not yet support it.
     """
     smf = cpc.firmware_feature_enabled('dpm-storage-management')
     if not smf:
-        skip_warn("DPM Storage Mgmt feature not enabled or not supported "
-                  f"on CPC {cpc.name}")
+        skip_log(logger,
+                 "DPM Storage Mgmt feature not enabled or not supported "
+                 f"on CPC {cpc.name}")
 
 
-def skipif_storage_mgmt_feature(cpc):
+def skipif_storage_mgmt_feature(logger, cpc):
     """
     Skip the test if the "DPM Storage Management" feature is enabled for
     the specified CPC.
     """
     smf = cpc.firmware_feature_enabled('dpm-storage-management')
     if smf:
-        skip_warn(f"DPM Storage Mgmt feature enabled on CPC {cpc.name}")
+        skip_log(logger,
+                 f"DPM Storage Mgmt feature enabled on CPC {cpc.name}")
 
 
-def skipif_no_group_support(client):
+def skipif_no_group_support(logger, client):
     """
     Skip the test if the HMC version does not support groups yet.
     """
@@ -598,19 +600,21 @@ def skipif_no_group_support(client):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn(
-            f"HMC has version {hmc_version} and does not yet support groups")
+        skip_log(logger,
+                 f"HMC has version {hmc_version} and does not yet support "
+                 "groups")
 
 
-def skipif_no_secure_boot_feature(cpc):
+def skipif_no_secure_boot_feature(logger, cpc):
     """
     Skip the test if the API feature "secure-boot-with-certificates" isn't
     available on the specified CPC & console.
     """
-    _skipif_api_feature_not_on_cpc_and_hmc("secure-boot-with-certificates", cpc)
+    _skipif_api_feature_not_on_cpc_and_hmc(
+        logger, "secure-boot-with-certificates", cpc)
 
 
-def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
+def _skipif_api_feature_not_on_cpc_and_hmc(logger, feature, cpc):
     """
     Skip the test if the given API feature isn't available on the specified CPC
      and its console.
@@ -618,15 +622,17 @@ def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
     cpc_features = cpc.list_api_features()
 
     if feature not in cpc_features:
-        skip_warn(f"API feature {feature} not available on CPC {cpc.name}")
+        skip_log(logger,
+                 f"API feature {feature} not available on CPC {cpc.name}")
 
     console = cpc.manager.client.consoles.console
     console_features = console.list_api_features()
     if feature not in console_features:
-        skip_warn(f"API feature {feature} not available on HMC {console.name}")
+        skip_log(logger,
+                 f"API feature {feature} not available on HMC {console.name}")
 
 
-def skipif_no_partition_link_feature(cpc):
+def skipif_no_partition_link_feature(logger, cpc):
     """
     Skip the test if not all of the Partition Link related API features are
     enabled for the specified CPC, or if the CPC does not yet support all of
@@ -644,8 +650,9 @@ def skipif_no_partition_link_feature(cpc):
         has_api_feature("dpm-hipersockets-partition-link-management", cpc) and
         has_api_feature("dpm-ctc-partition-link-management", cpc))
     if not has_all_features:
-        skip_warn("The partition link related API features are not all enabled "
-                  f"or not all supported on CPC {cpc.name}")
+        skip_log(logger,
+                 "The partition link related API features are not all enabled "
+                 f"or not all supported on CPC {cpc.name}")
 
 
 def has_api_feature(feature, cpc):
@@ -703,6 +710,15 @@ def skip_warn(msg):
     specified message.
     """
     warnings.warn(msg, End2endTestWarning, stacklevel=2)
+    pytest.skip(msg)
+
+
+def skip_log(logger, msg):
+    """
+    Create a debug log entry and skip the current pytest testcase with the
+    specified message.
+    """
+    logger.debug(f"Skipped: {msg}")
     pytest.skip(msg)
 
 
@@ -878,7 +894,7 @@ def is_cpc_property_hmc_inventory(name):
 
 
 def skip_missing_api_feature(
-        console, console_feature, cpc=None, cpc_feature=None):
+        logger, console, console_feature, cpc=None, cpc_feature=None):
     """
     Skip pytest testcase if an HMC Console or CPC API feature is not
     available.
@@ -887,20 +903,21 @@ def skip_missing_api_feature(
 
     api_version_info = client.version_info()
     if api_version_info < (4, 10):
-        pytest.skip(
-            f"HMC API version {'.'.join(map(str, api_version_info))} is below "
-            "minimum version 4.10 required for API features")
+        skip_log(logger,
+                 f"HMC API version {'.'.join(map(str, api_version_info))} is "
+                 "below minimum version 4.10 required for API features")
 
     if console_feature:
         if not console.list_api_features(console_feature):
-            pytest.skip(
-                f"Console API feature {console_feature!r} is not available")
+            skip_log(logger,
+                     f"Console API feature {console_feature!r} is not "
+                     "available")
 
     if cpc_feature:
         if not cpc.list_api_features(cpc_feature):
-            pytest.skip(
-                f"CPC API feature {cpc_feature!r} is not available for "
-                f"CPC {cpc.name!r}")
+            skip_log(logger,
+                     f"CPC API feature {cpc_feature!r} is not available for "
+                     f"CPC {cpc.name!r}")
 
 
 def pformat_as_dict(dict_):
