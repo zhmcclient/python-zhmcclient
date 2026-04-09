@@ -14,22 +14,35 @@
 
 """
 Starting with SE version 2.15.0, tape link management capabilities have been
-introduced to support management of connections between tape libraries and
-partitions in DPM mode.
+introduced for DPM mode.
 
-Tape links represent logical connections between a :term:`tape library` and a
-:term:`partition`. They enable partitions to access tape storage devices
-through FCP adapters. Each tape link defines the relationship and access
-parameters for a partition to communicate with a specific tape library.
+A :term:`tape link` object represents a single tape link associated with a
+DPM-enabled :term:`CPC`. Tape links define pathways to tape library storage
+that can be attached to partitions. When a tape link is attached to a
+partition, its fulfilled resources are virtualized and the partition view of
+them is represented by a set of
+:term:`virtual tape resources <Virtual Tape Resource>`.
 
-Tape links are child resources of :term:`tape libraries <tape library>`.
-In the zhmcclient, the :class:`~zhmcclient.TapeLink` objects are accessible
-via the :attr:`~zhmcclient.TapeLibrary.tape_links` property of a
-:class:`~zhmcclient.TapeLibrary` object.
+Tape links are top-level resources whose conceptual parent is the
+:term:`Console`. In the zhmcclient, the :class:`~zhmcclient.TapeLink` objects
+are accessible via the :attr:`~zhmcclient.Console.tape_links` property of a
+:class:`~zhmcclient.Console` object.
 
-Tape links can be listed, created, deleted, and updated. They facilitate
-the attachment of tape libraries to partitions, enabling tape storage
-operations within the partition environment.
+Tape links can be listed, created, deleted, and updated. They also support
+querying and updating selected properties of their virtual tape resources.
+
+Tape link resources have a lifecycle that is reflected in their
+``fulfillment-state`` property. Creating or modifying a tape link can require
+subsequent SAN configuration changes by a storage administrator before the tape
+link resources become usable by a partition. Fulfillment is auto-detected by
+the HMC and can transition through states such as ``pending``, ``complete``,
+``pending-with-mismatches``, and ``incomplete``.
+
+The canonical URI of a tape link is ``/api/tape-links/{tape-link-id}``, and
+its ``parent`` property identifies the owning Console. The ``cpc-uri``
+property identifies the CPC associated with the tape link, and the
+``tape-library-uri`` property identifies the linked tape library once it is
+specified or discovered.
 
 Tape links can only be managed on CPCs that support the tape library
 management feature (SE version >= 2.15.0).
@@ -41,6 +54,7 @@ import re
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._virtual_tape_resource import VirtualTapeResourceManager
 from ._logging import logged_api_call
 from ._utils import RC_TAPE_LINK, append_query_parms
 
@@ -49,8 +63,8 @@ __all__ = ['TapeLinkManager', 'TapeLink']
 
 class TapeLinkManager(BaseManager):
     """
-    Manager providing access to the :term:`tape links <tape link>` of a
-    :term:`tape library`.
+    Manager providing access to the :term:`tape links <tape link>` of the
+    :term:`Console`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -58,53 +72,57 @@ class TapeLinkManager(BaseManager):
     Objects of this class are not directly created by the user; they are
     accessible via the following instance variable:
 
-    * :attr:`~zhmcclient.TapeLibrary.tape_links` of a
-      :class:`~zhmcclient.TapeLibrary` object.
+    * :attr:`~zhmcclient.Console.tape_links` of a
+      :class:`~zhmcclient.Console` object.
+
+    The tape links managed by this class are associated with DPM-enabled CPCs
+    and can be filtered by properties such as ``cpc-uri``, ``name``, and
+    ``fulfillment-state``.
 
     HMC/SE version requirements:
 
     * SE version >= 2.15.0
     """
 
-    def __init__(self, tape_library):
+    def __init__(self, console):
         # This function should not go into the docs.
         # Parameters:
-        #   tape_library (:class:`~zhmcclient.TapeLibrary`):
-        #     Tape library defining the scope for this manager.
+        #   console (:class:`~zhmcclient.Console`):
+        #     Console defining the scope for this manager.
 
         # Resource properties that are supported as filter query parameters.
         # If the support for a resource property changes within the set of HMC
         # versions that support this type of resource, this list must be set up
         # for the version of the HMC this session is connected to.
         query_props = [
+            'cpc-uri',
             'name',
-            'partition-uri',
+            'fulfillment-state',
         ]
 
         super().__init__(
             resource_class=TapeLink,
             class_name=RC_TAPE_LINK,
-            session=tape_library.manager.session,
-            parent=tape_library,
-            base_uri=f'{tape_library.uri}/tape-links',
-            oid_prop='element-id',
-            uri_prop='element-uri',
+            session=console.manager.session,
+            parent=console,
+            base_uri='/api/tape-links',
+            oid_prop='object-id',
+            uri_prop='object-uri',
             name_prop='name',
             query_props=query_props)
-        self._tape_library = tape_library
+        self._console = console
 
     @property
-    def tape_library(self):
+    def console(self):
         """
-        :class:`~zhmcclient.TapeLibrary`: The :term:`tape library` defining
-        the scope for this manager.
+        :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._tape_library
+        return self._console
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
-        List the tape links defined in this tape library.
+        List the tape links defined on this Console.
 
         Tape links for which the authenticated user does not have
         object-access permission are not included.
@@ -135,7 +153,7 @@ class TapeLinkManager(BaseManager):
 
         Authorization requirements:
 
-        * Object-access permission to this tape library.
+        * Object-access permission to the Console.
         * Object-access permission to any tape links to be included in the
           result.
 
@@ -143,8 +161,8 @@ class TapeLinkManager(BaseManager):
 
           full_properties (bool):
             Controls that the full set of resource properties for each returned
-            tape link is being retrieved, vs. only the following short
-            set: "element-uri", "name", and "partition-uri".
+            tape link is being retrieved, vs. only a short set of properties
+            returned by the HMC for tape link list operations.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -173,10 +191,13 @@ class TapeLinkManager(BaseManager):
     @logged_api_call
     def create(self, properties):
         """
-        Create a tape link in this tape library.
+        Create a tape link on this Console.
 
-        The new tape link establishes a connection between this tape library
-        and a partition, enabling the partition to access tape storage devices.
+        The new tape link establishes a pathway to tape library storage for a
+        partition on a DPM-enabled CPC. Depending on the requested properties
+        and the SAN environment, the new tape link may initially enter the
+        ``pending`` fulfillment state until its requested resources are
+        fulfilled.
 
         HMC/SE version requirements:
 
@@ -184,9 +205,9 @@ class TapeLinkManager(BaseManager):
 
         Authorization requirements:
 
-        * Object-access permission to this tape library.
-        * Object-access permission to the partition specified in the
-          'partition-uri' property.
+        * Object-access permission to the Console.
+        * Object-access permission to the CPC and any explicitly referenced
+          resources such as the tape library or adapter ports.
         * Task permission to the "Configure Storage - System Programmer" task.
 
         Parameters:
@@ -195,14 +216,17 @@ class TapeLinkManager(BaseManager):
             Allowable properties are defined in section 'Request body contents'
             in section 'Create Tape Link' in the :term:`HMC API` book.
 
-            The 'partition-uri' property identifies the partition to which
-            this tape link will connect, and is required to be specified.
+            Typical input properties include ``name``, ``description``,
+            ``cpc-uri``, ``connectivity``, ``max-partitions``,
+            ``tape-library-uri``, and ``adapter-port-uris``. If
+            ``tape-library-uri`` or enough adapter ports are not specified, the
+            remaining assignment may be deferred to the storage administrator.
 
         Returns:
 
           :class:`~zhmcclient.TapeLink`:
             The resource object for the new tape link.
-            The object will have its 'element-uri' property set as returned by
+            The object will have its ``object-uri`` property set as returned by
             the HMC, and will also have the input properties set.
 
         Raises:
@@ -227,6 +251,10 @@ class TapeLinkManager(BaseManager):
 class TapeLink(BaseResource):
     """
     Representation of a :term:`tape link`.
+
+    A tape link is associated with a CPC and conceptually parented by the
+    Console. It can link to a specific tape library or allow the storage
+    administrator to choose one during fulfillment.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -255,27 +283,8 @@ class TapeLink(BaseResource):
             f"TapeLink init: Expected manager type {TapeLinkManager}, "
             f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
-        self._partition = None
         self._virtual_tape_resources = None
-
-    @property
-    def partition(self):
-        """
-        :class:`~zhmcclient.Partition`: The :term:`partition` to which this
-        tape link is connected.
-
-        The returned :class:`~zhmcclient.Partition` has only a minimal set of
-        properties populated.
-        """
-        # We do here some lazy loading.
-        if not self._partition:
-            partition_uri = self.get_property('partition-uri')
-            tape_library = self.manager.tape_library
-            cpc = tape_library.manager.console.manager.client.cpcs.find(
-                **{'object-uri': tape_library.get_property('cpc-uri')})
-            part_mgr = cpc.partitions
-            self._partition = part_mgr.resource_object(partition_uri)
-        return self._partition
+        self._cpc = None
 
     @property
     def virtual_tape_resources(self):
@@ -286,92 +295,33 @@ class TapeLink(BaseResource):
         """
         # We do here some lazy loading.
         if not self._virtual_tape_resources:
-            # pylint: disable=import-outside-toplevel
-            from ._virtual_tape_resource import VirtualTapeResourceManager
             self._virtual_tape_resources = VirtualTapeResourceManager(self)
         return self._virtual_tape_resources
 
-    @logged_api_call
-    def delete(self):
+    @property
+    def cpc(self):
         """
-        Delete this tape link and remove the connection between the tape
-        library and the partition.
+        :class:`~zhmcclient.Cpc`: The :term:`CPC` to which this tape link
+        is associated.
 
-        HMC/SE version requirements:
-
-        * SE version >= 2.15.0
-
-        Authorization requirements:
-
-        * Object-access permission to this tape link.
-        * Object-access permission to the tape library containing this tape
-          link.
-        * Task permission to the "Configure Storage - System Programmer" task.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
+        The returned :class:`~zhmcclient.Cpc` has only a minimal set of
+        properties populated.
         """
-        self.manager.session.post(
-            uri=self.uri + '/operations/delete', resource=self, body={})
-        # pylint: disable=protected-access
-        self.manager._name_uri_cache.delete(
-            self.get_properties_local(self.manager._name_prop, None))
-        self.cease_existence_local()
-
-    @logged_api_call
-    def update_properties(self, properties):
-        """
-        Update writeable properties of this tape link.
-
-        This method serializes with other methods that access or change
-        properties on the same Python object.
-
-        HMC/SE version requirements:
-
-        * SE version >= 2.15.0
-
-        Authorization requirements:
-
-        * Object-access permission to this tape link.
-        * Object-access permission to the tape library containing this tape
-          link.
-        * Task permission to the "Configure Storage - System Programmer" task.
-
-        Parameters:
-
-          properties (dict): New values for the properties to be updated.
-            Properties not to be updated are omitted.
-            Allowable properties are listed for operation
-            'Modify Tape Link Properties' in section 'Tape Link element object'
-            in the :term:`HMC API` book.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
-        """
-        # pylint: disable=protected-access
-        self.manager.session.post(self.uri, resource=self, body=properties)
-        is_rename = self.manager._name_prop in properties
-        if is_rename:
-            # Delete the old name from the cache
-            self.manager._name_uri_cache.delete(self.name)
-        self.update_properties_local(copy.deepcopy(properties))
-        if is_rename:
-            # Add the new name to the cache
-            self.manager._name_uri_cache.update(self.name, self.uri)
+        # We do here some lazy loading.
+        if not self._cpc:
+            cpc_uri = self.get_property('cpc-uri')
+            cpc_mgr = self.manager.console.manager.client.cpcs
+            self._cpc = cpc_mgr.resource_object(cpc_uri)
+        return self._cpc
 
     @logged_api_call
     def get_partitions(self, name=None, status=None):
         """
-        Return the partitions associated with this tape link, optionally
-        filtered by partition name and status.
+        Return the partitions to which this tape link is currently
+        attached, optionally filtered by partition name and status.
+
+        If a returned partition is active, the tape link's fulfilled resources
+        are dynamically available in that partition as virtual tape resources.
 
         HMC/SE version requirements:
 
@@ -380,7 +330,6 @@ class TapeLink(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this tape link.
-        * Task permission to the "Configure Storage - System Programmer" task.
 
         Parameters:
 
@@ -389,14 +338,14 @@ class TapeLink(BaseResource):
             no filtering for the partition name takes place.
 
           status (:term:`string`): Filter string to limit returned partitions
-            to those that have a matching status. The value must be a valid
+            to those  that have a matching status. The value must be a valid
             partition status property value. If `None`, no filtering for the
             partition status takes place.
 
         Returns:
 
           List of :class:`~zhmcclient.Partition` objects representing the
-          partitions associated with this tape link,
+          partitions to which this tape link is currently attached,
           with a minimal set of properties ('object-id', 'name', 'status').
 
         Raises:
@@ -418,10 +367,8 @@ class TapeLink(BaseResource):
 
         uri = f'{self.uri}/operations/get-partitions{query_parms_str}'
 
-        tape_library = self.manager.tape_library
-        cpc = tape_library.manager.console.manager.client.cpcs.find(
-            **{'object-uri': tape_library.get_property('cpc-uri')})
-        part_mgr = cpc.partitions
+        tl_cpc = self.cpc
+        part_mgr = tl_cpc.partitions
 
         result = self.manager.session.get(uri, resource=self)
         props_list = result['partitions']
@@ -432,15 +379,129 @@ class TapeLink(BaseResource):
         return part_list
 
     @logged_api_call
+    def delete(self, email_to_addresses=None, email_cc_addresses=None,
+               email_insert=None):
+        """
+        Delete this tape link.
+
+        The tape link must be detached from all partitions before it can be
+        deleted. If email recipients are specified, the HMC can notify storage
+        administrators about resource deletion or cleanup actions.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.15.0
+
+        Authorization requirements:
+
+        * Object-access permission to this tape link.
+        * Task permission to the "Configure Storage - System Programmer" task.
+
+         Parameters:
+
+          email_to_addresses (:term:`iterable` of :term:`string`): Email
+            addresses of one or more storage administrator to be notified.
+            If `None` or empty, no email will be sent.
+
+          email_cc_addresses (:term:`iterable` of :term:`string`): Email
+            addresses of one or more storage administrator to be copied
+            on the notification email.
+            If `None` or empty, nobody will be copied on the email.
+            Must be `None` or empty if `email_to_addresses` is `None` or empty.
+
+          email_insert (:term:`string`): Additional text to be inserted in the
+            notification email.
+            The text can include HTML formatting tags.
+            If `None`, no additional text will be inserted.
+            Must be `None` or empty if `email_to_addresses` is `None` or empty.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        body = {}
+
+        if email_to_addresses:
+            body['email-to-addresses'] = email_to_addresses
+            if email_cc_addresses:
+                body['email-cc-addresses'] = email_cc_addresses
+            if email_insert:
+                body['email-insert'] = email_insert
+        else:
+            if email_cc_addresses:
+                raise ValueError(
+                    "email_cc_addresses must not be specified if there is no "
+                    f"email_to_addresses: {email_cc_addresses!r}")
+            if email_insert:
+                raise ValueError(
+                    "email_insert must not be specified if there is no "
+                    f"email_to_addresses: {email_insert!r}")
+
+        self.manager.session.post(
+            uri=self.uri + '/operations/delete', resource=self, body=body)
+        # pylint: disable=protected-access
+        self.manager._name_uri_cache.delete(
+            self.get_properties_local(self.manager._name_prop, None))
+        self.cease_existence_local()
+
+    @logged_api_call
+    def update_properties(self, properties):
+        """
+        Update writeable properties of this tape link.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.15.0
+
+        Authorization requirements:
+
+        * Object-access permission to this tape link.
+        * Task permission to the "Configure Storage - System Programmer" task.
+
+        Parameters:
+
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are listed for operation
+            'Modify Tape Link Properties' in section 'Tape Link element object'
+            in the :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        # pylint: disable=protected-access
+        uri = f'{self.uri}/operations/modify'
+        self.manager.session.post(uri, resource=self, body=properties)
+        is_rename = self.manager._name_prop in properties
+        if is_rename:
+            # Delete the old name from the cache
+            self.manager._name_uri_cache.delete(self.name)
+        self.update_properties_local(copy.deepcopy(properties))
+        if is_rename:
+            # Add the new name to the cache
+            self.manager._name_uri_cache.update(self.name, self.uri)
+
+    @logged_api_call
     def get_histories(self):
         """
         Get the historical records for this tape link.
 
         The corresponding HMC operation is "Get Tape Link Histories".
 
-        This operation retrieves historical information about the tape link,
-        including connection events, configuration changes, and operational
-        status over time.
+        This operation retrieves historical information about the tape link.
+        For details about the returned content, see the corresponding HMC API
+        operation.
 
         HMC/SE version requirements:
 
@@ -477,9 +538,8 @@ class TapeLink(BaseResource):
 
         The corresponding HMC operation is "Get Tape Link Environment Report".
 
-        The environment report provides information about the tape link's
-        operational environment, including connectivity status, adapter
-        information, and any environmental issues or warnings.
+        The environment report provides information about the current tape link
+        environment as defined by the HMC API for this operation.
 
         HMC/SE version requirements:
 
@@ -519,9 +579,8 @@ class TapeLink(BaseResource):
         The corresponding HMC operation is
         "Update Tape Link Environment Report".
 
-        This operation allows updating specific fields in the tape link's
-        environment report, such as acknowledging warnings or updating
-        configuration parameters.
+        This operation updates selected fields in the tape link environment
+        report as supported by the HMC API.
 
         HMC/SE version requirements:
 
@@ -714,9 +773,9 @@ class TapeLink(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        tape_library = self.manager.tape_library
-        cpc = tape_library.manager.console.manager.client.cpcs.find(
-            **{'object-uri': tape_library.get_property('cpc-uri')})
+        cpc = self.cpc
+        if not cpc:
+            return []
         adapter_mgr = cpc.adapters
         port_list = []
         port_uris = self.get_property('adapter-port-uris')

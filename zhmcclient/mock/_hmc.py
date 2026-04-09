@@ -1144,6 +1144,8 @@ class FakedConsole(FakedBaseResource):
             hmc=manager.hmc, console=self)
         self._tape_library = FakedTapeLibraryManager(
             hmc=manager.hmc, console=self)
+        self._tape_links = FakedTapeLinkManager(
+            hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
         self._user_patterns = FakedUserPatternManager(
@@ -1219,6 +1221,14 @@ class FakedConsole(FakedBaseResource):
         the faked Storage Group Template resources of this Console.
         """
         return self._tape_library
+
+    @property
+    def tape_links(self):
+        """
+        :class:`~zhmcclient.mock.FakedTapeLibraryManager`: Access to
+        the faked Storage Group Template resources of this Console.
+        """
+        return self._tape_links
 
     @property
     def users(self):
@@ -3817,6 +3827,21 @@ class FakedTapeLibraryManager(FakedBaseManager):
         return new_tlib
 
 
+class FakedTapeLibrary(FakedBaseResource):
+    """
+    A faked Tape Library resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
 class FakedTapeLinkManager(FakedBaseManager):
     """
     A manager for faked TapeLink resources within a faked TapeLibrary (see
@@ -3826,43 +3851,41 @@ class FakedTapeLinkManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, hmc, tape_library):
+    def __init__(self, hmc, console):
         super().__init__(
             hmc=hmc,
-            parent=tape_library,
+            parent=console,
             resource_class=FakedTapeLink,
-            base_uri=tape_library.uri + '/tape-links',
-            oid_prop='element-id',
-            uri_prop='element-uri',
+            base_uri=self.api_root + '/tape-links',
+            oid_prop='object-id',
+            uri_prop='object-uri',
             class_value='tape-link',
             name_prop='name')
 
-    def add(self, properties):
-        # pylint: disable=useless-super-delegation
+
+class FakedTapeLink(FakedBaseResource):
+    """
+    A faked TapeLink resource within a faked TapeLibrary (see
+    :class:`zhmcclient.mock.FakedTapeLibrary`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+        self._virtual_tape_resources = FakedVirtualTapeResourceManager(
+            hmc=manager.hmc, tape_link=self)
+
+    @property
+    def virtual_tape_resources(self):
         """
-        Add a faked TapeLink resource.
-
-        Parameters:
-
-          properties (dict):
-            Resource properties.
-
-            Special handling and requirements for certain properties:
-
-            * 'element-id' will be auto-generated with a unique value across
-              all instances of this resource type, if not specified.
-            * 'element-uri' will be auto-generated based upon the object ID,
-              if not specified.
-            * 'class' will be auto-generated to 'tape-link',
-              if not specified.
-            * 'parent' will be auto-generated to the parent resource URI
-              (the TapeLibrary URI), if not specified.
-
-        Returns:
-
-          :class:`~zhmcclient.mock.FakedTapeLink`: The faked TapeLink resource.
+        :class:`~zhmcclient.mock.FakedVirtualTapeResourceManager`: Access to
+        the faked VirtualTapeResource resources of this TapeLink.
         """
-        return super().add(properties)
+        return self._virtual_tape_resources
 
 
 class FakedVirtualTapeResourceManager(FakedBaseManager):
@@ -3928,56 +3951,6 @@ class FakedVirtualTapeResource(FakedBaseResource):
         super().__init__(
             manager=manager,
             properties=properties)
-
-
-class FakedTapeLink(FakedBaseResource):
-    """
-    A faked TapeLink resource within a faked TapeLibrary (see
-    :class:`zhmcclient.mock.FakedTapeLibrary`).
-
-    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
-    common methods and attributes.
-    """
-
-    def __init__(self, manager, properties):
-        super().__init__(
-            manager=manager,
-            properties=properties)
-        self._virtual_tape_resources = FakedVirtualTapeResourceManager(
-            hmc=manager.hmc, tape_link=self)
-
-    @property
-    def virtual_tape_resources(self):
-        """
-        :class:`~zhmcclient.mock.FakedVirtualTapeResourceManager`: Access to
-        the faked VirtualTapeResource resources of this TapeLink.
-        """
-        return self._virtual_tape_resources
-
-
-class FakedTapeLibrary(FakedBaseResource):
-    """
-    A faked Tape Library resource within a faked HMC (see
-    :class:`zhmcclient.mock.FakedHmc`).
-
-    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
-    common methods and attributes.
-    """
-
-    def __init__(self, manager, properties):
-        super().__init__(
-            manager=manager,
-            properties=properties)
-        self._tape_links = FakedTapeLinkManager(
-            hmc=manager.hmc, tape_library=self)
-
-    @property
-    def tape_links(self):
-        """
-        :class:`~zhmcclient.mock.FakedTapeLinkManager`: Access to the
-        faked TapeLink resources of this TapeLibrary.
-        """
-        return self._tape_links
 
 
 class FakedCapacityGroupManager(FakedBaseManager):

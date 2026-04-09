@@ -225,11 +225,18 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageGroup"
                     },
                 },
-                "tape_library": {
-                    "description": "The Tape Library defined on this HMC",
+                "tape_libraries": {
+                    "description": "The Tape Libraries defined on this HMC",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/TapeLibrary"
+                    },
+                },
+                "tape_links": {
+                    "description": "The tape links defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TapeLink"
                     },
                 },
                 "hw_messages": {

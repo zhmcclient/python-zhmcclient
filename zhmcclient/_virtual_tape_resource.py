@@ -13,18 +13,20 @@
 # limitations under the License.
 
 """
-A :term:`virtual tape resource` object represents a tape-related
-z/Architecture device that is visible to a partition and that provides access
-for that partition to a :term:`tape library` through a :term:`tape link`.
+A :term:`virtual tape resource` defines the virtualized view of a storage
+adapter that is backing a :term:`tape link` as seen by a partition.
 
-Virtual tape resource objects represent the virtualized tape devices in the
-partition that are used to access the tape library. Each usage of a virtual
-tape device in context of a tape link has its own virtual tape resource object.
+Virtual tape resource objects are element resources of a tape link. The
+canonical URI of a virtual tape resource is of the form
+``/api/tape-links/{tape-link-id}/virtual-tape-resources/``
+``{virtual-tape-resource-id}``, where the owning tape link remains the parent
+element and the tape link itself is a top-level resource whose conceptual
+parent is the :term:`Console`.
 
-Virtual tape resource objects are instantiated automatically when a tape link
-is attached to a partition, and are removed automatically upon detachment.
-
-Virtual tape resource objects are contained in :term:`tape link` objects.
+A virtual tape resource is created as tape link resources are fulfilled and
+made available to attached partitions. It provides the partition-specific view
+of the backing adapter port, allocated WWPN information, and the assigned
+device number.
 
 Tape links and virtual tape resources can only be managed on CPCs that support
 the tape library management feature (SE version >= 2.15.0).
@@ -45,7 +47,7 @@ __all__ = ['VirtualTapeResourceManager', 'VirtualTapeResource']
 class VirtualTapeResourceManager(BaseManager):
     """
     Manager providing access to the :term:`virtual tape resources
-    <Virtual Tape Resource>` in a particular :term:`tape link`.
+    <Virtual Tape Resource>` of a particular :term:`tape link`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -100,7 +102,7 @@ class VirtualTapeResourceManager(BaseManager):
     @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
-        List the virtual tape resources in this tape link.
+        List the virtual tape resources of this tape link.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
@@ -134,9 +136,9 @@ class VirtualTapeResourceManager(BaseManager):
 
           full_properties (bool):
             Controls that the full set of resource properties for each returned
-            virtual tape resource is being retrieved, vs. only the following
-            short set: "element-uri", "name", "device-number",
-            "adapter-port-uri", and "partition-uri".
+            virtual tape resource is being retrieved, vs. only a short set of
+            properties returned by the HMC for virtual tape resource list
+            operations.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -167,6 +169,10 @@ class VirtualTapeResourceManager(BaseManager):
 class VirtualTapeResource(BaseResource):
     """
     Representation of a :term:`virtual tape resource`.
+
+    A virtual tape resource is an element resource of a tape link and
+    represents the partition-visible view of the backing adapter port for tape
+    access. Its parent is the owning tape link.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -205,6 +211,8 @@ class VirtualTapeResource(BaseResource):
         :class:`~zhmcclient.Partition`: The partition to which this virtual
         tape resource is attached.
 
+        This is the partition identified by the ``partition-uri`` property.
+
         The returned partition object has only a minimal set of properties set
         ('object-id', 'object-uri', 'class', 'parent').
 
@@ -228,11 +236,7 @@ class VirtualTapeResource(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         if self._attached_partition is None:
-            tape_link = self.manager.tape_link
-            tape_library = tape_link.manager.tape_library
-            cpc = tape_library.manager.console.manager.client.cpcs.find(
-                **{'object-uri': tape_library.get_property('cpc-uri')})
-            part_mgr = cpc.partitions
+            part_mgr = self.manager.tape_link.cpc.partitions
             part = part_mgr.resource_object(self.get_property('partition-uri'))
             self._attached_partition = part
         return self._attached_partition
@@ -240,9 +244,13 @@ class VirtualTapeResource(BaseResource):
     @property
     def adapter_port(self):
         """
-        :class:`~zhmcclient.Port`: The tape adapter port associated with
-        this virtual tape resource, once discovery has determined which
-        port to use for this virtual tape resource.
+        :class:`~zhmcclient.Port`: The backing adapter port associated with
+        this virtual tape resource.
+
+        This is the port identified by the ``adapter-port-uri`` property. Its
+        value can change when adapter ports are added, removed, or replaced for
+        the owning tape link. The property value can be `None` if an adapter
+        has not yet been discovered to back this virtual tape resource.
 
         The returned adapter port object has only a minimal set of properties
         set ('object-id', 'object-uri', 'class', 'parent').
@@ -270,11 +278,7 @@ class VirtualTapeResource(BaseResource):
             assert port_uri is not None
             m = re.match(r'^(/api/adapters/[^/]+)/.*', port_uri)
             adapter_uri = m.group(1)
-            tape_link = self.manager.tape_link
-            tape_library = tape_link.manager.tape_library
-            cpc = tape_library.manager.console.manager.client.cpcs.find(
-                **{'object-uri': tape_library.get_property('cpc-uri')})
-            adapter_mgr = cpc.adapters
+            adapter_mgr = self.manager.tape_link.cpc.adapters
             filter_args = {'object-uri': adapter_uri}
             adapter = adapter_mgr.find(**filter_args)
             port_mgr = adapter.ports
@@ -286,6 +290,10 @@ class VirtualTapeResource(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this virtual tape resource.
+
+        This method updates the writeable properties defined by the HMC API for
+        virtual tape resource element objects, such as ``name``,
+        ``description``, and ``device-number``.
 
         This method serializes with other methods that access or change
         properties on the same Python object.
@@ -304,9 +312,9 @@ class VirtualTapeResource(BaseResource):
 
           properties (dict): New values for the properties to be updated.
             Properties not to be updated are omitted.
-            Allowable properties are the properties with qualifier (w) in
-            section 'Data model' in section 'Virtual Tape Resource object'
-            in the :term:`HMC API` book.
+            Allowable properties are the properties with qualifier ``(w)``
+            in the data model for the Virtual Tape Resource element object in
+            the :term:`HMC API` book.
 
         Raises:
 
