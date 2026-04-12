@@ -443,8 +443,21 @@ pylint: $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done
 
 .PHONY: safety
 safety: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_develop_policy_file) $(safety_install_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
-	safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report || test '$(RUN_TYPE)' == 'normal' || test '$(RUN_TYPE)' == 'scheduled' || exit 1
-	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report || test '$(RUN_TYPE)' == 'normal' || exit 1
+	safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report; \
+	  rc_dev=$$?; \
+	  safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report; \
+	  rc_ins=$$?; \
+	  where=""; \
+	  if [[ $${rc_dev} -ne 0 ]]; then where="development"; fi; \
+	  if [[ $${rc_ins} -ne 0 ]]; then where="$${where:+$$where,}install"; fi; \
+	  if [[ -n $${where} ]]; then \
+	    if [[ "$(RUN_TYPE)" == "release" || "$(RUN_TYPE)" == "local" ]]; then \
+	      echo "Safety issues found in $${where}"; \
+	      exit 1; \
+	    else \
+	      echo "::error::Safety issues found in $${where} - They need to be fixed before the next release"; \
+	    fi; \
+	  fi
 	@echo "Makefile: $@ done."
 
 .PHONY: bandit
