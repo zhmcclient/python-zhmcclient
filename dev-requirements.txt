@@ -62,7 +62,7 @@ safety-schemas>=0.0.16
 dparse>=0.6.4
 ruamel.yaml>=0.17.21
 click>=8.0.2
-Authlib>=1.6.6
+Authlib>=1.6.9
 marshmallow>=3.26.2
 pydantic>=2.12.0
 pydantic_core>=2.41.1
@@ -164,7 +164,7 @@ pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.5.3
+tornado>=6.5.5
 
 # pyzmq 26.1.0 added wheel archives for Python 3.13
 # pyzmq 27.0.1 added wheel archives for Python 3.14
