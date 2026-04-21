@@ -157,7 +157,7 @@ jobs:
     #-------- Creation of Github release
     - name: Determine whether release on Github exists for the pushed tag
       id: set-release-exists
-      uses: octokit/request-action@v2.x
+      uses: octokit/request-action@v3.0.0
       with:
         route: GET /repos/${{ github.repository }}/releases/tags/${{ steps.set-tag.outputs.result }}
       continue-on-error: true
@@ -165,7 +165,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create release on Github for the pushed tag if it does not exist
       if: ${{ steps.set-release-exists.outputs.status == 404 }}
-      uses: octokit/request-action@v2.x
+      uses: octokit/request-action@v3.0.0
       with:
         route: POST /repos/${{ github.repository }}/releases
       env:
