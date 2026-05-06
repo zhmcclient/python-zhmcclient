@@ -48,6 +48,10 @@ security:
             reason: Fixed cryptography version 46.0.6 requires Python>=3.10 and is used there
         35073:
            reason: Fixed pygments version 2.20.0 requires Python>=3.10 and is used there
+        45555:
+           reason: Fixed requests version 2.33.0 requires Python>=3.10 and is used there
+        20373:
+           reason: Fixed pytest version 9.0.3 requires Python>=3.10 and is used there
 
         # Need to comment out due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260218-01424:
