@@ -16,7 +16,7 @@ wheel==0.46.2
 
 # Direct dependencies for install (must be consistent with requirements.txt)
 
-requests==2.32.4
+requests==2.33.0
 stomp-py==8.1.1
 immutabledict==4.2.0
 nocasedict==1.0.2
@@ -38,7 +38,7 @@ urllib3==2.6.3
 # Direct dependencies for install of extra 'testutils' (must be consistent with extra-testutils-requirements)
 
 # Used by zhmcclient.testutils
-pytest==8.4.0
+pytest==9.0.3
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
 
