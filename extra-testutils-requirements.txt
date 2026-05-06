@@ -7,7 +7,8 @@
 # Direct dependencies for install of extra 'testutils' (must be consistent with minimum-constraints-install.txt)
 
 # zhmcclient.testutils defines pytest fixtures:
-pytest>=9.0.3
+pytest>=8.4.0; python_version == '3.9'
+pytest>=9.0.3; python_version >= '3.10'
 
 # Packages used by zhmcclient.testutils that are also used by zhmcclient and thus
 # are specified already in requirements.txt:

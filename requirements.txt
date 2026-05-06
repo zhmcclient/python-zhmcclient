@@ -8,7 +8,9 @@
 
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
-requests>=2.33.0
+# requests 2.33.0 is not installable on Python 3.9, so split by Python version.
+requests>=2.32.4; python_version == '3.9'
+requests>=2.33.0; python_version >= '3.10'
 
 stomp-py>=8.1.1
 
