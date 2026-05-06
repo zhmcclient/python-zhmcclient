@@ -51,7 +51,7 @@ security:
         45555:
            reason: Fixed requests version 2.32.4 requires Python>=3.10 and is used there
         20373:
-           reason: Fixed pytest version 9.0.3 requires Python>=3.10 and is used there
+           reason: Fixed pytest version 8.4.0 requires Python>=3.10 and is used there
 
         # Need to comment out due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260218-01424:
