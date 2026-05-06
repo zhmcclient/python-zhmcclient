@@ -39,7 +39,7 @@ security:
         84415:
             reason: Fixed filelock version 3.20.3 requires Python>=3.10 and is used there
         89481:
-            reason: Fixed authlib version 1.6.9 requires Python>=3.10 and is used there
+            reason: Fixed authlib version 1.6.11 requires Python>=3.10 and is used there
         89032:
             reason: Fixed tornado version 6.5.5 requires Python>=3.10 and is used there
 
