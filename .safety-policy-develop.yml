@@ -49,7 +49,7 @@ security:
         35073:
            reason: Fixed pygments version 2.20.0 requires Python>=3.10 and is used there
         45555:
-           reason: Fixed requests version 2.33.0 requires Python>=3.10 and is used there
+           reason: Fixed requests version 2.32.4 requires Python>=3.10 and is used there
         20373:
            reason: Fixed pytest version 9.0.3 requires Python>=3.10 and is used there
 
