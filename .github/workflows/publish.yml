@@ -121,6 +121,9 @@ jobs:
           echo "Update version '${{ steps.set-update-version.outputs.result }}' in tag '${{ steps.set-tag.outputs.result }}' is invalid (must be non-0 when releasing stable branch for pushed tag)";
           false;
         fi
+    - name: Set repo name
+      id: repo
+      run: echo "name=${GITHUB_REPOSITORY#*/}" >> $GITHUB_OUTPUT
 
     #-------- Setup of work environment
     - name: Checkout repo
@@ -163,6 +166,7 @@ jobs:
       continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create release on Github for the pushed tag if it does not exist
       if: ${{ steps.set-release-exists.outputs.status == 404 }}
       uses: octokit/request-action@v2.x
@@ -172,7 +176,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         INPUT_TAG_NAME: ${{ steps.set-tag.outputs.result }}
         INPUT_NAME: "Release ${{ steps.set-tag.outputs.result }}"
-        INPUT_BODY: "Change log https://python-zhmcclient.readthedocs.io/en/${{ steps.set-tag.outputs.result }}/changes.html"
+        INPUT_BODY: "Change log https://${{ steps.repo.outputs.name }}.readthedocs.io/en/${{ steps.set-tag.outputs.result }}/changes.html"
 
     #-------- Creation of stable branch
     # Note: This does not seem to depend on the disablement of the "Restrict pushes
