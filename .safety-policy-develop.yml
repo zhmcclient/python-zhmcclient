@@ -38,6 +38,17 @@ security:
             reason: Fixed filelock version 3.20.3 requires Python>=3.10 and is used there
         84415:
             reason: Fixed filelock version 3.20.3 requires Python>=3.10 and is used there
+        89481:
+            reason: Fixed authlib version 1.6.9 requires Python>=3.10 and is used there
+        89032:
+            reason: Fixed tornado version 6.5.5 requires Python>=3.10 and is used there
+        89826:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        90749:
+            reason: Fixed cryptography version 46.0.6 requires Python>=3.10 and is used there
+        35073:
+           reason: Fixed pygments version 2.20.0 requires Python>=3.10 and is used there
+
         # Need to comment out due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260218-01424:
         #     reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
