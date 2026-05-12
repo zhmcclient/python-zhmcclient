@@ -30,6 +30,8 @@ security:
     ignore-vulnerabilities:
         90553:
             reason: Fixed requests version 2.33.0 is not installable in the Python 3.9 CI environment, so Python 3.9 uses requests 2.32.4
+        96886:
+            reason: Fixed urllib3 version 2.7.0 requires Python>=3.10 and is used there
         # Need to comment out due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260122-20373:
         #     reason: Fixed pytest version 9.0.3 is not installable in the Python 3.9 CI environment, so Python 3.9 uses pytest 8.4.0
