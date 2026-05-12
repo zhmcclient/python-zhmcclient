@@ -39,7 +39,8 @@ urllib3==2.6.3
 # Direct dependencies for install of extra 'testutils' (must be consistent with extra-testutils-requirements)
 
 # Used by zhmcclient.testutils
-pytest==8.4.0; python_version == '3.9'
+# Needs to be commented out due to https://github.com/pyupio/safety/issues/856
+# pytest==8.4.0; python_version == '3.9'
 pytest==9.0.3; python_version >= '3.10'
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
