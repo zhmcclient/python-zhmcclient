@@ -30,6 +30,36 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.25.1
+^^^^^^^^^^^^^^
+
+Released: 2026-05-12
+
+**Bug fixes:**
+
+* Fixed dependabot issues up to 2026-05-12.
+
+* Fixed Mend issues up to 2026-02-26.
+
+* Added a step to the release instructions for checking Mend issues in the
+  internal copy of the repo.
+
+* Fixed safety issues up to 2026-05-12.
+
+* Pinned the version of stomp.py to <8.3.0, because version 8.3.0 caused problems
+  with the zhmcclient library, and because version 8.3.0 on Pypi has no
+  corresponding changes in the source code repository of stomp.py.
+
+* Fixed the check for the maximum length of the commit message title to
+  tolerate squash merges, which add the PR number at the end of the line.
+
+* Fixed a JSONDecodeError when a STOMP notification from the HMC contained the
+  empty string as the message body, by tolerating that. (`#2087 <https://github.com/zhmcclient/python-zhmcclient/issues/2087>`_)
+
+* Fixed the issue that the zhmcclient mock support returned write-only properties
+  of resources in Get and List operations. (`#2122 <https://github.com/zhmcclient/python-zhmcclient/issues/2122>`_)
+
+
 Version 1.25.0
 ^^^^^^^^^^^^^^
 
