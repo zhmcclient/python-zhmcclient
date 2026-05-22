@@ -28,6 +28,8 @@ security:
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
     ignore-vulnerabilities:
+        35073:
+           reason: Fixed pygments version 2.20.0 requires Python>=3.10 and is used there
         70612:
             reason: Disputed issue in jinja2 version 3.1.3 - No known fix
         79993:
@@ -46,9 +48,8 @@ security:
             reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
         90749:
             reason: Fixed cryptography version 46.0.6 requires Python>=3.10 and is used there
-        35073:
-           reason: Fixed pygments version 2.20.0 requires Python>=3.10 and is used there
-        # Need to comment out due to issue https://github.com/pyupio/safety/issues/847
+
+        # Need to comment out SFTY IDs due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260218-01424:
         #     reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
 
