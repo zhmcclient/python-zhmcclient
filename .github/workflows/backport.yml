@@ -35,14 +35,25 @@ jobs:
             | sort -t. -k1,1V -k2,2V \
             | tail -1)
           if [ -z "$latest" ]; then
-            echo "No stable branch found" >&2
+            echo "## Backport failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "No stable_M.N branch found" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           echo "branch=$latest" >> "$GITHUB_OUTPUT"
 
       - name: Create backport pull request
+        id: backport
         uses: korthout/backport-action@v4
         with:
           label_pattern: '^$'   # disable label-based targeting
           target_branches: ${{ steps.stable.outputs.branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail if backport had conflicts
+        if: steps.backport.outputs.was_successful == 'false'
+        run: |
+          branch="${{ steps.stable.outputs.branch }}"
+          echo "## Backport failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cherry-pick to branch ${{ steps.stable.outputs.branch }} had conflicts and requires manual resolution." >> "$GITHUB_STEP_SUMMARY"
+          echo "Please cherry-pick the changes locally and resolve the conflicts." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
