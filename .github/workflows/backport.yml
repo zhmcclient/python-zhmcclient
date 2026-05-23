@@ -30,11 +30,10 @@ jobs:
         id: stable
         run: |
           latest=$(git branch -r \
-            | sed 's|origin/||' \
+            | sed -e 's|origin/||' -e 's| ||g' \
             | grep -E '^stable_[0-9]+\.[0-9]+$' \
             | sort -t. -k1,1V -k2,2V \
-            | tail -1 \
-            | xargs)
+            | tail -1)
           if [ -z "$latest" ]; then
             echo "No stable branch found" >&2
             exit 1
