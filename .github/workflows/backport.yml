@@ -1,11 +1,13 @@
 # This GitHub workflow will backport ("roll back") PRs that are labelled with
 # "backport" to the latest stable branch by creating an according PR.
 
-name: Backport to latest stable branch
+name: backport
 
 on:
-  pull_request_target:
+  pull_request_target:  # Triggers when the PR is closed (which includes merging)
     types: [closed]
+    branches:
+      - master
 
 permissions:
   contents: write
@@ -13,7 +15,7 @@ permissions:
 
 jobs:
   backport:
-    name: Backport pull request
+    name: Backport pull request to latest stable branch
     runs-on: ubuntu-latest
     if: >
       github.event.pull_request.merged == true &&
