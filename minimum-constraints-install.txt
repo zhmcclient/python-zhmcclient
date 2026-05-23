@@ -49,7 +49,7 @@ pytest==9.0.3; python_version >= '3.10'
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
 
 # idna>3 requires using requests >=2.26.0
-idna==3.7
+idna==3.16
 
 
 # All other indirect dependencies for install that are not in requirements.txt

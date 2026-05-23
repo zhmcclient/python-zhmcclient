@@ -45,4 +45,4 @@ urllib3>=2.7.0; python_version >= '3.10'
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
 
 # idna is used by requests. idna 3.7 resolves security issues
-idna>=3.7
+idna>=3.16
