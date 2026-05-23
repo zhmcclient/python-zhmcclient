@@ -879,6 +879,106 @@ sign-off line by using a commit template file:
       git config commit.template ~/.git-signoff.template
 
 
+.. _`Handling Dependabot alerts and PRs`:
+
+Handling Dependabot alerts and PRs
+----------------------------------
+
+The GitHub Dependabot settings on this repo are set as follows:
+
+* Dependabot alerts: Enabled
+* Dependabot malware alerts: Enabled
+* Dependabot security updates: Enabled
+
+This causes the creation of
+`Dependabot alerts <https://github.com/zhmcclient/python-zhmcclient/security/dependabot>`_
+and the creation of
+`Dependabot pull requests <https://github.com/zhmcclient/python-zhmcclient/pulls?q=is%3Apr+label%3Adependencies+is%3Aopen>`_
+to fix them.
+
+These pull requests can be recognized by their ``dependencies`` label. They
+increase the package versions in the requirements files and also in the
+minimum-constraints files. However, there are some limitations:
+
+* When a new package version cannot by installed in all supported Python
+  environments, Dependabot adds an according warning to the alert, and does not
+  create a fix PR. The warning in the alert reads like this:
+
+  ```
+  Dependabot cannot update <package> to a non-vulnerable version
+  ```
+
+* Dependabot does not always correctly handle environment markers in requirements
+  and minimum-constraints files.
+
+Dependabot alerts should be handled as follows:
+
+* For created PRs, double check that all occurrences of the package have been
+  increased in the ``*.txt`` files and that the PR succeedes.
+
+  Then, add the ``backport`` label and merge the PR.
+
+  The presence of the ``backport`` label will cause a backport PR to the
+  latest ``stable_M.N`` branch to be created. See :ref:`Backporting` for
+  details. Merging the PR will close the Dependabot alert(s).
+
+* For the remaining Dependabot alerts, create PRs that increase the package
+  version to the version that is recommended in the PR. Make sure you do that
+  for all occurrences of the package in the ``*.txt`` files. You probably will
+  need to split the entry for the package by Python version. Use
+  `Pypi <https://pypi.org>`_ to find out which package versions support which
+  Python versions.
+
+  Example:
+
+  Assume this package requires Python >=3.9 and the
+  ``minimum-constraints-install.txt`` file contains a single entry for the
+  urllib3 package (it would also be in ``requirements.txt`` with ``>=``):
+
+  .. code-block:: text
+
+      urllib3==2.6.0
+
+  Dependabot has an alert that recommends upgrading urllib3 to 2.7.0, but has
+  failed creating a PR.
+
+  The `urllib3 package on Pypi <https://pypi.org/project/urllib3/>`_ shows
+  that version 2.6.3 is the latest version supported on Python 3.9, and
+  version 2.7.0 requires Python 3.10.
+
+  Split the entry between these two Python versions:
+
+  .. code-block:: text
+
+      urllib3==2.6.0; python_version == '3.9'
+      urllib3==2.7.0; python_version >= '3.10'
+
+
+.. _`Backporting`:
+
+Backporting
+-----------
+
+This repo supports assisted backporting of PRs targeting the ``master`` branch
+to the latest ``stable_M.N`` branch.
+
+To trigger the backporting, add the label ``backport`` to a PR targeting the
+``master`` branch. Merging that PR will cause a backport PR to be created, if
+the backporting can be done without merge conflicts.
+
+This is done by the ``backport.yml`` GitHub Actions workflow. The workflow
+determines the latest version of existing ``stable_M.N`` branches and then
+attempts to cherry-pick the PR to that branch. If there are merge conflicts,
+the workflow fails.
+
+When merging the PR with the ``backport`` label does not create a backport PR,
+look at the
+`run of the backport workflow <https://github.com/zhmcclient/python-zhmcclient/actions/workflows/backport.yml>`_
+to find out why it failed and create the backport PR by cherry-picking the
+commits from the original PR and resolving the merge conflicts. For this, it is
+helpful to have only one commit in each PR.
+
+
 .. _`Releasing a version`:
 
 Releasing a version
@@ -924,14 +1024,13 @@ local clone of the python-zhmcclient Git repo.
     If any of the two safety runs fails, fix the safety issues that are reported,
     in a separate branch/PR.
 
-    Roll back the PR into any maintained stable branches.
+    :ref:`Backport <Backporting>` the PR into the latest ``stable_M.N`` branch.
 
 3.  Check for any
-    `dependabot alerts <https://github.com/zhmcclient/python-zhmcclient/security/dependabot>`_.
+    `Dependabot alerts <https://github.com/zhmcclient/python-zhmcclient/security/dependabot>`_ and `Dependabot PRs <https://github.com/zhmcclient/python-zhmcclient/pulls?q=is%3Apr+label%3Adependencies+is%3Aopen>`_.
 
-    If there are any dependabot alerts, fix them in a separate branch/PR.
-
-    Roll back the PR into any maintained stable branches.
+    If there are any Dependabot alerts or PRs, fix them as described in
+    :ref:`Handling Dependabot alerts and PRs`.
 
 4.  Check for any Mend issues
 
@@ -951,7 +1050,7 @@ local clone of the python-zhmcclient Git repo.
        `internal issue tracker <https://github.ibm.com/zhmcclient/python-zhmcclient/issues>`_,
        fix them in a separate PR or PRs.
 
-       Roll back the PR(s) into any maintained stable branches.
+       :ref:`Backport <Backporting>` the PR(s) into the latest ``stable_M.N`` branch.
 
 5.  Create and push the release branch (replace M,N,U accordingly):
 
