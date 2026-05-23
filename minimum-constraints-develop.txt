@@ -153,7 +153,7 @@ pywinpty==3.0.2; os_name == "nt" and python_version >= '3.13'
 alabaster==0.7.9
 anyio==4.4.0
 appdirs==1.4.3
-appnope==0.1.2
+appnope==0.1.4
 argon2-cffi==21.2.0
 args==0.1.0
 atomicwrites==1.4.0
