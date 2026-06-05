@@ -57,6 +57,7 @@ typer==0.16.0
 typer-cli==0.16.0
 typer-slim==0.16.0
 psutil==6.1.0
+truststore==0.9.1
 
 # Bandit checker
 bandit==1.7.8
