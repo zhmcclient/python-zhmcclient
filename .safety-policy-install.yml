@@ -36,6 +36,8 @@ security:
         # Need to comment out SFTY IDs due to issue https://github.com/pyupio/safety/issues/847
         # SFTY-20260122-20373:
         #     reason: Fixed pytest version 9.0.3 requires Python>=3.10 and is used there
+        # SFTY-20260511-47957:
+        #     reason: Fixed urllib3 version 2.7.0 requires Python>=3.10 and is used there
         # SFTY-20260420-60812:
         #     reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
 

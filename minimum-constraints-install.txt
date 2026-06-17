@@ -35,7 +35,8 @@ websocket-client==1.8.0
 
 certifi==2024.07.04
 
-urllib3==2.6.3; python_version == '3.9'
+# Need to comment out urllib3==2.6.3 due to issue https://github.com/pyupio/safety/issues/847
+# urllib3==2.6.3; python_version == '3.9'
 urllib3==2.7.0; python_version >= '3.10'
 
 
