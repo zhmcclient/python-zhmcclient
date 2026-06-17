@@ -220,7 +220,7 @@ testpath==0.3
 toml==0.10.0
 tomli==2.0.1  # used by towncrier
 tomli-w==1.2.0  # used by tox>=4.48.0
-tornado==6.5.6
+tornado==6.5.7
 tqdm==4.66.3
 traitlets==5.6.0
 typing==3.6.1
