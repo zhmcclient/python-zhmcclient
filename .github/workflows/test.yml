@@ -41,53 +41,18 @@ jobs:
         else \
           echo "matrix={ \
             \"os\": [ \"ubuntu-latest\" ], \
-            \"python-version\": [ \"3.14\" ], \
+            \"python-version\": [ \"3.9\", \"3.14\" ], \
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"include\": [ \
               { \
                 \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.9\", \
+                \"python-version\": \"3.10\", \
                 \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.9\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.12\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.9\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.11\", \
-                \"package_level\": \"latest\" \
               }, \
               { \
                 \"os\": \"macos-latest\", \
                 \"python-version\": \"3.14\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.9\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.9\", \
                 \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.14\", \
-                \"package_level\": \"minimum\" \
               }, \
               { \
                 \"os\": \"windows-latest\", \
