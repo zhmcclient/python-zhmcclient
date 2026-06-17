@@ -199,7 +199,7 @@ tenacity==8.5.0
 terminado==0.8.3
 tomli==2.0.1; python_version <= '3.10'  # used by a number of packages; built-in to Python>=3.11
 tomli-w==1.2.0  # used by tox>=4.48.0
-tornado==6.5.6
+tornado==6.5.7
 tqdm==4.66.3
 traitlets==5.6.0
 typing-extensions==4.14.1
