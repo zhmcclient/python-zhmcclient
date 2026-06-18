@@ -56,6 +56,11 @@ jobs:
               }, \
               { \
                 \"os\": \"windows-latest\", \
+                \"python-version\": \"3.12\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
                 \"python-version\": \"3.14\", \
                 \"package_level\": \"latest\" \
               } \
@@ -151,6 +156,17 @@ jobs:
       run: |
         echo "Installed Python packages:"
         pip list
+    - name: Run check_reqs_install
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        make check_reqs_install
+    - name: Upload extra_reqs_install artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: extra_reqs_install_${{ matrix.os }}_${{ matrix.python-version }}_${{ matrix.package_level }}
+        path: extra_reqs_install*.txt
     - name: Development setup
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
@@ -165,6 +181,17 @@ jobs:
       run: |
         echo "Package dependency tree of installed Python packages:"
         python -m pipdeptree --all
+    - name: Run check_reqs
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        make check_reqs
+    - name: Upload extra_reqs_all artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: extra_reqs_all_${{ matrix.os }}_${{ matrix.python-version }}_${{ matrix.package_level }}
+        path: extra_reqs_all*.txt
     - name: Run build
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
@@ -242,12 +269,6 @@ jobs:
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make debuginfo
-    - name: Run check_reqs
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
-        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
-      run: |
-        make check_reqs
     - name: Run safety
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
@@ -273,6 +294,57 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
+    - name: Download extra_reqs_install artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: extra_reqs_install_*
+        path: extra_reqs_install/
+        merge-multiple: true
+    - name: Display extra dependencies in minimum-constraints-install.txt
+      shell: bash
+      run: |
+        files=(extra_reqs_install/*.txt); \
+        if [ ${#files[@]} -eq 0 ]; then \
+            echo "::error::No extra_reqs_install files found"; \
+            exit 1; \
+        elif [ ${#files[@]} -eq 1 ]; then \
+            sort "${files[0]}" >extra_reqs_install.txt; \
+        else \
+            sort "${files[0]}" >tmp.txt; \
+            for f in "${files[@]:1}"; do \
+                comm -12 tmp.txt <(sort "$f") >tmp2.txt; \
+                mv tmp2.txt tmp.txt; \
+            done; \
+            mv tmp.txt extra_reqs_install.txt; \
+        fi; \
+        if [ -s extra_reqs_install.txt ]; then echo "::warning::Extra dependencies in minimum-constraints-install.txt: $(cat extra_reqs_install.txt | tr '\n' ' ')"; fi
+    - name: Download extra_reqs artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: extra_reqs_all*
+        path: extra_reqs_all/
+        merge-multiple: true
+    - name: Display extra dependencies in minimum-constraints-develop.txt
+      shell: bash
+      run: |
+        files=(extra_reqs_all/*.txt); \
+        if [ ${#files[@]} -eq 0 ]; then \
+            echo "::error::No extra_reqs_all files found"; \
+            exit 1; \
+        elif [ ${#files[@]} -eq 1 ]; then \
+            sort "${files[0]}" >extra_reqs_all.txt; \
+        else \
+            sort "${files[0]}" >tmp.txt; \
+            for f in "${files[@]:1}"; do \
+                comm -12 tmp.txt <(sort "$f") >tmp2.txt; \
+                mv tmp2.txt tmp.txt; \
+            done; \
+            mv tmp.txt extra_reqs_all.txt; \
+        fi; \
+        echo "Extra dependencies in all minimum-constraints files:"; \
+        cat extra_reqs_all.txt; \
+        comm -23 extra_reqs_all.txt extra_reqs_install.txt >extra_reqs_develop.txt; \
+        if [ -s extra_reqs_develop.txt ]; then echo "::warning::Extra dependencies in minimum-constraints-develop.txt: $(cat extra_reqs_develop.txt | tr '\n' ' ')"; fi
     - name: Install coveralls
       run: |
         pip3 install --upgrade coveralls

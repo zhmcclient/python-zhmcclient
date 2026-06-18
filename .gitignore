@@ -42,3 +42,4 @@ session.yml
 # Files created by releasenotes build
 releasenotes/build
 zhmcrc.sh
+/extra-reqs*.txt
