@@ -22,7 +22,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'backport')
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
