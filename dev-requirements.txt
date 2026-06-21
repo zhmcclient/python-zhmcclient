@@ -10,9 +10,6 @@ build>=1.0.0
 virtualenv>=20.36.1
 pyproject-hooks>=1.1.0
 
-# six (only needed by packages that still support Python 2)
-six>=1.16.0
-
 # Change log
 towncrier>=22.8.0
 
@@ -22,7 +19,6 @@ testfixtures>=6.9.0
 # For versions of importlib-metadata that are in Python, see https://pypi.org/project/importlib-metadata/
 importlib-metadata>=8.7.0
 # requests: covered in direct deps for installation
-colorama>=0.4.6
 requests-mock>=1.6.0
 requests-toolbelt>=0.8.0
 more-itertools>=4.0.0
@@ -60,8 +56,7 @@ coveralls>=4.0.2; python_version >= '3.10'
 safety>=3.6.2
 safety-schemas>=0.0.16
 dparse>=0.6.4
-ruamel.yaml>=0.17.21
-click>=8.0.2
+ruamel.yaml>=0.19.1
 Authlib>=1.6.12
 marshmallow>=3.26.2
 pydantic>=2.12.0
@@ -109,8 +104,6 @@ pylint>=3.3.1
 astroid>=3.3.7
 lazy-object-proxy>=1.4.3
 wrapt>=1.14
-# platformdirs is also used by tox
-platformdirs>=4.1.0
 # isort 4.3.8 fixes an issue with py310 and works on py310 (Note that isort 5.10.0 has official support for py310)
 isort>=4.3.8
 tomlkit>=0.10.1
