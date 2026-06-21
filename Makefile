@@ -57,14 +57,6 @@ ifndef RUN_TYPE
   RUN_TYPE := local
 endif
 
-# Make variables are case sensitive and some native Windows environments have
-# ComSpec set instead of COMSPEC.
-ifndef COMSPEC
-  ifdef ComSpec
-    COMSPEC = $(ComSpec)
-  endif
-endif
-
 # Determine OS platform make runs on.
 ifeq ($(OS),Windows_NT)
   ifdef PWD
@@ -75,9 +67,8 @@ ifeq ($(OS),Windows_NT)
     SHELL := wsl bash
   endif
   .SHELLFLAGS := -c
-else
-  # Values: Linux, Darwin
-  PLATFORM := $(shell uname -s)
+else  # Values: Linux, Darwin
+  PLATFORM := $(shell uname -s)  # Values: Linux, Darwin
   SHELL := $(shell which bash)
   .SHELLFLAGS := -c
 endif
