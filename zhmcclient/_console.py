@@ -31,6 +31,7 @@ from ._utils import timestamp_from_datetime, divide_filter_args, \
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._tape_library import TapeLibraryManager
+from ._storage_site import StorageSiteManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -214,6 +215,7 @@ class Console(BaseResource):
         self._storage_group_templates = None
         self._tape_library = None
         self._partition_links = None
+        self._storage_sites = None
         self._users = None
         self._user_roles = None
         self._user_patterns = None
@@ -261,6 +263,17 @@ class Console(BaseResource):
         if not self._tape_library:
             self._tape_library = TapeLibraryManager(self)
         return self._tape_library
+
+    @property
+    def storage_sites(self):
+        """
+        :class:`~zhmcclient.StorageSiteManager`:
+          Manager object for the Storage Sites in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_sites:
+            self._storage_sites = StorageSiteManager(self)
+        return self._storage_sites
 
     @property
     def partition_links(self):

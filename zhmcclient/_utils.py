@@ -107,6 +107,7 @@ RC_CHILDREN_CONSOLE = (
     RC_SSO_SERVER_DEFINITION,
     RC_CPC,  # For unmanaged CPCs
     RC_PARTITION_LINK,
+    RC_STORAGE_SITE,
 )
 # Resource classes that are children of zhmcclient.Client (= top level)
 RC_CHILDREN_CLIENT = (

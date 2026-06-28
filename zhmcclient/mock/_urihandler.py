@@ -3205,13 +3205,11 @@ def get_inventory_for_virtual_switch(hmc):
 
 
 def get_inventory_for_storage_site(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-site'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stosites = hmc.consoles.console.storage_sites.list()
-    # for stosite in stosites:
-    #     result.append(properties_copy(stosite.properties))
+    stosites = hmc.consoles.console.storage_sites.list()
+    for stosite in stosites:
+        result.append(properties_copy(stosite.properties))
     return result
 
 
@@ -5592,6 +5590,53 @@ class StorageTemplateVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class StorageSitesHandler:
+    """
+    Handler class for HTTP methods on the set of StorageSite resources.
+    """
+
+    valid_query_parms_get = ['cpc-uris', 'name']
+
+    returned_props = ['object-uri', 'name', 'cpc-uris']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Sites (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_sites = []
+        for ss in hmc.consoles.console.storage_sites.list(filter_args):
+            result_ss = {}
+            for prop in cls.returned_props:
+                result_ss[prop] = prop_copy(ss.properties.get(prop))
+            result_storage_sites.append(result_ss)
+        return {'storage-sites': result_storage_sites}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Storage Site."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['name'])
+
+        new_storage_site = hmc.consoles.console.storage_sites.add(body)
+        return {'object-uri': new_storage_site.uri}
+
+
+class StorageSiteHandler(GenericGetPropertiesHandler,
+                         GenericUpdatePropertiesHandler,
+                         GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on a single StorageSite resource.
+    """
+    pass
+
+
 class TapeLibrariesHandler:
     """
     Handler class for HTTP methods on set of TapeLibraries resources.
@@ -7027,6 +7072,11 @@ URIS = (
      StorageTemplateVolumesHandler),
     (r'/api/storage-templates/([^/]+)/storage-template-volumes/'
      r'([^?/]+)(?:\?(.*))?', StorageTemplateVolumeHandler),
+
+    (r'/api/storage-sites(?:\?(.*))?',
+     StorageSitesHandler),
+    (r'/api/storage-sites/([^?/]+)(?:\?(.*))?',
+     StorageSiteHandler),
 
     (r'/api/tape-libraries(?:\?(.*))?',
      TapeLibrariesHandler),
