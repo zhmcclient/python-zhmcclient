@@ -5718,10 +5718,10 @@ class TapeLinksHandler:
     """
 
     valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state',
-                                        'tape-library-uri']
+                             'tape-library-uri']
 
     returned_props = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state',
-                                 'tape-library-uri']
+                      'tape-library-uri']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -5812,7 +5812,7 @@ class TapeLinkUpdateHandler:
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
         # pylint: disable=unused-argument
-        """Operation: Delete Tape Link."""
+        """Operation: Modify Tape Link."""
         assert wait_for_completion is True  # async not supported yet
 
         tape_link_oid = uri_parms[0]
