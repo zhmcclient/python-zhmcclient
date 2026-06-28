@@ -98,6 +98,7 @@ class TapeLinkManager(BaseManager):
             'cpc-uri',
             'name',
             'fulfillment-state',
+            'tape-library-uri',
         ]
 
         super().__init__(

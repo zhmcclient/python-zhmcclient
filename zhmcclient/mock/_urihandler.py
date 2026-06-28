@@ -5717,9 +5717,11 @@ class TapeLinksHandler:
     Handler class for HTTP methods on set of TapeLink resources.
     """
 
-    valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state']
+    valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state',
+                                        'tape-library-uri']
 
-    returned_props = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state']
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state',
+                                 'tape-library-uri']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -5862,7 +5864,7 @@ class TapeLinkGetPartitionsHandler:
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
-        """Operation: Get Partitions attached to Tape Link."""
+        """Operation: Get Partitions for a Tape Link."""
 
         # Extract tape link OID from URI
         tape_link_oid = uri_parms[0]
