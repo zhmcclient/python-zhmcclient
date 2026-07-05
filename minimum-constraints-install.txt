@@ -15,6 +15,9 @@ setuptools==78.1.1
 setuptools-scm==9.2.0
 wheel==0.46.2
 
+# ld gets installed by 'make platform' on Linux
+ld==0.5.0; sys_platform=="linux"
+
 
 # Direct dependencies for install (must be consistent with requirements.txt)
 
@@ -56,9 +59,23 @@ idna==3.15
 # All other indirect dependencies for install that are not in requirements.txt
 
 attrs==22.2.0
-chardet==5.2.0
+argcomplete==3.6.3
+charset-normalizer==3.4.7
+click==8.1.8
+colorama==0.4.6
 docopt==0.6.2
-
-# Used by zhmcclient.testutils
+exceptiongroup==1.3.1; python_version <= '3.10'  # built-in to Python>=3.11
+iniconfig==2.1.0
+jsonschema-specifications==2025.9.1
 packaging==24.2
+pipx==1.11.1
+platformdirs==4.1.0
 pluggy==1.5.0
+Pygments==2.20.0
+referencing==0.36.2
+rpds-py==0.27.1
+six==1.16.0
+tomli==2.0.1; python_version <= '3.10'  # used by a number of packages; built-in to Python>=3.11
+typing-extensions==4.14.1
+userpath==1.9.2
+vcs-versioning==1.1.1
