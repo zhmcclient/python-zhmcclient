@@ -137,6 +137,12 @@ jobs:
       run: |
         echo "Installed Python packages:"
         pip list
+    - name: Run check_reqs_prepare
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        make check_reqs_prepare
     - name: Display platform
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
