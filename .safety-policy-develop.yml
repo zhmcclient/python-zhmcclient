@@ -44,14 +44,22 @@ security:
             reason: Fixed authlib version 1.6.9 requires Python>=3.10 and is used there
         89032:
             reason: Fixed tornado version 6.5.5 requires Python>=3.10 and is used there
+        89824:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
         89826:
             reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        89827:
+            reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
         90749:
             reason: Fixed cryptography version 46.0.6 requires Python>=3.10 and is used there
-
-        # Need to comment out SFTY IDs due to issue https://github.com/pyupio/safety/issues/847
-        # SFTY-20260218-01424:
-        #     reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
+        SFTY-20260218-01424:
+            reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
+        SFTY-20260304-49322:
+            reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
+        SFTY-20260320-58622:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        SFTY-20260309-65600:
+            reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
