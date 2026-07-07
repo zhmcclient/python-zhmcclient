@@ -54,6 +54,8 @@ security:
             reason: Fixed cryptography version 46.0.6 requires Python>=3.10 and is used there
         SFTY-20260218-01424:
             reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
+        SFTY-20260122-20373:
+            reason: Fixed pytest version 9.0.3 requires Python>=3.10 and is used there
         SFTY-20260304-49322:
             reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
         SFTY-20260320-58622:
