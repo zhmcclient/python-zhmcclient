@@ -998,6 +998,7 @@ def test_httperror_initial_attrs(arg_names, args):
         body.get('request-body-as-string-partial', None)
     assert exc.stack == body.get('stack', None)
     assert exc.error_details == body.get('error-details', None)
+    assert exc.body == body
 
 
 @pytest.mark.parametrize(
