@@ -1,0 +1,2 @@
+Exposed the response body of :exc:`zhmcclient.HTTPError` as a new `body`
+property.

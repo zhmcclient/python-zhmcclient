@@ -628,6 +628,13 @@ class HTTPError(Error):
         self._body = body
 
     @property
+    def body(self):
+        """
+        :term:`json object`: Body of the HTTP error response.
+        """
+        return self._body
+
+    @property
     def http_status(self):
         """
         :term:`integer`: Numeric HTTP status code (e.g. 500).
