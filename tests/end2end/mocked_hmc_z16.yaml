@@ -365,6 +365,26 @@ hmc_definition:
             description : Tape Library resource 1
             cpc-uri : /api/cpcs/cpc_dpm
 
+      storage_sites:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss1
+            name: Primary Site
+            description: Primary storage site local to the CPC
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss2
+            name: Alternate Site
+            description: Alternate storage site at a remote location
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+
       hw_messages:
         - properties:
             # class: created automatically
