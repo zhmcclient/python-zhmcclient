@@ -530,9 +530,9 @@ Resources scoped to CPCs in DPM mode
   Storage Site
      A location that houses a set of storage switches and storage subsystems
      within the FICON storage configuration of a DPM-enabled :term:`CPC`.
-     A primary site (named "Primary Site") exists by default and cannot be
-     deleted. An alternate site at a remote location can be created and
-     deleted.
+     A Storage Site object with `type="primary"` always exists for the primary
+     site and cannot be deleted. Additional Storage Site objects can be created
+     and deleted.
 
      For details, see section :ref:`Storage Sites`.
 

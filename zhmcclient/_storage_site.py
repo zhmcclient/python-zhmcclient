@@ -1,4 +1,4 @@
-# Copyright 2025 IBM Corp. All Rights Reserved.
+# Copyright 2026 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ A :term:`Storage Site` represents a single storage site in the FICON storage
 configuration associated with a DPM-enabled CPC.
 
 A storage site describes a location that houses a set of storage switches and
-storage subsystems. A primary site with a default name of "Primary Site",
-local to the CPC, exists by default and cannot be deleted. An alternate site,
-typically at a remote location, can be created.
+storage subsystems. A Storage Site object with `type="primary"` always exists 
+for the primary site and cannot be deleted. Additional Storage Site objects 
+can be created and deleted.
 
 The Storage Site object APIs provide access to the set of storage sites within
 the FICON configuration associated with a CPC that is enabled for DPM. APIs
@@ -68,6 +68,7 @@ class StorageSiteManager(BaseManager):
         query_props = [
             'cpc-uris',
             'name',
+            'type',
         ]
 
         super().__init__(
