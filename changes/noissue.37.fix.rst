@@ -3,4 +3,3 @@ CVE-2024-35178 (GHSA-hrw6-wg82-cm62), a path traversal vulnerability
 caused by an incorrect ``startswith()`` root-directory check that
 allowed authenticated users to read, write, and delete files in sibling
 directories sharing a name prefix with the server's ``root_dir``.
-Also documented this Dependabot alert pattern in the development guide.
