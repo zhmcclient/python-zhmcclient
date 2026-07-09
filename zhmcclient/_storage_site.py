@@ -17,8 +17,8 @@ A :term:`Storage Site` represents a single storage site in the FICON storage
 configuration associated with a DPM-enabled CPC.
 
 A storage site describes a location that houses a set of storage switches and
-storage subsystems. A Storage Site object with `type="primary"` always exists 
-for the primary site and cannot be deleted. Additional Storage Site objects 
+storage subsystems. A Storage Site object with `type="primary"` always exists
+for the primary site and cannot be deleted. Additional Storage Site objects
 can be created and deleted.
 
 The Storage Site object APIs provide access to the set of storage sites within
