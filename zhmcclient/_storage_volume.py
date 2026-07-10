@@ -107,7 +107,8 @@ class StorageVolumeManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the storage volumes in this storage group.
 
@@ -155,6 +156,12 @@ class StorageVolumeManager(BaseManager):
             `None` causes no filtering to happen, i.e. all resources are
             returned.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires HMC 2.17.0 or higher.
+
         Returns:
 
           : A list of :class:`~zhmcclient.StorageVolume` objects.
@@ -170,7 +177,8 @@ class StorageVolumeManager(BaseManager):
         result_prop = 'storage-volumes'
         list_uri = f'{self.storage_group.uri}/storage-volumes'
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None)
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create(self, properties, email_to_addresses=None,
