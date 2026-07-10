@@ -72,7 +72,7 @@ Changelog = "https://python-zhmcclient.readthedocs.io/en/master/changes.html"
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.dynamic.optional-dependencies]
-testutils = {file = ['extra-testutils-requirements.txt']}
+testutils = {file = ['requirements-testutils.txt']}
 
 [tool.setuptools_scm]
 # Get the version from the Git tag, and write a version file:
