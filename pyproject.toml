@@ -5,7 +5,7 @@
 
 [build-system]
 requires = [
-    # Keep in sync with base-requirements.txt and the base dependencies in
+    # Keep in sync with requirements-base.txt and the base dependencies in
     # minimum-constraints-install.txt
     "setuptools>=78.1.1",
     "setuptools-scm[toml]>=9.2.0",

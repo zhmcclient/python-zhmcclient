@@ -1,12 +1,12 @@
 # Pip constraints file for packages needed for development.
 #
 # This file specifies constraints that match the minimum versions specified in
-# dev-requirements.txt. They are used for example when setting up test
+# requirements-develop.txt. They are used for example when setting up test
 # environments with the minimum versions of any dependent packages.
 
 
 # Direct dependencies for development and indirect dependencies for development
-# that are needed for some reason (must be consistent with dev-requirements.txt)
+# that are needed for some reason (must be consistent with requirements-develop.txt)
 
 # PEP517 package builder, used in Makefile
 build==1.0.0
@@ -147,7 +147,7 @@ pip-check-reqs==2.5.1
 pywinpty==2.0.12; os_name == "nt" and python_version <= '3.12'
 pywinpty==3.0.2; os_name == "nt" and python_version >= '3.13'
 
-# Indirect dependencies for development that are not in dev-requirements.txt
+# Indirect dependencies for development that are not in requirements-develop.txt
 
 alabaster==0.7.9
 annotated-doc==0.0.4
