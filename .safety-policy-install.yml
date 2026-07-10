@@ -38,6 +38,8 @@ security:
             reason: Fixed urllib3 version 2.7.0 requires Python>=3.10 and is used there
         SFTY-20260420-60812:
             reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
+        SFTY-20260601-69199:
+            reason: Fixed pip version 26.1.2 requires Python>=3.10 and is used there
         SFTY-20260427-69629:
             reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
 
