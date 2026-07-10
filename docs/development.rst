@@ -953,7 +953,6 @@ Dependabot alerts should be handled as follows:
       urllib3==2.6.0; python_version == '3.9'
       urllib3==2.7.0; python_version >= '3.10'
 
-
 .. _`Backporting`:
 
 Backporting
