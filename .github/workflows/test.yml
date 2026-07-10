@@ -98,7 +98,7 @@ jobs:
         fetch-depth: 0
     - name: Check commit messages - Signed-off-by
       if: github.event_name != 'schedule'
-      uses: gsactions/commit-message-checker@v2
+      uses: ddev/commit-message-checker@v3
       with:
         pattern: '^Signed-off-by: [^<>]+ <[^<>]+>$'
         flags: 'gm'
@@ -109,7 +109,7 @@ jobs:
         error: Commit message has no or incorrectly formatted signed-off-by line
     - name: Check commit messages - Line length
       if: github.event_name == 'pull_request'
-      uses: gsactions/commit-message-checker@v2
+      uses: ddev/commit-message-checker@v3
       with:
         pattern: '^.{1,80}( \(#[\d]+\))?\n(.{0,80}\n)*'
         flags: ''
