@@ -234,7 +234,7 @@ dist_dependent_files := \
     README.md \
     AUTHORS.md \
     requirements.txt \
-    extra-testutils-requirements.txt \
+    requirements-testutils.txt \
     $(package_py_files) \
 
 # No built-in rules needed:
@@ -459,7 +459,7 @@ bandit: $(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt $(dist_dependent_files)
+$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt requirements-testutils.txt minimum-constraints-develop.txt minimum-constraints-install.txt $(dist_dependent_files)
 	rm -f $@
 	@echo "Installing $(package_name) (non-editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) .
@@ -649,13 +649,13 @@ check_reqs_install: Makefile $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done m
 	@echo "Makefile: $@ done."
 
 .PHONY: check_reqs
-check_reqs: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-install.txt minimum-constraints-develop.txt requirements.txt extra-testutils-requirements.txt
+check_reqs: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-install.txt minimum-constraints-develop.txt requirements.txt requirements-testutils.txt
 	@echo "Makefile: Checking missing and extra dependencies of this package"
 ifeq ($(PLATFORM),Windows_native)
 # Reason for skipping on Windows is https://github.com/r1chardj0n3s/pip-check-reqs/issues/67
 	@echo "Makefile: Warning: Skipping the use of pip-missing-reqs on native Windows" >&2
 else
-	cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt
+	cat requirements.txt requirements-testutils.txt >tmp_requirements.txt
 	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=tmp_requirements.txt
 	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=minimum-constraints-install.txt
 	rm -f tmp_requirements.txt

@@ -14,7 +14,7 @@ pyproject-hooks>=1.1.0
 towncrier>=22.8.0
 
 # Unit test (imports into testcases):
-# pytest is covered in extra-testutils-requirements.txt
+# pytest is covered in requirements-testutils.txt
 testfixtures>=6.9.0
 # For versions of importlib-metadata that are in Python, see https://pypi.org/project/importlib-metadata/
 importlib-metadata>=8.7.0
