@@ -640,6 +640,8 @@ check_reqs_prepare: Makefile
 .PHONY: check_reqs_install
 check_reqs_install: Makefile $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-install.txt
 	@echo "Makefile: Checking missing and extra install dependencies of this package"
+# Create empty tmp_initial-packages.txt for local runs that missed running check_reqs_prepare
+	touch tmp_initial-packages.txt
 	pip freeze | cut -d '=' -f 1 | grep -v '@' | tr '-' '.' | tr '_' '.' | grep -v -F -f tmp_initial-packages.txt | xargs -I {} sh -c 'if ! grep -iE ^{}== minimum-constraints-install.txt >/dev/null; then sh -c "pip freeze | grep -iE ^{}=="; fi' >tmp_missing-reqs.txt
 	if [ -s tmp_missing-reqs.txt ]; then echo 'Error: Missing packages in minimum-constraints-install.txt compared to what is installed:'; cat tmp_missing-reqs.txt; exit 1; fi
 	rm -f tmp_missing-reqs.txt
@@ -661,6 +663,8 @@ else
 	rm -f tmp_requirements.txt
 endif
 	cat minimum-constraints-develop.txt minimum-constraints-install.txt >tmp_minimum-constraints.txt
+# Create empty tmp_initial-packages.txt for local runs that missed running check_reqs_prepare
+	touch tmp_initial-packages.txt
 	pip freeze | cut -d '=' -f 1 | grep -v '@' | tr '-' '.' | tr '_' '.' | grep -v -F -f tmp_initial-packages.txt | xargs -I {} sh -c 'if ! grep -iE ^{}== tmp_minimum-constraints.txt >/dev/null; then sh -c "pip freeze | grep -iE ^{}=="; fi' >tmp_missing-reqs.txt
 	if [ -s tmp_missing-reqs.txt ]; then echo 'Error: Missing packages in minimum-constraints files compared to what is installed:'; cat tmp_missing-reqs.txt; exit 1; fi
 	rm -f tmp_missing-reqs.txt tmp_initial-packages.txt
