@@ -355,6 +355,26 @@ hmc_definition:
                 adapter-port-uri: /api/adapters/fcp1
                 partition-uri: /api/partitions/part1
 
+      storage_fabrics:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric1
+            name: "Storage Fabric A"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Primary storage fabric for CPC DPM"
+            high-integrity: false
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric2
+            name: "Storage Fabric B"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Alternate storage fabric for CPC DPM"
+            high-integrity: true
+
       tape_libraries:
         - properties:
             # class : created automatically
