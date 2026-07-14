@@ -2001,7 +2001,13 @@ class SSOServerDefinitionsHandler:
                               ['name', 'type', 'client-id', 'client-secret',
                                'issuer-url', 'authentication-url', 'token-url',
                                'jwks-url'])
-        new_sso_srv_def = console.sso_server_definitions.add(body)
+        # These properties are server-controlled on create: the real HMC ignores
+        # any caller-supplied value and auto-sets them. Strip them here so the
+        # setdefault() calls in FakedSSOServerDefinitionManager.add() apply.
+        store_body = {k: v for k, v in body.items()
+                      if k not in ('logout-url',
+                                   'logout-sso-session-on-reauthentication-failure')}
+        new_sso_srv_def = console.sso_server_definitions.add(store_body)
         return {'element-uri': new_sso_srv_def.uri}
 
 
@@ -2026,11 +2032,12 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
-        # Check whether requested properties are modifiable
+        # Check whether requested properties are modifiable.
+        # 'name' is intentionally absent: the real HMC rejects rename with
+        # HTTPError(400, reason=6), which check_writable also raises.
         check_writable(
             method, uri, body,
             [
-                'name',
                 'description',
                 'client-id',
                 'client-secret',

@@ -191,7 +191,23 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
         else:
             raise
 
-    try:
+    for pn, exp_value in ssosrvdef_input_props.items():
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
+    ssosrvdef.pull_full_properties()
+    # After GET, server-controlled (auto) properties override the input values.
+    # Check only the non-auto input props here, then check auto props separately.
+    for pn, exp_value in ssosrvdef_input_props.items():
+        if pn in ssosrvdef_auto_props:
+            continue
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
+    for pn, exp_value in ssosrvdef_auto_props.items():
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
 
         for pn, exp_value in ssosrvdef_input_props.items():
             assert (
