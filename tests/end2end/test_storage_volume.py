@@ -87,7 +87,7 @@ def test_stovol_find_list(zhmc_logger, dpm_mode_cpcs):
             runtest_find_list(
                 session, stogrp.storage_volumes, stovol.name, 'name', 'size',
                 STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS,
-                unique_name=unique_name)
+                add_props=['uuid'], unique_name=unique_name)
 
 
 def test_stovol_property(zhmc_logger, dpm_mode_cpcs):

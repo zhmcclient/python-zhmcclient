@@ -5312,10 +5312,10 @@ class StorageVolumesHandler:
     """
 
     valid_query_parms_get = ['name', 'fulfillment-state', 'maximum-size',
-                             'minimum-size', 'usage']
+                             'minimum-size', 'usage', 'additional-properties']
 
     returned_props = ['element-uri', 'name', 'fulfillment-state', 'size',
-                      'usage']
+                      'usage']  # plus additional-properties
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -5324,6 +5324,8 @@ class StorageVolumesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = get_additional_properties(
+            query_parms, StorageVolumeHandler.wo_properties)
         filter_args = query_parms
 
         sg_uri = re.sub('/storage-volumes$', '', uri)
@@ -5336,7 +5338,7 @@ class StorageVolumesHandler:
         result_storage_volumes = []
         for sv in sg.storage_volumes.list(filter_args):
             result_sv = {}
-            for prop in cls.returned_props:
+            for prop in cls.returned_props + add_props:
                 result_sv[prop] = prop_copy(sv.properties.get(prop))
             result_storage_volumes.append(result_sv)
         return {'storage-volumes': result_storage_volumes}
