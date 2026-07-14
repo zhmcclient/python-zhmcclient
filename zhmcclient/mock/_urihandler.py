@@ -1966,7 +1966,7 @@ class SSOServerDefinitionsHandler:
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
         add_props = get_additional_properties(
-            query_parms, PartitionHandler.wo_properties)
+            query_parms, SSOServerDefinitionHandler.wo_properties)
 
         filter_args = query_parms
 
@@ -2033,12 +2033,11 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
-        # Check whether requested properties are modifiable.
-        # 'name' is intentionally absent: the real HMC rejects rename with
-        # HTTPError(400, reason=6), which check_writable also raises.
+        # Check whether requested properties are modifiable
         check_writable(
             method, uri, body,
             [
+                'name',
                 'description',
                 'client-id',
                 'client-secret',
