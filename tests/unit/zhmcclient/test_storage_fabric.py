@@ -267,7 +267,8 @@ class TestStorageFabric:
             for prop_name in exp_prop_names:
                 assert prop_name in fabric.properties
                 if prop_name in input_props:
-                    assert fabric.properties[prop_name] == input_props[prop_name]
+                    assert fabric.properties[prop_name] == \
+                        input_props[prop_name]
 
     def test_sfm_resource_object(self):
         """Test StorageFabricManager.resource_object()."""
