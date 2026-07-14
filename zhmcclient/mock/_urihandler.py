@@ -2004,9 +2004,10 @@ class SSOServerDefinitionsHandler:
         # These properties are server-controlled on create: the real HMC ignores
         # any caller-supplied value and auto-sets them. Strip them here so the
         # setdefault() calls in FakedSSOServerDefinitionManager.add() apply.
+        auto_props = ('logout-url',
+                      'logout-sso-session-on-reauthentication-failure')
         store_body = {k: v for k, v in body.items()
-                      if k not in ('logout-url',
-                                   'logout-sso-session-on-reauthentication-failure')}
+                      if k not in auto_props}
         new_sso_srv_def = console.sso_server_definitions.add(store_body)
         return {'element-uri': new_sso_srv_def.uri}
 
