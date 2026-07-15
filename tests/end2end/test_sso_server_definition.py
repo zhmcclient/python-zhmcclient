@@ -69,8 +69,7 @@ SSOSRVDEF_INPUT_PROPS = {
 # Expected automatically set properties for the test instance in
 # SSOSRVDEF_INPUT_PROPS
 SSOSRVDEF_AUTO_PROPS = {
-    "logout-url": None,
-    "logout-sso-session-on-reauthentication-failure": False,
+    "logout-sso-session-on-reauthentication-failure": True,
 }
 
 
@@ -199,12 +198,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
                 ssosrvdef.properties[pn] == exp_value
             ), f"Unexpected value for property {pn!r}"
         ssosrvdef.pull_full_properties()
-        # After GET, server-controlled (auto) properties override the input
-        # values. Check only the non-auto input props here, then check auto
-        # props separately.
         for pn, exp_value in ssosrvdef_input_props.items():
-            if pn in SSOSRVDEF_AUTO_PROPS:
-                continue
             assert (
                 ssosrvdef.properties[pn] == exp_value
             ), f"Unexpected value for property {pn!r}"
