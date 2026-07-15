@@ -225,6 +225,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageGroup"
                     },
                 },
+                "storage_fabrics": {
+                    "description": "The Storage Fabrics defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageFabric"
+                    },
+                },
                 "tape_libraries": {
                     "description": "The Tape Libraries defined on this HMC",
                     "type": "array",
@@ -395,6 +402,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "VirtualStorageResource": {
             "description": "A VSR of a storage group",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageFabric": {
+            "description": "A Storage Fabric on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [
