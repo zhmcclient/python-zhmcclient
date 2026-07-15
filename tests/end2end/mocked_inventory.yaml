@@ -53,8 +53,19 @@ all:
         CPC_DPM:
           machine_type: "3932"
           dpm_enabled: true
+    mocked_hmc_z17:
+      description: "Mocked HMC with z17 in classic mode and z17 in DPM mode"
+      mock_file: "mocked_hmc_z17.yaml"
+      cpcs:
+        CPC_CLA:
+          machine_type: "3932"
+          dpm_enabled: false
+        CPC_DPM:
+          machine_type: "3932"
+          dpm_enabled: true
   children:
     default:
       hosts:
         mocked_hmc_z14:
         mocked_hmc_z16:
+        mocked_hmc_z17:

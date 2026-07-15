@@ -1866,18 +1866,11 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
 
         # Resource type specific default values
         new_lsd.properties.setdefault('description', '')
-        new_lsd.properties.setdefault('authentication-url',
-                                      'https://sso1.example.com/auth')
         new_lsd.properties.setdefault('type', 'oidc')
+        new_lsd.properties.setdefault('logout-url', None)
         new_lsd.properties.setdefault(
-            'logout-sso-session-on-reauthentication-failure', True
+            'logout-sso-session-on-reauthentication-failure', False
         )
-        new_lsd.properties.setdefault('logout-url',
-                                      'https://sso1.example.com/logout')
-        new_lsd.properties.setdefault('issuer-url',
-                                      'https://sso1.example.com/issuer')
-        new_lsd.properties.setdefault('jwks-url',
-                                      'https://sso1.example.com/jwks')
         new_lsd.properties.setdefault('replication-overwrite-possible', False)
 
         return new_lsd

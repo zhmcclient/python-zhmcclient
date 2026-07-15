@@ -61,7 +61,7 @@ class SSOServerDefinitionManager(BaseManager):
         # Because this resource has case-insensitive names, this list must
         # contain the name property.
         query_props = [
-            'name',
+            'name', 'type'
         ]
 
         super().__init__(
@@ -85,7 +85,8 @@ class SSOServerDefinitionManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the :term:`sso Server Definition` resources representing the
         definitions of sso servers in this HMC.
@@ -135,6 +136,12 @@ class SSOServerDefinitionManager(BaseManager):
             `None` causes no filtering to happen, i.e. all resources are
             returned.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires HMC 2.17.0 or higher.
+
         Returns:
 
           : A list of :class:`~zhmcclient.SSOServerDefinition` objects.
@@ -150,7 +157,8 @@ class SSOServerDefinitionManager(BaseManager):
         result_prop = 'sso-server-definitions'
         list_uri = f'{self.console.uri}/sso-server-definitions'
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None)
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create(self, properties):
@@ -291,10 +299,11 @@ class SSOServerDefinition(BaseResource):
         """
         # pylint: disable=protected-access
         self.manager.session.post(self.uri, resource=self, body=properties)
-
-        # The name of SSO Server Definitions cannot be updated. An attempt to
-        # do so should cause HTTPError to be raised in the POST above, so we
-        # assert that here, because we omit the extra code for handling name
-        # updates:
-        assert self.manager._name_prop not in properties
+        is_rename = self.manager._name_prop in properties
+        if is_rename:
+            # Delete the old name from the cache
+            self.manager._name_uri_cache.delete(self.name)
         self.update_properties_local(copy.deepcopy(properties))
+        if is_rename:
+            # Add the new name to the cache
+            self.manager._name_uri_cache.update(self.name, self.uri)

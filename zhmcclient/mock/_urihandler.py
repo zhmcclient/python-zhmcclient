@@ -1951,9 +1951,12 @@ class SSOServerDefinitionsHandler:
     Handler class for HTTP methods on set of SSOServerDefinition resources.
     """
 
-    valid_query_parms_get = ['name']
+    valid_query_parms_get = ['name', 'type', 'additional-properties']
 
-    returned_props = ['element-uri', 'name', 'type']
+    returned_props = [
+        'element-uri', 'name', 'type'
+        # plus additional-properties
+    ]
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -1962,6 +1965,9 @@ class SSOServerDefinitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = get_additional_properties(
+            query_parms, SSOServerDefinitionHandler.wo_properties)
+
         filter_args = query_parms
 
         try:
@@ -1973,7 +1979,7 @@ class SSOServerDefinitionsHandler:
         result_sso_srv_defs = []
         for sso_srv_def in console.sso_server_definitions.list(filter_args):
             result_sso_srv_def = {}
-            for prop in cls.returned_props:
+            for prop in cls.returned_props + add_props:
                 result_sso_srv_def[prop] = \
                     sso_srv_def.properties.get(prop)
             result_sso_srv_defs.append(result_sso_srv_def)
@@ -1995,7 +2001,14 @@ class SSOServerDefinitionsHandler:
                               ['name', 'type', 'client-id', 'client-secret',
                                'issuer-url', 'authentication-url', 'token-url',
                                'jwks-url'])
-        new_sso_srv_def = console.sso_server_definitions.add(body)
+        # These properties are server-controlled on create: the real HMC ignores
+        # any caller-supplied value and auto-sets them. Strip them here so the
+        # setdefault() calls in FakedSSOServerDefinitionManager.add() apply.
+        auto_props = ('logout-url',
+                      'logout-sso-session-on-reauthentication-failure')
+        store_body = {k: v for k, v in body.items()
+                      if k not in auto_props}
+        new_sso_srv_def = console.sso_server_definitions.add(store_body)
         return {'element-uri': new_sso_srv_def.uri}
 
 
@@ -2004,6 +2017,8 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
     """
     Handler class for HTTP methods on single SSOServerDefinition resource.
     """
+
+    valid_query_parms_get = ['properties']
 
     wo_properties = ["client-secret"]
 

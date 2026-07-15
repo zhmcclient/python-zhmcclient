@@ -19,7 +19,7 @@ These tests do not change any existing SSO server definitions, but create,
 modify and delete test SSO server definitions.
 """
 
-
+from copy import deepcopy
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -46,6 +46,32 @@ SSOSRVDEF_LIST_PROPS = ["element-uri", "name", "type"]
 # Properties whose values can change between retrievals of SSOServerDefinition
 # objects
 SSOSRVDEF_VOLATILE_PROPS = []
+
+# Input properties for a test instance of SSOServerDefinition
+SSOSRVDEF_INPUT_PROPS = {
+    "authentication-page-servers": [
+        {"hostname-ipaddr": "images1.example.com", "port": 443},
+        {"hostname-ipaddr": "images2.example.com", "port": 80},
+    ],
+    "authentication-url": "https://sso1.example.com/auth",
+    "client-id": "sso1-123456",
+    "client-secret": "sso1-client-secret",
+    "description": "Primary SSO server",
+    "issuer-url": "https://sso1.example.com/issuer",
+    "jwks-url": "https://sso1.example.com/jwks",
+    "logout-sso-session-on-reauthentication-failure": True,
+    "logout-url": "https://sso1.example.com/logout",
+    "name": None,  # Update before use
+    "token-url": "https://sso1.example.com/token",
+    "type": "oidc",
+}
+
+# Expected automatically set properties for the test instance in
+# SSOSRVDEF_INPUT_PROPS
+SSOSRVDEF_AUTO_PROPS = {
+    "logout-url": None,
+    "logout-sso-session-on-reauthentication-failure": False,
+}
 
 
 def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
@@ -82,6 +108,7 @@ def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
             SSOSRVDEF_VOLATILE_PROPS,
             SSOSRVDEF_MINIMAL_PROPS,
             SSOSRVDEF_LIST_PROPS,
+            add_props=['authentication-url'],
         )
 
 
@@ -133,7 +160,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support SSO server definitions")
 
-    ssosrvdef_name = TEST_PREFIX + " test_ssosrvdef_crud ssosrvdef1"
+    ssosrvdef_name = TEST_PREFIX + " crud ssosrvdef1"
     ssosrvdef_name_new = ssosrvdef_name + " new"
 
     # Ensure a clean starting point for this test
@@ -151,27 +178,8 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
 
     # Test creating the SSO server definition
 
-    ssosrvdef_input_props = {
-        "authentication-page-servers": [
-            {"hostname-ipaddr": "images1.example.com", "port": 443},
-            {"hostname-ipaddr": "images2.example.com", "port": 80},
-        ],
-        "authentication-url": "https://sso1.example.com/auth",
-        "client-id": "sso1-123456",
-        "client-secret": "sso1-client-secret",
-        "description": "Primary SSO server",
-        "issuer-url": "https://sso1.example.com/issuer",
-        "jwks-url": "https://sso1.example.com/jwks",
-        "logout-sso-session-on-reauthentication-failure": True,
-        "logout-url": "https://sso1.example.com/logout",
-        "name": "SSO Server 1",
-        "token-url": "https://sso1.example.com/token",
-        "type": "oidc",
-    }
-    ssosrvdef_auto_props = {
-        "logout-url": None,
-        "logout-sso-session-on-reauthentication-failure": False,
-    }
+    ssosrvdef_input_props = deepcopy(SSOSRVDEF_INPUT_PROPS)
+    ssosrvdef_input_props['name'] = ssosrvdef_name
 
     # The code to be tested
     try:
@@ -184,48 +192,55 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
         else:
             raise
 
-    for pn, exp_value in ssosrvdef_input_props.items():
-        assert (
-            ssosrvdef.properties[pn] == exp_value
-        ), f"Unexpected value for property {pn!r}"
-    ssosrvdef.pull_full_properties()
-    for pn, exp_value in ssosrvdef_input_props.items():
-        assert (
-            ssosrvdef.properties[pn] == exp_value
-        ), f"Unexpected value for property {pn!r}"
-    for pn, exp_value in ssosrvdef_auto_props.items():
-        assert (
-            ssosrvdef.properties[pn] == exp_value
-        ), f"Unexpected value for property {pn!r}"
+    try:
 
-    # Test updating a property of the SSO server definition
+        for pn, exp_value in ssosrvdef_input_props.items():
+            assert (
+                ssosrvdef.properties[pn] == exp_value
+            ), f"Unexpected value for property {pn!r}"
+        ssosrvdef.pull_full_properties()
+        # After GET, server-controlled (auto) properties override the input
+        # values. Check only the non-auto input props here, then check auto
+        # props separately.
+        for pn, exp_value in ssosrvdef_input_props.items():
+            if pn in SSOSRVDEF_AUTO_PROPS:
+                continue
+            assert (
+                ssosrvdef.properties[pn] == exp_value
+            ), f"Unexpected value for property {pn!r}"
+        for pn, exp_value in SSOSRVDEF_AUTO_PROPS.items():
+            assert (
+                ssosrvdef.properties[pn] == exp_value
+            ), f"Unexpected value for property {pn!r}"
 
-    new_desc = "Updated SSO server definition description."
+        # Test updating a property of the SSO server definition
 
-    # The code to be tested
-    ssosrvdef.update_properties(dict(description=new_desc))
+        new_desc = "Updated SSO server definition description."
 
-    assert ssosrvdef.properties["description"] == new_desc
-    ssosrvdef.pull_full_properties()
-    assert ssosrvdef.properties["description"] == new_desc
+        # The code to be tested
+        ssosrvdef.update_properties(dict(description=new_desc))
 
-    # Test that SSO server definitions cannot be renamed
+        assert ssosrvdef.properties["description"] == new_desc
+        ssosrvdef.pull_full_properties()
+        assert ssosrvdef.properties["description"] == new_desc
 
-    with pytest.raises(zhmcclient.HTTPError) as exc_info:
+        # Test that SSO server definitions can be renamed
 
         # The code to be tested
         ssosrvdef.update_properties(dict(name=ssosrvdef_name_new))
 
-    exc = exc_info.value
-    assert exc.http_status == 400
-    assert exc.reason == 6
-    with pytest.raises(zhmcclient.NotFound):
         console.sso_server_definitions.find(name=ssosrvdef_name_new)
+        with pytest.raises(zhmcclient.NotFound):
+            console.sso_server_definitions.find(name=ssosrvdef_name)
 
-    # Test deleting the SSO server definition
+    finally:
 
-    # The code to be tested
-    ssosrvdef.delete()
+        # Test deleting the SSO server definition
 
-    with pytest.raises(zhmcclient.NotFound):
-        console.sso_server_definitions.find(name=ssosrvdef_name)
+        # The code to be tested
+        ssosrvdef.delete()
+
+        with pytest.raises(zhmcclient.NotFound):
+            console.sso_server_definitions.find(name=ssosrvdef_name_new)
+        with pytest.raises(zhmcclient.NotFound):
+            console.sso_server_definitions.find(name=ssosrvdef_name)
