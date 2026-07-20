@@ -1,3 +1,0 @@
-Added support for SSO Server Definitions with new classes
-:class:`zhmcclient.SSOServerDefinition` and
-:class:`zhmcclient.SSOServerDefinitionManager`.
