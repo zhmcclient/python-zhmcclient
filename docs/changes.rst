@@ -30,6 +30,114 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.26.0
+^^^^^^^^^^^^^^
+
+Released: 2026-07-20
+
+**Bug fixes:**
+
+* Fixed dependabot issues up to 2026-05-12.
+
+* Fixed Mend issues up to 2026-02-26.
+
+* Added a step to the release instructions for checking Mend issues in the
+  internal copy of the repo.
+
+* Fixed safety issues up to 2026-07-10.
+
+* Pinned the version of stomp.py to <8.3.0, because version 8.3.0 caused problems
+  with the zhmcclient library, and because version 8.3.0 on Pypi has no
+  corresponding changes in the source code repository of stomp.py.
+
+* Fixed the check for the maximum length of the commit message title to
+  tolerate squash merges, which add the PR number at the end of the line.
+
+* Bumped ``jupyter_server`` to >=2.20.0 on Python>=3.10 to fix
+  CVE-2024-35178 (GHSA-hrw6-wg82-cm62), a path traversal vulnerability
+  caused by an incorrect ``startswith()`` root-directory check that
+  allowed authenticated users to read, write, and delete files in sibling
+  directories sharing a name prefix with the server's ``root_dir``.
+
+* Dev: Fixed the issue in the make targets "release_publish" and "start_tag"
+  that manually cleaned up local release/start branches led to a failure. Local
+  branch cleanup is now tolerated. (`#2077 <https://github.com/zhmcclient/python-zhmcclient/issues/2077>`_)
+
+* Fixed a JSONDecodeError when a STOMP notification from the HMC contained the
+  empty string as the message body, by tolerating that. (`#2087 <https://github.com/zhmcclient/python-zhmcclient/issues/2087>`_)
+
+* Fixed the issue that the zhmcclient mock support returned write-only properties
+  of resources in Get and List operations. (`#2122 <https://github.com/zhmcclient/python-zhmcclient/issues/2122>`_)
+
+* Changed from the unmaintained GitHub action gsactions/commit-message-checker
+  to its new fork ddev/commit-message-checker. (`#2129 <https://github.com/zhmcclient/python-zhmcclient/issues/2129>`_)
+
+**Enhancements:**
+
+* Test: Added check for missing and extra dependencies in minimum constraints
+  files based on installed packages. The result is displayed as a warning in
+  the summary of the GitHub Actions run of the "test" workflow.
+
+* Development: Added a GitHub Actions workflow named 'backport' that creates a
+  backport PR to the latest stable branch stable_M.N when a PR labeled with the
+  'backport' label is merged.
+
+* Added a `stop_event` parameter to the :meth:`zhmcclient.NotificationReceiver.notifications`
+  method that allows stopping the iterations over the HMC notifications if the event
+  gets set.
+
+* Improved checking for sensitive properties in logs to reduce maintenance
+  effort.
+
+* Test: Added support for checking blanked-out sensitive properties in the
+  zhmcclient log file created during the end2end tests, by adding a new
+  script tools/check_blanked.py, and running it during "make end2end"
+  and "make end2end_mocked".
+
+* Dev: Safety issues that are detected in normal and scheduled Actions runs
+  now cause an error to be shown in the Actions summary. They still
+  (intentionally) do not cause the Actions run to fail. Note that safety issues
+  detected during an Actions release run, or during local use, do cause the
+  make command and Actions run to fail. In addition, the safety command is now
+  always run for both development and install before checking for failure.
+
+* Docs: Added sections that describe how to handle GitHub Dependabot alerts
+  and how to use the assisted backporting of PRs.
+
+* Support for the additional_properties parameter in StorageVolumeManager.list().
+  This requires HMC 2.17.0.
+
+* Added support for SSO Server Definitions with new classes
+  :class:`zhmcclient.SSOServerDefinition` and
+  :class:`zhmcclient.SSOServerDefinitionManager`. (`#1918 <https://github.com/zhmcclient/python-zhmcclient/issues/1918>`_)
+
+* Test: Added support for a new function test concept where the testcases are
+  defined in YAML test files. The communication to the HMC is mocked using
+  the "requests_mock" Python package, and the testcases can define any reaction
+  of the HMC on the request. Added testcases for
+  :class:`zhmcclient.BaseResource`, :class:`zhmcclient.User`, for exceptions
+  from the "requests" package, and for Unicode. (`#1928 <https://github.com/zhmcclient/python-zhmcclient/issues/1928>`_)
+
+* Test: Improved some settings for coverage measurement, and enabled branch
+  coverage reporting. This lowered the overall coverage percentage somewhat. (`#2078 <https://github.com/zhmcclient/python-zhmcclient/issues/2078>`_)
+
+* Exposed the response body of :exc:`zhmcclient.HTTPError` as a new `body`
+  property. (`#2212 <https://github.com/zhmcclient/python-zhmcclient/issues/2212>`_)
+
+**Cleanup:**
+
+* Test: Reduced the GitHub Actions test environments to save resources.
+
+* Removed unused packages from minimum constraints files.
+
+* Renamed base-requirements.txt to requirements-base.txt and dev-requirements.txt
+  to requirements-develop.txt, for consistency with other projects.
+
+* Dev: Using bash as the make shell on Windows. This allows cleaning up all
+  the conditional processing for Windows-specific commands and the use of
+  "bash -c".
+
+
 Version 1.25.0
 ^^^^^^^^^^^^^^
 
