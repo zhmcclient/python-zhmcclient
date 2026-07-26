@@ -260,7 +260,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             # pylint: disable=used-before-assignment
             found_res_list = manager.findall(**{client_prop: client_value})
 
-            assert name in map(lambda _res: _res.name, found_res_list)
+            assert name in (_res.name for _res in found_res_list)
             found_res_list = list(filter(lambda _res: _res.name == name,
                                          found_res_list))
             found_res = found_res_list[0]
@@ -300,15 +300,15 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                 filter_args={client_prop: client_value})
 
             assert name in [_res.name for _res in found_res_list]
-            found_res = [_res for _res in found_res_list
-                         if _res.name == name][0]
+            found_res = next(_res for _res in found_res_list
+                             if _res.name == name)
             assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                              prop_names=minimal_props)
 
     # The code to be tested: findall() with no filter
     found_res_list = manager.findall()
 
-    assert name in map(lambda _res: _res.name, found_res_list)
+    assert name in (_res.name for _res in found_res_list)
     found_res_list = list(filter(lambda _res: _res.name == name,
                                  found_res_list))
     found_res = found_res_list[0]
@@ -329,7 +329,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
 
     # Because we have only the expected properties for the resource with
     # the specified name, we only compare that one resource.
-    assert name in map(lambda _res: _res.name, found_res_list)
+    assert name in (_res.name for _res in found_res_list)
     found_res_list = list(filter(lambda _res: _res.name == name,
                                  found_res_list))
     found_res = found_res_list[0]
@@ -346,7 +346,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
 
         # Because we have only the expected properties for the resource with
         # the specified name, we only compare that one resource.
-        assert name in map(lambda _res: _res.name, found_res_list)
+        assert name in (_res.name for _res in found_res_list)
         found_res_list = list(filter(lambda _res: _res.name == name,
                                      found_res_list))
         found_res = found_res_list[0]

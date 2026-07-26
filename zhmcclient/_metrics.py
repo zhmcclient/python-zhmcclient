@@ -260,7 +260,7 @@ class MetricsContext(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         if not isinstance(manager, MetricsContextManager):
-            raise AssertionError(
+            raise TypeError(
                 "MetricsContext init: Expected manager type "
                 f"{MetricsContextManager}, got {type(manager)}")
         super().__init__(manager, uri, name, properties)

@@ -109,9 +109,9 @@ class TestMetricsContext:
         "full_properties_kwargs, prop_names", [
             ({},
              ['anticipated-frequency-seconds', 'metric-groups']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['anticipated-frequency-seconds', 'metric-groups']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['anticipated-frequency-seconds', 'metric-groups']),
         ]
     )

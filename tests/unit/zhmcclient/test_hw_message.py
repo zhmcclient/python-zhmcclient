@@ -100,9 +100,9 @@ class TestHwMessageConsole:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, exp_prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri', 'element-id', 'text', 'timestamp']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['element-uri', 'element-id', 'text', 'timestamp',
               'service-supported']),
             ({},  # test default for full_properties (False)

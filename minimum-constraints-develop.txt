@@ -96,7 +96,7 @@ pyflakes==3.1.0
 entrypoints==0.3.0
 
 # Ruff checker (no imports, invoked via ruff script):
-ruff==0.3.5
+ruff==0.16.0
 
 # Jupyter Notebook (no imports, invoked via jupyter script):
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
@@ -247,3 +247,7 @@ webcolors==24.11.1
 webencodings==0.5.1
 widgetsnbextension==4.0.14
 zipp==3.20.0
+installer==1.0.1; python_version >= '3.10'  # Used by pipdeptree>=4.0.0
+nab-index==0.0.11; python_version >= '3.10'  # Used by pipdeptree>=4.0.0
+nab-python==0.0.11; python_version >= '3.10'  # Used by pipdeptree>=4.0.0
+nab-resolver==0.0.11; python_version >= '3.10'  # Used by pipdeptree>=4.0.0

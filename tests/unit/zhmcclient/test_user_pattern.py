@@ -114,9 +114,9 @@ class TestUserPattern:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri', 'name', 'type']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['element-uri', 'name', 'type', 'description']),
             ({},  # test default for full_properties (False)
              ['element-uri', 'name', 'type']),
@@ -164,11 +164,6 @@ class TestUserPattern:
              None,
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'description': 'fake description X'},  # props missing
-             None,
-             HTTPError({'http-status': 400, 'reason': 5})),
-            ({'description': 'fake description X',
-              'name': 'a',
-              'pattern': 'a*'},  # several missing
              None,
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'description': 'fake description X',

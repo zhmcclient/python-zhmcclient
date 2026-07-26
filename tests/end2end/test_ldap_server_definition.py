@@ -179,7 +179,7 @@ def test_ldapsrvdef_crud(zhmc_logger, hmc_session):
     new_desc = "Updated LDAP server definition description."
 
     # The code to be tested
-    ldapsrvdef.update_properties(dict(description=new_desc))
+    ldapsrvdef.update_properties({'description': new_desc})
 
     assert ldapsrvdef.properties['description'] == new_desc
     ldapsrvdef.pull_full_properties()
@@ -190,7 +190,7 @@ def test_ldapsrvdef_crud(zhmc_logger, hmc_session):
     with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
         # The code to be tested
-        ldapsrvdef.update_properties(dict(name=ldapsrvdef_name_new))
+        ldapsrvdef.update_properties({'name': ldapsrvdef_name_new})
 
     exc = exc_info.value
     assert exc.http_status == 400

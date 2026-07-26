@@ -151,7 +151,7 @@ def test_hba_crud(zhmc_logger, dpm_mode_cpcs):
         try:
 
             # Pick a FICON adapter backing the HBA
-            adapters = cpc.adapters.findall(**{'type': 'fcp'})
+            adapters = cpc.adapters.findall(type='fcp')
             assert len(adapters) >= 1, (
                 f"CPC {cpc.name} does not have any FCP-type FICON adapters")
             adapter = adapters[-1]  # Pick the last adapter found
@@ -190,7 +190,7 @@ def test_hba_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated HBA description."
 
             # The code to be tested
-            hba.update_properties(dict(description=new_desc))
+            hba.update_properties({'description': new_desc})
 
             assert hba.properties['description'] == new_desc
             hba.pull_full_properties()
@@ -199,7 +199,7 @@ def test_hba_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the HBA
 
             # The code to be tested
-            hba.update_properties(dict(name=hba_name_new))
+            hba.update_properties({'name': hba_name_new})
 
             assert hba.properties['name'] == hba_name_new
             hba.pull_full_properties()

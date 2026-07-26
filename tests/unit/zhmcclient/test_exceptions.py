@@ -1467,98 +1467,98 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
     (
         "message as positional arg",
         [None, None, "foo"],
-        dict(),
-        dict(
-            filter_args=None,
-            manager=None,
-        ),
+        {},
+        {
+            'filter_args': None,
+            'manager': None,
+        },
         r"^foo$"
     ),
     (
         "message as keyword arg",
         [],
-        dict(
-            message="foo",
-        ),
-        dict(
-            filter_args=None,
-            manager=None,
-        ),
+        {
+            'message': "foo",
+        },
+        {
+            'filter_args': None,
+            'manager': None,
+        },
         r"^foo$"
     ),
     (
         "manager but no filter_args as positional arg",
         [None, ADD_MANAGER],
-        dict(),
-        dict(
-            filter_args=None,
-            manager=ADD_MANAGER,
-        ),
+        {},
+        {
+            'filter_args': None,
+            'manager': ADD_MANAGER,
+        },
         r"^Could not find Adapter using filter arguments None in Cpc "
     ),
     (
         "manager but no filter_args as keyword arg",
         [],
-        dict(
-            manager=ADD_MANAGER,
-        ),
-        dict(
-            filter_args=None,
-            manager=ADD_MANAGER,
-        ),
+        {
+            'manager': ADD_MANAGER,
+        },
+        {
+            'filter_args': None,
+            'manager': ADD_MANAGER,
+        },
         r"^Could not find Adapter using filter arguments None in Cpc "
     ),
     (
         "manager and one filter_arg as positional arg",
         [{"adapter-id": "1c0"}, ADD_MANAGER],
-        dict(),
-        dict(
-            filter_args={"adapter-id": "1c0"},
-            manager=ADD_MANAGER,
-        ),
+        {},
+        {
+            'filter_args': {"adapter-id": "1c0"},
+            'manager': ADD_MANAGER,
+        },
         r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
         r"in Cpc "
     ),
     (
         "manager and one filter_arg as keyword arg",
         [],
-        dict(
-            filter_args={"adapter-id": "1c0"},
-            manager=ADD_MANAGER,
-        ),
-        dict(
-            filter_args={"adapter-id": "1c0"},
-            manager=ADD_MANAGER,
-        ),
+        {
+            'filter_args': {"adapter-id": "1c0"},
+            'manager': ADD_MANAGER,
+        },
+        {
+            'filter_args': {"adapter-id": "1c0"},
+            'manager': ADD_MANAGER,
+        },
         r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
         r"in Cpc "
     ),
     (
         "manager and two filter_arg items as keyword arg",
         [],
-        dict(
-            filter_args={"adapter-id": "1c0", "name": "foo"},
-            manager=ADD_MANAGER,
-        ),
-        dict(
-            filter_args={"adapter-id": "1c0", "name": "foo"},
-            manager=ADD_MANAGER,
-        ),
+        {
+            'filter_args': {"adapter-id": "1c0", "name": "foo"},
+            'manager': ADD_MANAGER,
+        },
+        {
+            'filter_args': {"adapter-id": "1c0", "name": "foo"},
+            'manager': ADD_MANAGER,
+        },
         r"^Could not find Adapter using filter arguments "
         r".*(?=.*'adapter-id': '1c0')(?=.*'name': 'foo').* in Cpc "
     ),
     (
         "message overwrites manager/filter_arg",
         [],
-        dict(
-            message="foo",
-            filter_args={"adapter-id": "1c0"},
-            manager=ADD_MANAGER,
-        ),
-        dict(
-            filter_args=None,
-            manager=None,
-        ),
+        {
+            'message': "foo",
+            'filter_args': {"adapter-id": "1c0"},
+            'manager': ADD_MANAGER,
+        },
+        {
+            'filter_args': None,
+            'manager': None,
+        },
         r"^foo$"
     ),
 ]
@@ -1733,32 +1733,32 @@ TESTCASES_MR_NOTFOUND_INITIAL_ATTRS = [
     (
         "Positional args - just msg",
         ["foo", None, None],
-        dict(),
-        dict(
-            resource_class=None,
-            managers=None,
-        ),
+        {},
+        {
+            'resource_class': None,
+            'managers': None,
+        },
         r"^foo$"
     ),
     (
         "Positional args - all args",
         ["foo", Adapter, [ADD_MANAGER]],
-        dict(),
-        dict(
-            resource_class=Adapter,
-        ),
+        {},
+        {
+            'resource_class': Adapter,
+        },
         r"^foo$"
     ),
     (
         "Keyword args - all args",
         [],
-        dict(
-            msg="foo",
-            resource_class=Adapter,
-            managers=[ADD_MANAGER]),
-        dict(
-            resource_class=Adapter,
-        ),
+        {
+            'msg': "foo",
+            'resource_class': Adapter,
+            'managers': [ADD_MANAGER]},
+        {
+            'resource_class': Adapter,
+        },
         r"^foo$"
     ),
 ]
@@ -1901,7 +1901,7 @@ class TestMetricsResourceNotFound:
     # Input and expected arguments.
     "args", [
         # (msg, jms_headers, jms_message)
-        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+        ("fake msg", {'message': 'jms error msg1'}, 'jms error msg2'),
     ]
 )
 @pytest.mark.parametrize(
@@ -1930,7 +1930,7 @@ def test_notijmserror_initial_attrs(arg_names, args):
 
 @pytest.mark.parametrize(
     "msg, jms_headers, jms_message", [
-        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+        ("fake msg", {'message': 'jms error msg1'}, 'jms error msg2'),
     ]
 )
 def test_notijmserror_repr(msg, jms_headers, jms_message):
@@ -1950,7 +1950,7 @@ def test_notijmserror_repr(msg, jms_headers, jms_message):
 
 @pytest.mark.parametrize(
     "msg, jms_headers, jms_message", [
-        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+        ("fake msg", {'message': 'jms error msg1'}, 'jms error msg2'),
     ]
 )
 def test_notijmserror_str(msg, jms_headers, jms_message):
@@ -1968,7 +1968,7 @@ def test_notijmserror_str(msg, jms_headers, jms_message):
 
 @pytest.mark.parametrize(
     "msg, jms_headers, jms_message", [
-        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+        ("fake msg", {'message': 'jms error msg1'}, 'jms error msg2'),
     ]
 )
 def test_notijmserror_str_def(msg, jms_headers, jms_message):
@@ -1990,7 +1990,7 @@ def test_notijmserror_str_def(msg, jms_headers, jms_message):
     # Input and expected arguments.
     "args", [
         # (msg, jms_message)
-        ("fake msg", dict(bla='bla1')),
+        ("fake msg", {'bla': 'bla1'}),
     ]
 )
 @pytest.mark.parametrize(
@@ -2018,7 +2018,7 @@ def test_notiparseerror_initial_attrs(arg_names, args):
 
 @pytest.mark.parametrize(
     "msg, jms_message", [
-        ("fake msg", dict(bla='bla1')),
+        ("fake msg", {'bla': 'bla1'}),
     ]
 )
 def test_notiparseerror_repr(msg, jms_message):
@@ -2038,7 +2038,7 @@ def test_notiparseerror_repr(msg, jms_message):
 
 @pytest.mark.parametrize(
     "msg, jms_message", [
-        ("fake msg", dict(bla='bla1')),
+        ("fake msg", {'bla': 'bla1'}),
     ]
 )
 def test_notiparseerror_str(msg, jms_message):
@@ -2056,7 +2056,7 @@ def test_notiparseerror_str(msg, jms_message):
 
 @pytest.mark.parametrize(
     "msg, jms_message", [
-        ("fake msg", dict(bla='bla1')),
+        ("fake msg", {'bla': 'bla1'}),
     ]
 )
 def test_notiparseerror_str_def(msg, jms_message):
@@ -2096,21 +2096,21 @@ TESTCASES_CEASEDEXISTENCE_INITIAL_ATTRS = [
     (
         "Positional args",
         ["/api/foo"],
-        dict(),
-        dict(
-            resource_uri="/api/foo",
-        ),
+        {},
+        {
+            'resource_uri': "/api/foo",
+        },
         r"^Resource no longer exists: /api/foo$"
     ),
     (
         "Keyword args",
         [],
-        dict(
-            resource_uri="/api/foo",
-        ),
-        dict(
-            resource_uri="/api/foo",
-        ),
+        {
+            'resource_uri': "/api/foo",
+        },
+        {
+            'resource_uri': "/api/foo",
+        },
         r"^Resource no longer exists: /api/foo$"
     ),
 ]
@@ -2203,35 +2203,35 @@ TESTCASES_FCE_INITIAL_ATTRS = [
     (
         "Positional args - just msg",
         ["foo", None, None],
-        dict(),
-        dict(
-            property_name=None,
-            match_value=None,
-        ),
+        {},
+        {
+            'property_name': None,
+            'match_value': None,
+        },
         r"^foo$"
     ),
     (
         "Positional args - all args",
         ["foo", "prop1", "value1"],
-        dict(),
-        dict(
-            property_name="prop1",
-            match_value="value1",
-        ),
+        {},
+        {
+            'property_name': "prop1",
+            'match_value': "value1",
+        },
         r"^foo$"
     ),
     (
         "Keyword args - all args",
         [],
-        dict(
-            msg="foo",
-            property_name="prop1",
-            match_value="value1",
-        ),
-        dict(
-            property_name="prop1",
-            match_value="value1",
-        ),
+        {
+            'msg': "foo",
+            'property_name': "prop1",
+            'match_value': "value1",
+        },
+        {
+            'property_name': "prop1",
+            'match_value': "value1",
+        },
         r"^foo$"
     ),
 ]

@@ -497,9 +497,9 @@ class TestFakedActivationProfile:
         resetprofiles = cpc1.reset_activation_profiles.list()
         assert len(resetprofiles) == 2
 
-        resetprofile2 = [p for p in resetprofiles
-                         if p.properties['name'] ==
-                         resetprofile2_in_props['name']][0]
+        resetprofile2 = next(p for p in resetprofiles
+                             if p.properties['name'] ==
+                             resetprofile2_in_props['name'])
 
         assert new_resetprofile.properties == resetprofile2.properties
         assert new_resetprofile.manager == resetprofile2.manager
@@ -633,8 +633,8 @@ class TestFakedAdapter:
         adapters = cpc1.adapters.list()
         assert len(adapters) == 2
 
-        adapter2 = [a for a in adapters
-                    if a.properties['name'] == adapter2_in_props['name']][0]
+        adapter2 = next(a for a in adapters
+                        if a.properties['name'] == adapter2_in_props['name'])
 
         assert new_adapter.properties == adapter2.properties
         assert new_adapter.manager == adapter2.manager
@@ -758,8 +758,8 @@ class TestFakedCpc:
         cpcs = self.hmc.cpcs.list()
         assert len(cpcs) == 2
 
-        cpc2 = [cpc for cpc in cpcs
-                if cpc.properties['name'] == cpc2_in_props['name']][0]
+        cpc2 = next(cpc for cpc in cpcs
+                    if cpc.properties['name'] == cpc2_in_props['name'])
 
         assert new_cpc.properties == cpc2.properties
         assert new_cpc.manager == cpc2.manager
@@ -920,8 +920,8 @@ class TestFakedHba:
         hbas = partition1.hbas.list()
         assert len(hbas) == 2
 
-        hba2 = [hba for hba in hbas
-                if hba.properties['name'] == hba2_in_props['name']][0]
+        hba2 = next(hba for hba in hbas
+                    if hba.properties['name'] == hba2_in_props['name'])
 
         assert new_hba.properties == hba2.properties
         assert new_hba.manager == hba2.manager
@@ -1035,8 +1035,8 @@ class TestFakedLpar:
         lpars = cpc1.lpars.list()
         assert len(lpars) == 2
 
-        lpar2 = [p for p in lpars
-                 if p.properties['name'] == lpar2_in_props['name']][0]
+        lpar2 = next(p for p in lpars
+                     if p.properties['name'] == lpar2_in_props['name'])
 
         assert new_lpar.properties == lpar2.properties
         assert new_lpar.manager == lpar2.manager
@@ -1196,8 +1196,8 @@ class TestFakedNic:
         nics = partition1.nics.list()
         assert len(nics) == 2
 
-        nic2 = [nic for nic in nics
-                if nic.properties['name'] == nic2_in_props['name']][0]
+        nic2 = next(nic for nic in nics
+                    if nic.properties['name'] == nic2_in_props['name'])
 
         assert new_nic.properties == nic2.properties
         assert new_nic.manager == nic2.manager
@@ -1333,9 +1333,9 @@ class TestFakedPartition:
         partitions = cpc1.partitions.list()
         assert len(partitions) == 2
 
-        partition2 = [p for p in partitions
-                      if p.properties['name'] ==
-                      partition2_in_props['name']][0]
+        partition2 = next(p for p in partitions
+                          if p.properties['name'] ==
+                          partition2_in_props['name'])
 
         assert new_partition.properties == partition2.properties
         assert new_partition.manager == partition2.manager
@@ -1461,8 +1461,8 @@ class TestFakedPort:
         ports = adapter1.ports.list()
         assert len(ports) == 2
 
-        port2 = [p for p in ports
-                 if p.properties['name'] == port2_in_props['name']][0]
+        port2 = next(p for p in ports
+                     if p.properties['name'] == port2_in_props['name'])
 
         assert new_port.properties == port2.properties
         assert new_port.manager == port2.manager
@@ -1591,9 +1591,9 @@ class TestFakedVirtualFunction:
         virtual_functions = partition1.virtual_functions.list()
         assert len(virtual_functions) == 2
 
-        virtual_function2 = [vf for vf in virtual_functions
-                             if vf.properties['name'] ==
-                             virtual_function2_in_props['name']][0]
+        virtual_function2 = next(vf for vf in virtual_functions
+                                 if vf.properties['name'] ==
+                                 virtual_function2_in_props['name'])
 
         assert new_virtual_function.properties == virtual_function2.properties
         assert new_virtual_function.manager == virtual_function2.manager
@@ -1707,9 +1707,9 @@ class TestFakedVirtualSwitch:
         virtual_switches = cpc1.virtual_switches.list()
         assert len(virtual_switches) == 2
 
-        virtual_switch2 = [p for p in virtual_switches
-                           if p.properties['name'] ==
-                           virtual_switch2_in_props['name']][0]
+        virtual_switch2 = next(p for p in virtual_switches
+                               if p.properties['name'] ==
+                               virtual_switch2_in_props['name'])
 
         assert new_virtual_switch.properties == virtual_switch2.properties
         assert new_virtual_switch.manager == virtual_switch2.manager
@@ -1820,9 +1820,9 @@ class TestFakedCapacityGroup:
         capacity_groups = cpc1.capacity_groups.list()
         assert len(capacity_groups) == 2
 
-        capacity_group2 = [p for p in capacity_groups
-                           if p.properties['name'] ==
-                           capacity_group2_in_props['name']][0]
+        capacity_group2 = next(p for p in capacity_groups
+                               if p.properties['name'] ==
+                               capacity_group2_in_props['name'])
 
         assert new_capacity_group.properties == capacity_group2.properties
         assert new_capacity_group.manager == capacity_group2.manager
@@ -2141,7 +2141,7 @@ class TestFakedMetricsContext:
 
         mg_name2 = 'dpm-system-usage-overview'
 
-        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
+        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # noqa: DTZ001
         ts3_offset = int(tzlocal().utcoffset(ts3_input).total_seconds())
         ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(
@@ -2210,7 +2210,7 @@ def test_mgd_attr():
 def test_mov_attr():
     """Test attributes of a FakedMetricObjectValues object."""
 
-    in_timestamp = datetime.now()  # timezone-naive
+    in_timestamp = datetime.now()  # noqa: DTZ001
     in_kwargs = {
         'group_name': 'partition-usage',
         'resource_uri': '/api/partitions/fake-oid',

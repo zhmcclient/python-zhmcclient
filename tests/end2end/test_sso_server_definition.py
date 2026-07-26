@@ -218,7 +218,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
         new_desc = "Updated SSO server definition description."
 
         # The code to be tested
-        ssosrvdef.update_properties(dict(description=new_desc))
+        ssosrvdef.update_properties({"description": new_desc})
 
         assert ssosrvdef.properties["description"] == new_desc
         ssosrvdef.pull_full_properties()
@@ -227,7 +227,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
         # Test that SSO server definitions can be renamed
 
         # The code to be tested
-        ssosrvdef.update_properties(dict(name=ssosrvdef_name_new))
+        ssosrvdef.update_properties({"name": ssosrvdef_name_new})
 
         console.sso_server_definitions.find(name=ssosrvdef_name_new)
         with pytest.raises(zhmcclient.NotFound):

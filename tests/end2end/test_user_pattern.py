@@ -180,7 +180,7 @@ def test_upatt_crud(zhmc_logger, hmc_session):
     new_desc = "Updated user pattern description."
 
     # The code to be tested
-    upatt.update_properties(dict(description=new_desc))
+    upatt.update_properties({'description': new_desc})
 
     assert upatt.properties['description'] == new_desc
     upatt.pull_full_properties()
@@ -189,7 +189,7 @@ def test_upatt_crud(zhmc_logger, hmc_session):
     # Test renaming the user pattern
 
     # The code to be tested
-    upatt.update_properties(dict(name=upatt_name_new))
+    upatt.update_properties({'name': upatt_name_new})
 
     assert upatt.properties['name'] == upatt_name_new
     upatt.pull_full_properties()

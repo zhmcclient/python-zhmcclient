@@ -572,12 +572,12 @@ class TestThreadingSerialization(ResourceTestCase):
         Test serialization of resource property update/access.
         """
 
-        resource = MyResource(self.mgr, self.uri, 'res1', dict(p1=1, p2=1))
+        resource = MyResource(self.mgr, self.uri, 'res1', {'p1': 1, 'p2': 1})
 
         def update():
             for _ in range(0, 10000):
                 value = random.randint(1, 100)
-                props = dict(p1=value, p2=value)
+                props = {'p1': value, 'p2': value}
                 resource.update_properties_local(props)
 
         def get_assert():
@@ -806,7 +806,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (None); "
             "resource exists and does not support 'properties' query parm",
-            dict(properties=None),
+            {'properties': None},
             False,
             False,
             {'name', 'object-uri'},
@@ -816,7 +816,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (None); "
             "resource exists and supports 'properties' query parm",
-            dict(properties=None),
+            {'properties': None},
             False,
             True,
             {'name', 'object-uri'},
@@ -826,7 +826,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (None); "
             "resource is deleted and does not support 'properties' query parm",
-            dict(properties=None),
+            {'properties': None},
             True,
             False,
             {'name', 'object-uri'},
@@ -836,7 +836,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (None); "
             "resource is deleted and supports 'properties' query parm",
-            dict(properties=None),
+            {'properties': None},
             True,
             True,
             {'name', 'object-uri'},
@@ -847,7 +847,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (empty list); "
             "resource exists and does not support 'properties' query parm",
-            dict(properties=[]),
+            {'properties': []},
             False,
             False,
             {'name', 'object-uri'},
@@ -857,7 +857,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (empty list); "
             "resource exists and supports 'properties' query parm",
-            dict(properties=[]),
+            {'properties': []},
             False,
             True,
             {'name', 'object-uri'},
@@ -867,7 +867,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (empty list); "
             "resource is deleted and does not support 'properties' query parm",
-            dict(properties=[]),
+            {'properties': []},
             True,
             False,
             {'name', 'object-uri'},
@@ -877,7 +877,7 @@ class TestPropertyMethodsMocked:
         (
             "No properties requested (empty list); "
             "resource is deleted and supports 'properties' query parm",
-            dict(properties=[]),
+            {'properties': []},
             True,
             True,
             {'name', 'object-uri'},
@@ -888,7 +888,7 @@ class TestPropertyMethodsMocked:
         (
             "One valid property requested; "
             "resource exists and does not support 'properties' query parm",
-            dict(properties=['object-id']),
+            {'properties': ['object-id']},
             False,
             False,
             {'name', 'object-uri', 'object-id'},
@@ -898,7 +898,7 @@ class TestPropertyMethodsMocked:
         (
             "One valid property requested; "
             "resource exists and supports 'properties' query parm",
-            dict(properties=['object-id']),
+            {'properties': ['object-id']},
             False,
             True,
             {'name', 'object-uri', 'object-id'},
@@ -908,7 +908,7 @@ class TestPropertyMethodsMocked:
         (
             "One valid property requested; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(properties=['object-id']),
+            {'properties': ['object-id']},
             True,
             False,
             None,
@@ -918,7 +918,7 @@ class TestPropertyMethodsMocked:
         (
             "One valid property requested; "
             "resource is deleted and supports 'properties' query parm",
-            dict(properties=['object-id']),
+            {'properties': ['object-id']},
             True,
             True,
             None,
@@ -929,7 +929,7 @@ class TestPropertyMethodsMocked:
         (
             "One invalid property requested; "
             "resource exists and does not support 'properties' query parm",
-            dict(properties=['invalid-property']),
+            {'properties': ['invalid-property']},
             False,
             False,
             {'name', 'object-uri', 'object-id'},
@@ -939,7 +939,7 @@ class TestPropertyMethodsMocked:
         (
             "One invalid property requested; "
             "resource exists and supports 'properties' query parm",
-            dict(properties=['invalid-property']),
+            {'properties': ['invalid-property']},
             False,
             True,
             {'name', 'object-uri', 'object-id'},
@@ -949,7 +949,7 @@ class TestPropertyMethodsMocked:
         (
             "One invalid property requested; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(properties=['invalid-property']),
+            {'properties': ['invalid-property']},
             True,
             False,
             None,
@@ -959,7 +959,7 @@ class TestPropertyMethodsMocked:
         (
             "One invalid property requested; "
             "resource is deleted and supports 'properties' query parm",
-            dict(properties=['invalid-property']),
+            {'properties': ['invalid-property']},
             True,
             True,
             None,
@@ -1032,7 +1032,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             False,
             False,
             RESOURCE_NAME,
@@ -1043,7 +1043,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested; "
             "resource exists and supports 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             False,
             True,
             RESOURCE_NAME,
@@ -1054,7 +1054,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             True,
             False,
             RESOURCE_NAME,
@@ -1065,7 +1065,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             True,
             True,
             RESOURCE_NAME,
@@ -1077,7 +1077,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             False,
             False,
             RESOURCE_OID,
@@ -1088,7 +1088,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested; "
             "resource exists and supports 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             False,
             True,
             RESOURCE_OID,
@@ -1099,7 +1099,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             True,
             False,
             RESOURCE_OID,
@@ -1110,7 +1110,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             True,
             True,
             RESOURCE_OID,
@@ -1122,7 +1122,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             False,
             False,
             None,
@@ -1133,7 +1133,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested; "
             "resource exists and supports 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             False,
             True,
             None,
@@ -1144,7 +1144,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             True,
             False,
             None,
@@ -1155,7 +1155,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             True,
             True,
             None,
@@ -1231,7 +1231,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested without default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             False,
             False,
             RESOURCE_NAME,
@@ -1242,7 +1242,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested without default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             False,
             True,
             RESOURCE_NAME,
@@ -1253,7 +1253,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested without default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             True,
             False,
             RESOURCE_NAME,
@@ -1264,7 +1264,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested without default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='name'),
+            {'name': 'name'},
             True,
             True,
             RESOURCE_NAME,
@@ -1276,7 +1276,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested with default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='name', default='foo'),
+            {'name': 'name', 'default': 'foo'},
             False,
             False,
             RESOURCE_NAME,
@@ -1287,7 +1287,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested with default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='name', default='foo'),
+            {'name': 'name', 'default': 'foo'},
             False,
             True,
             RESOURCE_NAME,
@@ -1298,7 +1298,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested with default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='name', default='foo'),
+            {'name': 'name', 'default': 'foo'},
             True,
             False,
             RESOURCE_NAME,
@@ -1309,7 +1309,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid locally existing property requested with default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='name', default='foo'),
+            {'name': 'name', 'default': 'foo'},
             True,
             True,
             RESOURCE_NAME,
@@ -1321,7 +1321,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested without default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             False,
             False,
             RESOURCE_OID,
@@ -1332,7 +1332,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested without default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             False,
             True,
             RESOURCE_OID,
@@ -1343,7 +1343,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested without default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             True,
             False,
             RESOURCE_OID,
@@ -1354,7 +1354,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested without default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='object-id'),
+            {'name': 'object-id'},
             True,
             True,
             RESOURCE_OID,
@@ -1366,7 +1366,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested with default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='object-id', default='foo'),
+            {'name': 'object-id', 'default': 'foo'},
             False,
             False,
             RESOURCE_OID,
@@ -1377,7 +1377,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested with default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='object-id', default='foo'),
+            {'name': 'object-id', 'default': 'foo'},
             False,
             True,
             RESOURCE_OID,
@@ -1388,7 +1388,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested with default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='object-id', default='foo'),
+            {'name': 'object-id', 'default': 'foo'},
             True,
             False,
             RESOURCE_OID,
@@ -1399,7 +1399,7 @@ class TestPropertyMethodsMocked:
         (
             "Valid not locally existing property requested with default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='object-id', default='foo'),
+            {'name': 'object-id', 'default': 'foo'},
             True,
             True,
             RESOURCE_OID,
@@ -1411,7 +1411,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested without default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             False,
             False,
             None,
@@ -1422,7 +1422,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested without default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             False,
             True,
             None,
@@ -1433,7 +1433,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested without default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             True,
             False,
             None,
@@ -1444,7 +1444,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested without default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='invalid-property'),
+            {'name': 'invalid-property'},
             True,
             True,
             None,
@@ -1456,7 +1456,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested with default; "
             "resource exists and does not support 'properties' query parm",
-            dict(name='invalid-property', default='foo'),
+            {'name': 'invalid-property', 'default': 'foo'},
             False,
             False,
             'foo',
@@ -1467,7 +1467,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested with default; "
             "resource exists and supports 'properties' query parm",
-            dict(name='invalid-property', default='foo'),
+            {'name': 'invalid-property', 'default': 'foo'},
             False,
             True,
             'foo',
@@ -1478,7 +1478,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested with default; "
             "resource is deleted and does not support 'properties' query parm",
-            dict(name='invalid-property', default='foo'),
+            {'name': 'invalid-property', 'default': 'foo'},
             True,
             False,
             None,
@@ -1489,7 +1489,7 @@ class TestPropertyMethodsMocked:
         (
             "Invalid property requested with default; "
             "resource is deleted and supports 'properties' query parm",
-            dict(name='invalid-property', default='foo'),
+            {'name': 'invalid-property', 'default': 'foo'},
             True,
             True,
             None,

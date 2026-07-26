@@ -101,7 +101,7 @@ def main():
     client = zhmcclient.Client(session)
     console = client.consoles.console
     lpars = console.list_permitted_lpars()
-    lpar = [x for x in lpars if x.properties.get("name") == config['lpar']][0]
+    lpar = next(x for x in lpars if x.properties.get("name") == config['lpar'])
     print(lpar)
     ftp_config = config['ftp_config']
     lpar.load_from_ftp(

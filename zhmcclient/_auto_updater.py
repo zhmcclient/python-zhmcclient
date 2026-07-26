@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2021 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -155,7 +154,7 @@ class AutoUpdater:
         rt_kwargs = get_stomp_rt_kwargs(self._rt_config)
         self._conn = self._stomp.Connection(
             [(self._session.actual_host, DEFAULT_STOMP_PORT)], **rt_kwargs)
-        set_kwargs = dict()
+        set_kwargs = {}
         set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
         self._conn.set_ssl(
             for_hosts=[(self._session.actual_host, DEFAULT_STOMP_PORT)],

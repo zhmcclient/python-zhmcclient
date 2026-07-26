@@ -205,7 +205,7 @@ def test_stovoltpl_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated storage volume template description."
 
             # The code to be tested
-            stovoltpl.update_properties(dict(description=new_desc))
+            stovoltpl.update_properties({'description': new_desc})
 
             assert stovoltpl.properties['description'] == new_desc
             stovoltpl.pull_full_properties()
@@ -214,7 +214,7 @@ def test_stovoltpl_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the storage volume template
 
             # The code to be tested
-            stovoltpl.update_properties(dict(name=stovoltpl_name_new))
+            stovoltpl.update_properties({'name': stovoltpl_name_new})
 
             assert stovoltpl.properties['name'] == stovoltpl_name_new
             stovoltpl.pull_full_properties()

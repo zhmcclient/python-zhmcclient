@@ -81,7 +81,7 @@ def print_hmc_definitions():
         host = hd.mock_file or hd.host
         if isinstance(host, list):
             host = ','.join(host)
-        print(f"{hd.nickname:20s} {str(host):24s} {hd.description}")
+        print(f"{hd.nickname:20s} {host!s:24s} {hd.description}")
 
     print("\nGroups in inventory file:")
     print("Group name           HMCs in the group")
@@ -252,10 +252,11 @@ class HMCDefinitions:
             cpcs = combined_vars.pop('cpcs', None)
             add_vars = combined_vars
 
-            _host_dict[nickname] = dict(
-                description=description, contact=contact, access_via=access_via,
-                mock_file=mock_file, ansible_host=ansible_host, cpcs=cpcs,
-                add_vars=add_vars)
+            _host_dict[nickname] = {
+                'description': description, 'contact': contact,
+                'access_via': access_via, 'mock_file': mock_file,
+                'ansible_host': ansible_host, 'cpcs': cpcs,
+                'add_vars': add_vars}
 
         self._hd_dict[group_name] = _host_dict
 
