@@ -47,14 +47,14 @@ def main():
         format_str = "{:<8}  {:<6}  {:<7}  {:<16}"
 
         cpcs = client.cpcs.list()
-        print('')
+        print()
         print('CPCs managed by this HMC:')
         print(format_str.format('CPC', 'SE', 'Mode', 'Status'))
         for cpc in sorted(cpcs, key=lambda x: x.name):
             mode = 'DPM' if cpc.prop('dpm-enabled') else 'classic'
             print(format_str.format(
                 cpc.name, cpc.prop('se-version'), mode, cpc.prop('status')))
-        print('')
+        print()
 
         return 0
 

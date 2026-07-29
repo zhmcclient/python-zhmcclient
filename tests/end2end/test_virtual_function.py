@@ -193,7 +193,7 @@ def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated virtual function description."
 
             # The code to be tested
-            vfunc.update_properties(dict(description=new_desc))
+            vfunc.update_properties({'description': new_desc})
 
             assert vfunc.properties['description'] == new_desc
             vfunc.pull_full_properties()
@@ -202,7 +202,7 @@ def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the virtual function
 
             # The code to be tested
-            vfunc.update_properties(dict(name=vfunc_name_new))
+            vfunc.update_properties({'name': vfunc_name_new})
 
             assert vfunc.properties['name'] == vfunc_name_new
             vfunc.pull_full_properties()

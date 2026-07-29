@@ -169,7 +169,7 @@ def setup_hmc_session(hd, rt_config=None, skip_on_failure=True):
         # A real HMC
 
         if hd.password_command is not None:
-            variables = dict(host=hd.host, userid=hd.userid)
+            variables = {'host': hd.host, 'userid': hd.userid}
             # May raise PasswordCommandFailure:
             password = run_password_command(
                 hd.password_command, variables, hd.password_timeout)

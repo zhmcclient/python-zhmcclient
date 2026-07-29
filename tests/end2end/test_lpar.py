@@ -356,7 +356,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'not-operating',
         },
@@ -369,7 +369,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         'image',
         True,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -382,7 +382,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'image',
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'not-operating',
         },
@@ -395,7 +395,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'image',
         'image',
         True,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -409,7 +409,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'not-operating',
         },
@@ -422,7 +422,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         'image',
         True,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -435,7 +435,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'image',
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'not-operating',
         },
@@ -448,7 +448,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'image',
         'image',
         True,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -462,7 +462,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -475,7 +475,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'image',
         'image',
         False,
-        dict(),
+        {},
         {
             'status': 'operating',
         },
@@ -488,7 +488,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'wrongimage',
         'image',
         False,
-        dict(),
+        {},
         None,
         # HTTP 500,263: LPAR name and image profile name must match
         zhmcclient.HTTPError,
@@ -500,7 +500,7 @@ LPAR_ACTIVATE_TESTCASES = [
         'wrongimage',
         'image',
         False,
-        dict(),
+        {},
         None,
         # HTTP 500,263: LPAR name and image profile name must match
         zhmcclient.HTTPError,

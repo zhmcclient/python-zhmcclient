@@ -190,7 +190,7 @@ def test_stogrptpl_crud(zhmc_logger, dpm_mode_cpcs):
         new_desc = "Updated storage group template description."
 
         # The code to be tested
-        stogrptpl.update_properties(dict(description=new_desc))
+        stogrptpl.update_properties({'description': new_desc})
 
         assert stogrptpl.properties['description'] == new_desc
         stogrptpl.pull_full_properties()
@@ -199,7 +199,7 @@ def test_stogrptpl_crud(zhmc_logger, dpm_mode_cpcs):
         # Test renaming the storage group template
 
         # The code to be tested
-        stogrptpl.update_properties(dict(name=stogrptpl_name_new))
+        stogrptpl.update_properties({'name': stogrptpl_name_new})
 
         assert stogrptpl.properties['name'] == stogrptpl_name_new
         stogrptpl.pull_full_properties()

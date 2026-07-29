@@ -51,7 +51,7 @@ def main():
 
         cpcs = client.cpcs.list()
         cpc = cpcs[0]
-        print('')
+        print()
         print(f'Getting sustainability metrics on CPC: {cpc.name}')
         print(f'Range: {RANGE}')
         print(f'Resolution: {RESOLUTION}')
@@ -62,7 +62,7 @@ def main():
             print(f"Error: {exc}")
             rc = 1
         else:
-            print('')
+            print()
             print('CPC sustainability metrics:')
             for metric_name, metric_array in data.items():
                 print(f"{metric_name}:")
@@ -76,7 +76,7 @@ def main():
             parts = cpc.lpars.list()
             part_str = "LPAR"
         part = parts[0]
-        print('')
+        print()
         print(f'Getting sustainability metrics on {part_str}: {part.name}')
         print(f'Range: {RANGE}')
         print(f'Resolution: {RESOLUTION}')
@@ -87,7 +87,7 @@ def main():
             print(f"Error: {exc}")
             rc = 1
         else:
-            print('')
+            print()
             print(f'{part_str} sustainability metrics:')
             for metric_name, metric_array in data.items():
                 print(f"{metric_name}:")

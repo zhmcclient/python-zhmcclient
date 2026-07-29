@@ -44,43 +44,43 @@ TESTCASES_RUN_PASSWORD_COMMAND = [
     # * exp_exc_msg: Expected exception message regex pattern
     (
         "Command with literal string",
-        dict(
-            command="echo mypw",
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+        {
+            "command": "echo mypw",
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         "mypw",
         None, None
     ),
     (
         "Command with host and userid variables",
-        dict(
-            command="echo {host}-{userid}-mypw",
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+        {
+            "command": "echo {host}-{userid}-mypw",
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         "myhost-myuserid-mypw",
         None, None
     ),
     (
         "Command returns password with leading and trailing space and NL",
-        dict(
+        {
             # On Windows, the quotes for echo must be double quotes
-            command="{es}{d}echo mypw{d}{es}".format(
+            "command": "{es}{d}echo mypw{d}{es}".format(
                 d=DELIM, es=ECHO_SPACE_NL),
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         "mypw",
         None, None
     ),
     (
         "Invalid command",
-        dict(
-            command="foo_invalid",
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+        {
+            "command": "foo_invalid",
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         None,
         PasswordCommandFailure,
         "Password command .* failed .*(not found|command not found|not "
@@ -88,22 +88,22 @@ TESTCASES_RUN_PASSWORD_COMMAND = [
     ),
     (
         "Command returns non-zero exit code and stderr",
-        dict(
-            command="echo foo 1>&2{d}exit 42".format(d=DELIM),
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+        {
+            "command": "echo foo 1>&2{d}exit 42".format(d=DELIM),
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         None,
         PasswordCommandFailure,
         "Password command .* failed with exit code 42: foo"
     ),
     (
         "Command returns password with space inside",
-        dict(
-            command="echo 'foo bar'",
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=10,
-        ),
+        {
+            "command": "echo 'foo bar'",
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 10,
+        },
         None,
         PasswordCommandFailure,
         r"Password command .* succeeded but its standard output contains "
@@ -111,11 +111,11 @@ TESTCASES_RUN_PASSWORD_COMMAND = [
     ),
     (
         "Command that times out",
-        dict(
-            command="{s2}{d}echo mypw".format(d=DELIM, s2=SLEEP_2),
-            variables=dict(host="myhost", userid="myuserid"),
-            timeout=1,
-        ),
+        {
+            "command": "{s2}{d}echo mypw".format(d=DELIM, s2=SLEEP_2),
+            "variables": {"host": "myhost", "userid": "myuserid"},
+            "timeout": 1,
+        },
         None,
         PasswordCommandFailure,
         r"Password command .* timed out after 1 s"

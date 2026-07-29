@@ -184,7 +184,7 @@ def test_stogrp_crud(zhmc_logger, dpm_mode_cpcs):
         new_desc = "Updated storage group description."
 
         # The code to be tested
-        stogrp.update_properties(dict(description=new_desc))
+        stogrp.update_properties({'description': new_desc})
 
         assert stogrp.properties['description'] == new_desc
         stogrp.pull_full_properties()
@@ -193,7 +193,7 @@ def test_stogrp_crud(zhmc_logger, dpm_mode_cpcs):
         # Test renaming the storage group
 
         # The code to be tested
-        stogrp.update_properties(dict(name=stogrp_name_new))
+        stogrp.update_properties({'name': stogrp_name_new})
 
         assert stogrp.properties['name'] == stogrp_name_new
         stogrp.pull_full_properties()

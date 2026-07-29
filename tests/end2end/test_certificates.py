@@ -123,7 +123,7 @@ def test_cert_crud(zhmc_logger, all_cpcs):
         new_desc = "Update certificate for end2end tests."
 
         # The code to be tested
-        cert.update_properties(dict(description=new_desc))
+        cert.update_properties({'description': new_desc})
 
         assert cert.properties['description'] == new_desc
         cert.pull_full_properties()
@@ -132,7 +132,7 @@ def test_cert_crud(zhmc_logger, all_cpcs):
         # Test renaming the certificate
 
         # The code to be tested
-        cert.update_properties(dict(name=cert_name_new))
+        cert.update_properties({'name': cert_name_new})
 
         assert cert.properties['name'] == cert_name_new
         cert.pull_full_properties()

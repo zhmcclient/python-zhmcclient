@@ -162,9 +162,9 @@ class TestCapacityGroup:
         "full_properties_kwargs, prop_names", [
             ({},
              ['element-uri', 'name']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri', 'name']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -498,7 +498,7 @@ class TestCapacityGroup:
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
         capacity_groups_list = capacity_group_mgr.list(
-            filter_args=dict(name=capacity_group_name))
+            filter_args={'name': capacity_group_name})
         assert len(capacity_groups_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -523,7 +523,7 @@ class TestCapacityGroup:
 
         # Verify that the resource can be found by its new name, using list()
         new_capacity_groups_list = capacity_group_mgr.list(
-            filter_args=dict(name=new_capacity_group_name))
+            filter_args={'name': new_capacity_group_name})
         assert len(new_capacity_groups_list) == 1
         new_capacity_group_list = new_capacity_groups_list[0]
         assert new_capacity_group_list.properties['name'] == \

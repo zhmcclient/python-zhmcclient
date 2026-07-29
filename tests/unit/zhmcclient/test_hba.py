@@ -161,9 +161,9 @@ class TestHba:
         "full_properties_kwargs, prop_names", [
             ({},
              ['element-uri']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -512,7 +512,7 @@ class TestHba:
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
         hbas_list = hba_mgr.list(
-            filter_args=dict(name=hba_name))
+            filter_args={'name': hba_name})
         assert len(hbas_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -535,7 +535,7 @@ class TestHba:
 
         # Verify that the resource can be found by its new name, using list()
         new_hbas_list = hba_mgr.list(
-            filter_args=dict(name=new_hba_name))
+            filter_args={'name': new_hba_name})
         assert len(new_hbas_list) == 1
         new_hba_list = new_hbas_list[0]
         assert new_hba_list.properties['name'] == new_hba_name

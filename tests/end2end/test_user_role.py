@@ -173,7 +173,7 @@ def test_urole_crud(zhmc_logger, hmc_session):
     new_desc = "Updated user role description."
 
     # The code to be tested
-    urole.update_properties(dict(description=new_desc))
+    urole.update_properties({'description': new_desc})
 
     assert urole.properties['description'] == new_desc
     urole.pull_full_properties()
@@ -184,7 +184,7 @@ def test_urole_crud(zhmc_logger, hmc_session):
     with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
         # The code to be tested
-        urole.update_properties(dict(name=urole_name_new))
+        urole.update_properties({'name': urole_name_new})
 
     exc = exc_info.value
     assert exc.http_status == 400

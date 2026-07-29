@@ -158,9 +158,9 @@ class TestPartition:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -259,13 +259,13 @@ class TestPartition:
         "list_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(additional_properties=[]),
+            ({'additional_properties': []},
              ['object-uri', 'name', 'status']),
-            (dict(additional_properties=['description']),
+            ({'additional_properties': ['description']},
              ['object-uri', 'name', 'status', 'description']),
-            (dict(additional_properties=['description', 'se-version']),
+            ({'additional_properties': ['description', 'se-version']},
              ['object-uri', 'name', 'status', 'description', 'se-version']),
-            (dict(additional_properties=['ssc-host-name']),
+            ({'additional_properties': ['ssc-host-name']},
              ['object-uri', 'name', 'status', 'ssc-host-name']
              # ssc-host-name is not on every partition
              ),
@@ -548,7 +548,7 @@ class TestPartition:
             "Tested firmware feature not available (one other feature avail)",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             'fake-feature1',
             None,
@@ -559,8 +559,8 @@ class TestPartition:
             "Tested firmware feature available and disabled",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': False},
             ],
             'fake-feature1',
             False,
@@ -571,8 +571,8 @@ class TestPartition:
             "Tested firmware feature available and enabled",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': True},
             ],
             'fake-feature1',
             True,
@@ -649,7 +649,7 @@ class TestPartition:
             "Tested firmware feature not available (one other feature avail)",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             'fake-feature1',
             False,
@@ -660,8 +660,8 @@ class TestPartition:
             "Tested firmware feature available and disabled",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': False},
             ],
             'fake-feature1',
             False,
@@ -672,8 +672,8 @@ class TestPartition:
             "Tested firmware feature available and enabled",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': True},
             ],
             'fake-feature1',
             True,
@@ -744,7 +744,7 @@ class TestPartition:
             "Partition with one enabled firmware feature",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             None,
             None
@@ -753,8 +753,8 @@ class TestPartition:
             "Partition with one enabled and one disabled firmware feature",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature-bar', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature-bar', 'state': False},
             ],
             None,
             None
@@ -825,7 +825,7 @@ class TestPartition:
             "Partition with one enabled firmware feature",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             ['fake-feature-foo'],
             None,
@@ -835,8 +835,8 @@ class TestPartition:
             "Partition with one enabled and one disabled firmware feature",
             PART3_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature-bar', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature-bar', 'state': False},
             ],
             ['fake-feature-foo'],
             None,
@@ -994,7 +994,7 @@ class TestPartition:
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
         partitions_list = partition_mgr.list(
-            filter_args=dict(name=partition_name))
+            filter_args={'name': partition_name})
         assert len(partitions_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -1017,7 +1017,7 @@ class TestPartition:
 
         # Verify that the resource can be found by its new name, using list()
         new_partitions_list = partition_mgr.list(
-            filter_args=dict(name=new_partition_name))
+            filter_args={'name': new_partition_name})
         assert len(new_partitions_list) == 1
         new_partition_list = new_partitions_list[0]
         assert new_partition_list.properties['name'] == new_partition_name

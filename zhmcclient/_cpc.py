@@ -1510,7 +1510,7 @@ class Cpc(BaseResource):
 
         all_domains = set(range(0, max_domains))
         free_domains = all_domains - used_domains
-        return sorted(list(free_domains))
+        return sorted(free_domains)
 
     @logged_api_call
     def set_power_save(self, power_saving, wait_for_completion=True,

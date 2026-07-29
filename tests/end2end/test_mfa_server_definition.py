@@ -181,7 +181,7 @@ def test_mfasrvdef_crud(zhmc_logger, hmc_session):
         new_desc = "Updated MFA server definition description."
 
         # The code to be tested
-        mfasrvdef.update_properties(dict(description=new_desc))
+        mfasrvdef.update_properties({'description': new_desc})
 
         assert mfasrvdef.properties['description'] == new_desc
         mfasrvdef.pull_full_properties()
@@ -190,7 +190,7 @@ def test_mfasrvdef_crud(zhmc_logger, hmc_session):
         # Test that MFA server definitions can be renamed
 
         # The code to be tested
-        mfasrvdef.update_properties(dict(name=mfasrvdef_name_new))
+        mfasrvdef.update_properties({'name': mfasrvdef_name_new})
 
         with pytest.raises(zhmcclient.NotFound):
             console.mfa_server_definitions.find(name=mfasrvdef_name)

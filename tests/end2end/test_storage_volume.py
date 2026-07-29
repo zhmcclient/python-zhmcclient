@@ -222,7 +222,7 @@ def test_stovol_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated storage volume description."
 
             # The code to be tested
-            stovol.update_properties(dict(description=new_desc))
+            stovol.update_properties({'description': new_desc})
 
             assert stovol.properties['description'] == new_desc
             stovol.pull_full_properties()
@@ -231,7 +231,7 @@ def test_stovol_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the storage volume
 
             # The code to be tested
-            stovol.update_properties(dict(name=stovol_name_new))
+            stovol.update_properties({'name': stovol_name_new})
 
             assert stovol.properties['name'] == stovol_name_new
             stovol.pull_full_properties()

@@ -174,7 +174,7 @@ def test_pwrule_crud(zhmc_logger, hmc_session):
     new_desc = "Updated password rule description."
 
     # The code to be tested
-    pwrule.update_properties(dict(description=new_desc))
+    pwrule.update_properties({'description': new_desc})
 
     assert pwrule.properties['description'] == new_desc
     pwrule.pull_full_properties()
@@ -185,7 +185,7 @@ def test_pwrule_crud(zhmc_logger, hmc_session):
     with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
         # The code to be tested
-        pwrule.update_properties(dict(name=pwrule_name_new))
+        pwrule.update_properties({'name': pwrule_name_new})
 
     exc = exc_info.value
     assert exc.http_status == 400

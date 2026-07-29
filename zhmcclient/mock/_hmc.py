@@ -72,21 +72,21 @@ __all__ = ['InputError',
 #   False=classic, None=any or N/A) in which the metric group is available.
 # - metrics: List of metrics, as tuple(metric-name, metric-type).
 METRIC_GROUPS = [
-    dict(
-        name='channel-usage',
-        resource_class='cpc',
-        cpc_dpm_enabled=False,
-        metrics=[
+    {
+        'name': 'channel-usage',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('channel-name', 'string-metric'),
             ('shared-channel', 'boolean-metric'),
             ('logical-partition-name', 'string-metric'),
             ('channel-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='cpc-usage-overview',
-        resource_class='cpc',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'cpc-usage-overview',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('cpc-processor-usage', 'integer-metric'),
             ('channel-usage', 'integer-metric'),
             ('power-consumption-watts', 'integer-metric'),
@@ -110,12 +110,12 @@ METRIC_GROUPS = [
             ('cbp-shared-processor-usage', 'integer-metric'),
             ('cbp-dedicated-processor-usage', 'integer-metric'),
             ('cbp-all-processor-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='dpm-system-usage-overview',
-        resource_class='cpc',
-        cpc_dpm_enabled=True,
-        metrics=[
+        ]},
+    {
+        'name': 'dpm-system-usage-overview',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': True,
+        'metrics': [
             ('processor-usage', 'integer-metric'),
             ('network-usage', 'integer-metric'),
             ('storage-usage', 'integer-metric'),
@@ -127,12 +127,12 @@ METRIC_GROUPS = [
             ('cp-dedicated-processor-usage', 'integer-metric'),
             ('ifl-shared-processor-usage', 'integer-metric'),
             ('ifl-dedicated-processor-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='logical-partition-usage',
-        resource_class='logical-partition',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'logical-partition-usage',
+        'resource_class': 'logical-partition',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('processor-usage', 'integer-metric'),
             ('zvm-paging-rate', 'integer-metric'),
             ('cp-processor-usage', 'integer-metric'),
@@ -140,23 +140,23 @@ METRIC_GROUPS = [
             ('icf-processor-usage', 'integer-metric'),
             ('iip-processor-usage', 'integer-metric'),
             ('cbp-processor-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='partition-usage',
-        resource_class='partition',
-        cpc_dpm_enabled=True,
-        metrics=[
+        ]},
+    {
+        'name': 'partition-usage',
+        'resource_class': 'partition',
+        'cpc_dpm_enabled': True,
+        'metrics': [
             ('processor-usage', 'integer-metric'),
             ('network-usage', 'integer-metric'),
             ('storage-usage', 'integer-metric'),
             ('accelerator-usage', 'integer-metric'),
             ('crypto-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='zcpc-environmentals-and-power',
-        resource_class='cpc',
-        cpc_dpm_enabled=None,
-        metrics=[
+        ]},
+    {
+        'name': 'zcpc-environmentals-and-power',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': None,
+        'metrics': [
             ('temperature-celsius', 'double-metric'),
             ('humidity', 'integer-metric'),
             ('dew-point-celsius', 'double-metric'),
@@ -165,12 +165,12 @@ METRIC_GROUPS = [
             ('heat-load-forced-air', 'integer-metric'),
             ('heat-load-water', 'integer-metric'),
             ('exhaust-temperature-celsius', 'double-metric'),
-        ]),
-    dict(
-        name='"environmental-power-status',
-        resource_class='cpc',
-        cpc_dpm_enabled=None,
-        metrics=[
+        ]},
+    {
+        'name': '"environmental-power-status',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': None,
+        'metrics': [
             ('linecord-one-name', 'string-metric'),
             ('linecord-one-power-phase-A', 'integer-metric'),
             ('linecord-one-power-phase-B', 'integer-metric'),
@@ -203,56 +203,56 @@ METRIC_GROUPS = [
             ('linecord-eight-power-phase-A', 'integer-metric'),
             ('linecord-eight-power-phase-B', 'integer-metric'),
             ('linecord-eight-power-phase-C', 'integer-metric'),
-        ]),
-    dict(
-        name='zcpc-processor-usage',
-        resource_class='cpc',
-        cpc_dpm_enabled=None,
-        metrics=[
+        ]},
+    {
+        'name': 'zcpc-processor-usage',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': None,
+        'metrics': [
             ('processor-name', 'string-metric'),
             ('processor-type', 'string-metric'),
             ('processor-usage', 'integer-metric'),
             ('smt-usage', 'integer-metric'),
             ('thread0-usage', 'integer-metric'),
             ('thread1-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='crypto-usage',
-        resource_class='cpc',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'crypto-usage',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('channel-id', 'string-metric'),
             ('crypto-id', 'string-metric'),
             ('adapter-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='adapter-usage',
-        resource_class='adapter',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'adapter-usage',
+        'resource_class': 'adapter',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('adapter-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='flash-memory-usage',
-        resource_class='cpc',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'flash-memory-usage',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('channel-id', 'string-metric'),
             ('adapter-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='roce-usage',
-        resource_class='cpc',
-        cpc_dpm_enabled=False,
-        metrics=[
+        ]},
+    {
+        'name': 'roce-usage',
+        'resource_class': 'cpc',
+        'cpc_dpm_enabled': False,
+        'metrics': [
             ('channel-id', 'string-metric'),
             ('adapter-usage', 'integer-metric'),
-        ]),
-    dict(
-        name='network-physical-adapter-port',
-        resource_class='adapter',
-        cpc_dpm_enabled=True,
-        metrics=[
+        ]},
+    {
+        'name': 'network-physical-adapter-port',
+        'resource_class': 'adapter',
+        'cpc_dpm_enabled': True,
+        'metrics': [
             ('network-port-id', 'integer-metric'),
             ('bytes-sent', 'long-metric'),
             ('bytes-received', 'long-metric'),
@@ -273,12 +273,12 @@ METRIC_GROUPS = [
             ('utilization', 'long-metric'),
             ('mac-address', 'string-metric'),
             ('flags', 'long-metric'),
-        ]),
-    dict(
-        name='partition-attached-network-interface',
-        resource_class='nic',
-        cpc_dpm_enabled=True,
-        metrics=[
+        ]},
+    {
+        'name': 'partition-attached-network-interface',
+        'resource_class': 'nic',
+        'cpc_dpm_enabled': True,
+        'metrics': [
             ('partition-id', 'string-metric'),
             ('bytes-sent', 'long-metric'),
             ('bytes-received', 'long-metric'),
@@ -297,7 +297,7 @@ METRIC_GROUPS = [
             ('bytes-per-second-sent', 'long-metric'),
             ('bytes-per-second-received', 'long-metric'),
             ('flags', 'long-metric'),
-        ]),
+        ]},
 ]
 
 
