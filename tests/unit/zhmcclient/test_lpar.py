@@ -186,9 +186,9 @@ class TestLpar:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -378,17 +378,17 @@ class TestLpar:
              LPAR1_NAME, None),
             (LPAR2_NAME, {},
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            ('', dict(activation_profile_name=LPAR1_NAME),
+            ('', {'activation_profile_name': LPAR1_NAME},
              LPAR1_NAME, None),
-            (LPAR1_NAME, dict(activation_profile_name=LPAR1_NAME),
+            (LPAR1_NAME, {'activation_profile_name': LPAR1_NAME},
              LPAR1_NAME, None),
-            (LPAR2_NAME, dict(activation_profile_name=LPAR1_NAME),
+            (LPAR2_NAME, {'activation_profile_name': LPAR1_NAME},
              LPAR1_NAME, None),
-            ('', dict(activation_profile_name=LPAR2_NAME),
+            ('', {'activation_profile_name': LPAR2_NAME},
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            (LPAR1_NAME, dict(activation_profile_name=LPAR2_NAME),
+            (LPAR1_NAME, {'activation_profile_name': LPAR2_NAME},
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            (LPAR2_NAME, dict(activation_profile_name=LPAR2_NAME),
+            (LPAR2_NAME, {'activation_profile_name': LPAR2_NAME},
              None, HTTPError({'http-status': 500, 'reason': 263})),
         ]
     )
@@ -397,33 +397,33 @@ class TestLpar:
 
             ('not-activated', {},  # Verify that force has a default
              'not-operating', None),
-            ('not-activated', dict(force=False),
+            ('not-activated', {'force': False},
              'not-operating', None),
-            ('not-activated', dict(force=True),
+            ('not-activated', {'force': True},
              'not-operating', None),
 
-            ('not-operating', dict(force=False),
+            ('not-operating', {'force': False},
              'not-operating', None),
-            ('not-operating', dict(force=True),
+            ('not-operating', {'force': True},
              'not-operating', None),
 
             ('operating', {},  # Verify that force default is False
              'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(force=False),
+            ('operating', {'force': False},
              'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(force=True),
+            ('operating', {'force': True},
              'not-operating', None),
 
-            ('exceptions', dict(force=False),
+            ('exceptions', {'force': False},
              'not-operating', None),
-            ('exceptions', dict(force=True),
+            ('exceptions', {'force': True},
              'not-operating', None),
 
             ('not-activated', {},
              'exceptions', StatusTimeout(None, None, None, None)),
-            ('not-activated', dict(allow_status_exceptions=False),
+            ('not-activated', {'allow_status_exceptions': False},
              'exceptions', StatusTimeout(None, None, None, None)),
-            ('not-activated', dict(allow_status_exceptions=True),
+            ('not-activated', {'allow_status_exceptions': True},
              'exceptions', None),
         ]
     )
@@ -468,8 +468,8 @@ class TestLpar:
             assert isinstance(exc, tuple(exp_exc_classes))
 
             if isinstance(exc, HTTPError):
-                exp_httperror = [e for e in exp_excs
-                                 if isinstance(e, HTTPError)][0]
+                exp_httperror = next(e for e in exp_excs
+                                     if isinstance(e, HTTPError))
                 assert exc.http_status == exp_httperror.http_status
                 assert exc.reason == exp_httperror.reason
 
@@ -494,33 +494,33 @@ class TestLpar:
 
             ('not-activated', {},  # Verify that force has a default
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
-            ('not-activated', dict(force=False),
+            ('not-activated', {'force': False},
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
-            ('not-activated', dict(force=True),
+            ('not-activated', {'force': True},
              'not-activated', None),
 
-            ('not-operating', dict(force=False),
+            ('not-operating', {'force': False},
              'not-activated', None),
-            ('not-operating', dict(force=True),
+            ('not-operating', {'force': True},
              'not-activated', None),
 
             ('operating', {},  # Verify that force default is False
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(force=False),
+            ('operating', {'force': False},
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(force=True),
+            ('operating', {'force': True},
              'not-activated', None),
 
-            ('exceptions', dict(force=False),
+            ('exceptions', {'force': False},
              'not-activated', None),
-            ('exceptions', dict(force=True),
+            ('exceptions', {'force': True},
              'not-activated', None),
 
             ('not-operating', {},
              'exceptions', StatusTimeout(None, None, None, None)),
-            ('not-operating', dict(allow_status_exceptions=False),
+            ('not-operating', {'allow_status_exceptions': False},
              'exceptions', StatusTimeout(None, None, None, None)),
-            ('not-operating', dict(allow_status_exceptions=True),
+            ('not-operating', {'allow_status_exceptions': True},
              'exceptions', None),
         ]
     )
@@ -556,8 +556,8 @@ class TestLpar:
             assert isinstance(exc, tuple(exp_exc_classes))
 
             if isinstance(exc, HTTPError):
-                exp_httperror = [e for e in exp_excs
-                                 if isinstance(e, HTTPError)][0]
+                exp_httperror = next(e for e in exp_excs
+                                     if isinstance(e, HTTPError))
                 assert exc.http_status == exp_httperror.http_status
                 assert exc.reason == exp_httperror.reason
 
@@ -577,11 +577,11 @@ class TestLpar:
         "initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc", [
             (None, {},
              '', None),
-            (None, dict(load_parameter='abcd'),
+            (None, {'load_parameter': 'abcd'},
              'abcd', None),
             ('abcd', {},
              'abcd', None),
-            ('fooo', dict(load_parameter='abcd'),
+            ('fooo', {'load_parameter': 'abcd'},
              'abcd', None),
         ]
     )
@@ -589,11 +589,11 @@ class TestLpar:
         "initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc", [
             (None, {},
              None, HTTPError({'http-status': 400, 'reason': 5})),
-            (None, dict(load_address='5176'),
+            (None, {'load_address': '5176'},
              '5176', None),
             ('5176', {},
              '5176', None),
-            ('1234', dict(load_address='5176'),
+            ('1234', {'load_address': '5176'},
              '5176', None),
         ]
     )
@@ -603,51 +603,51 @@ class TestLpar:
             ('not-activated', {},
              'operating', HTTPError({'http-status': 409, 'reason': 0}),
              None, None, None),
-            ('not-activated', dict(force=False),
+            ('not-activated', {'force': False},
              'operating', HTTPError({'http-status': 409, 'reason': 0}),
              None, None, None),
-            ('not-activated', dict(force=True),
+            ('not-activated', {'force': True},
              'operating', HTTPError({'http-status': 409, 'reason': 0}),
              None, None, None),
 
-            ('not-operating', dict(force=False),
+            ('not-operating', {'force': False},
              'operating', None,
              None, None, None),
-            ('not-operating', dict(force=True),
+            ('not-operating', {'force': True},
              'operating', None,
              None, None, None),
 
             ('operating', {},
              'operating', HTTPError({'http-status': 500, 'reason': 263}),
              None, None, None),
-            ('operating', dict(force=False),
+            ('operating', {'force': False},
              'operating', HTTPError({'http-status': 500, 'reason': 263}),
              None, None, None),
-            ('operating', dict(force=True),
+            ('operating', {'force': True},
              'operating', None,
              None, None, None),
 
-            ('exceptions', dict(force=False),
+            ('exceptions', {'force': False},
              'operating', None,
              None, None, None),
-            ('exceptions', dict(force=True),
+            ('exceptions', {'force': True},
              'operating', None,
              None, None, None),
 
             ('not-operating', {},
              'exceptions', StatusTimeout(None, None, None, None),
              None, None, None),
-            ('not-operating', dict(allow_status_exceptions=False),
+            ('not-operating', {'allow_status_exceptions': False},
              'exceptions', StatusTimeout(None, None, None, None),
              None, None, None),
-            ('not-operating', dict(allow_status_exceptions=True),
+            ('not-operating', {'allow_status_exceptions': True},
              'exceptions', None,
              None, None, None),
 
-            ('not-operating', dict(store_status_indicator=False),
+            ('not-operating', {'store_status_indicator': False},
              'operating', None,
              None, None, None),
-            ('not-operating', dict(store_status_indicator=True),
+            ('not-operating', {'store_status_indicator': True},
              'operating', None,
              None, 'not-operating', None),
         ]
@@ -656,9 +656,9 @@ class TestLpar:
         "initial_memory, memory_kwargs, exp_memory, exp_memory_exc", [
             ('foobar', {},
              '', None),
-            ('foobar', dict(clear_indicator=False),
+            ('foobar', {'clear_indicator': False},
              'foobar', None),
-            ('foobar', dict(clear_indicator=True),
+            ('foobar', {'clear_indicator': True},
              '', None),
         ]
     )
@@ -717,8 +717,8 @@ class TestLpar:
             assert isinstance(exc, tuple(exp_exc_classes))
 
             if isinstance(exc, HTTPError):
-                exp_httperror = [e for e in exp_excs
-                                 if isinstance(e, HTTPError)][0]
+                exp_httperror = next(e for e in exp_excs
+                                     if isinstance(e, HTTPError))
                 assert exc.http_status == exp_httperror.http_status
                 assert exc.reason == exp_httperror.reason
 
@@ -1491,13 +1491,13 @@ class TestLpar:
         "list_kwargs, prop_names", [
             ({},
              LIST_PERMITTED_LPARS_PROPS),
-            (dict(additional_properties=[]),
+            ({'additional_properties': []},
              LIST_PERMITTED_LPARS_PROPS),
-            (dict(additional_properties=['description']),
+            ({'additional_properties': ['description']},
              LIST_PERMITTED_LPARS_PROPS + ['description']),
-            (dict(additional_properties=['description', 'activation-mode']),
+            ({'additional_properties': ['description', 'activation-mode']},
              LIST_PERMITTED_LPARS_PROPS + ['description', 'activation-mode']),
-            (dict(additional_properties=['ssc-host-name']),
+            ({'additional_properties': ['ssc-host-name']},
              LIST_PERMITTED_LPARS_PROPS + ['ssc-host-name']),
         ]
     )

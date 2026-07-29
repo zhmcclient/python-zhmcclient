@@ -95,12 +95,12 @@ def main():
 
             print(f"Entering loop that displays property '{part_prop}' of "
                   "partition objects 1 and 2")
-            print("")
+            print()
             print(f"==> Update property '{part_prop}' of partition "
                   f"'{part_name}' on CPC '{cpc.name}' from another session")
             print(f"==> Delete partition '{part_name}' on CPC '{cpc.name}' "
                   "from another session")
-            print("")
+            print()
             try:
                 while True:
                     try:

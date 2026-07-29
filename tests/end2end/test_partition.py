@@ -208,7 +208,7 @@ def test_part_crud(zhmc_logger, dpm_mode_cpcs):
         new_desc = "Updated partition description."
 
         # The code to be tested
-        part.update_properties(dict(description=new_desc))
+        part.update_properties({'description': new_desc})
 
         assert part.properties['description'] == new_desc
         part.pull_full_properties()
@@ -217,7 +217,7 @@ def test_part_crud(zhmc_logger, dpm_mode_cpcs):
         # Test renaming the partition
 
         # The code to be tested
-        part.update_properties(dict(name=part_name_new))
+        part.update_properties({'name': part_name_new})
 
         assert part.properties['name'] == part_name_new
         part.pull_full_properties()
@@ -473,36 +473,36 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
     # - exp_props (List) : Expected properties in the output
     (
         "Default parameters",
-        dict(),
+        {},
         COMMON_PROPS_LIST,
     ),
     (
         "full_properties",
-        dict(
-            full_properties=True,
-        ),
+        {
+            'full_properties': True,
+        },
         FULL_PROPS_LIST
     ),
     (
         "full_properties and filtering",
-        dict(
-            full_properties=True,
-            filter_args={'type': 'linux'},
-        ),
+        {
+            'full_properties': True,
+            'filter_args': {'type': 'linux'},
+        },
         FULL_PROPS_LIST
     ),
     (
         "Bad request in filter_args",
-        dict(
-            filter_args={'name': '@#1c'}
-        ),
+        {
+            'filter_args': {'name': '@#1c'}
+        },
         COMMON_PROPS_LIST
     ),
     (
         "additional-properties",
-        dict(
-            additional_properties=['partition-id', 'tape-link-uris']
-        ),
+        {
+            'additional_properties': ['partition-id', 'tape-link-uris']
+        },
         COMMON_PROPS_LIST + ['partition-id', 'tape-link-uris']
     ),
 ]

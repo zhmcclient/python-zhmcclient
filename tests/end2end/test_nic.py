@@ -220,7 +220,7 @@ def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated NIC description."
 
             # The code to be tested
-            nic.update_properties(dict(description=new_desc))
+            nic.update_properties({'description': new_desc})
 
             assert nic.properties['description'] == new_desc
             nic.pull_full_properties()
@@ -229,7 +229,7 @@ def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the NIC
 
             # The code to be tested
-            nic.update_properties(dict(name=nic_name_new))
+            nic.update_properties({'name': nic_name_new})
 
             assert nic.properties['name'] == nic_name_new
             nic.pull_full_properties()

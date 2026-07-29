@@ -256,9 +256,9 @@ class TestAdapter:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -282,14 +282,14 @@ class TestAdapter:
         "list_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(additional_properties=[]),
+            ({'additional_properties': []},
              ['object-uri', 'name', 'status']),
-            (dict(additional_properties=['description']),
+            ({'additional_properties': ['description']},
              ['object-uri', 'name', 'status', 'description']),
-            (dict(additional_properties=['description', 'detected-card-type']),
+            ({'additional_properties': ['description', 'detected-card-type']},
              ['object-uri', 'name', 'status', 'description',
               'detected-card-type']),
-            (dict(additional_properties=['port-count']),
+            ({'additional_properties': ['port-count']},
              ['object-uri', 'name', 'status', 'port-count']
              # port-count is not on every adapter
              ),
@@ -541,7 +541,7 @@ class TestAdapter:
 
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
-        adapters_list = adapter_mgr.list(filter_args=dict(name=adapter_name))
+        adapters_list = adapter_mgr.list(filter_args={'name': adapter_name})
         assert len(adapters_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -564,7 +564,7 @@ class TestAdapter:
 
         # Verify that the resource can be found by its new name, using list()
         new_adapters_list = adapter_mgr.list(
-            filter_args=dict(name=new_adapter_name))
+            filter_args={'name': new_adapter_name})
         assert len(new_adapters_list) == 1
         new_adapter_list = new_adapters_list[0]
         assert new_adapter_list.properties['name'] == new_adapter_name

@@ -417,7 +417,7 @@ class NotificationReceiver:
         rt_kwargs = get_stomp_rt_kwargs(self._rt_config)
         self._conn = self._stomp.Connection(
             [(self._host, self._port)], **rt_kwargs)
-        set_kwargs = dict()
+        set_kwargs = {}
         set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
         if self._verify_cert is True:
             ca_cert = certifi.where()

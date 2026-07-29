@@ -673,7 +673,7 @@ def resolve_value_spec(val_loc, value_spec, resource_by_uri):
         for name, val_spec in value_spec.items():
             if name == "_resource":
                 if len(value_spec) > 1:
-                    keys_str = ", ".join([f"{k!r}" for k in value_spec.keys()])
+                    keys_str = ", ".join([f"{k!r}" for k in value_spec])
                     raise TestcaseDefinitionError(
                         f"'{val_loc}' specifies '_resource' but has "
                         f"additional dict keys: {keys_str}")
@@ -690,7 +690,7 @@ def resolve_value_spec(val_loc, value_spec, resource_by_uri):
 
             if name == "_manager":
                 if len(value_spec) > 1:
-                    keys_str = ", ".join([f"{k!r}" for k in value_spec.keys()])
+                    keys_str = ", ".join([f"{k!r}" for k in value_spec])
                     raise TestcaseDefinitionError(
                         f"'{val_loc}' specifies '_manager' but has "
                         f"additional dict keys: {keys_str}")

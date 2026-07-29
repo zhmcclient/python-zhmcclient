@@ -1410,7 +1410,7 @@ class UserRolesHandler:
         if 'associated-system-defined-user-role-uri' not in properties:
             # Use the default
             uroles = console.user_roles.list(
-                filter_args=dict(name='hmc-operator-tasks'))
+                filter_args={'name': 'hmc-operator-tasks'})
             if not uroles:
                 new_exc = ServerError(
                     method, uri, reason=99,
@@ -5644,7 +5644,7 @@ class TapeLibraryHandler(GenericGetPropertiesHandler,
     pass
 
 
-class TapeLibraryUndefineHandler():
+class TapeLibraryUndefineHandler:
     """
     Handler class for operation: Undefine Tape Library.
     """

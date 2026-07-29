@@ -197,7 +197,7 @@ def test_adapter_hs_crud(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated adapter description."
 
             # The code to be tested
-            adapter.update_properties(dict(description=new_desc))
+            adapter.update_properties({'description': new_desc})
 
             assert adapter.properties['description'] == new_desc
             adapter.pull_full_properties()
@@ -206,7 +206,7 @@ def test_adapter_hs_crud(zhmc_logger, dpm_mode_cpcs):
             # Test renaming the adapter
 
             # The code to be tested
-            adapter.update_properties(dict(name=adapter_name_new))
+            adapter.update_properties({'name': adapter_name_new})
 
             assert adapter.properties['name'] == adapter_name_new
             adapter.pull_full_properties()
@@ -665,25 +665,25 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
 
     (
         "Default parameters",
-        dict(),
+        {},
         DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS,
         None,
         True,
     ),
     (
         "full_properties",
-        dict(
-            full_properties=True,
-        ),
+        {
+            'full_properties': True,
+        },
         COMMON_FULL_PROPS_ADAPTERS,
         None,
         True,
     ),
     (
         "'detected-card-type' in additional_properties",
-        dict(
-            additional_properties=['detected-card-type'],
-        ),
+        {
+            'additional_properties': ['detected-card-type'],
+        },
         DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS + [
             ('detected-card-type', [2, 13, 1]),
         ],

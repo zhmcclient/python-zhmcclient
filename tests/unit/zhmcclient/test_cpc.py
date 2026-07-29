@@ -582,9 +582,9 @@ class TestCpc:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'status']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -913,7 +913,7 @@ class TestCpc:
             "Tested firmware feature not available (one other feature avail)",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             'fake-feature1',
             None,
@@ -924,8 +924,8 @@ class TestCpc:
             "Tested firmware feature available and disabled",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': False},
             ],
             'fake-feature1',
             False,
@@ -936,8 +936,8 @@ class TestCpc:
             "Tested firmware feature available and enabled",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': True},
             ],
             'fake-feature1',
             True,
@@ -1014,7 +1014,7 @@ class TestCpc:
             "Tested firmware feature not available (one other feature avail)",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             'fake-feature1',
             False,
@@ -1025,8 +1025,8 @@ class TestCpc:
             "Tested firmware feature available and disabled",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': False},
             ],
             'fake-feature1',
             False,
@@ -1037,8 +1037,8 @@ class TestCpc:
             "Tested firmware feature available and enabled",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature1', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature1', 'state': True},
             ],
             'fake-feature1',
             True,
@@ -1108,7 +1108,7 @@ class TestCpc:
             "CPC with one enabled firmware feature",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             None,
             None
@@ -1117,8 +1117,8 @@ class TestCpc:
             "CPC with one enabled and one disabled firmware feature",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature-bar', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature-bar', 'state': False},
             ],
             None,
             None
@@ -1189,7 +1189,7 @@ class TestCpc:
             "CPC with one enabled firmware feature",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
+                {'name': 'fake-feature-foo', 'state': True},
             ],
             ['fake-feature-foo'],
             None,
@@ -1199,8 +1199,8 @@ class TestCpc:
             "CPC with one enabled and one disabled firmware feature",
             CPC4_NAME,
             [
-                dict(name='fake-feature-foo', state=True),
-                dict(name='fake-feature-bar', state=False),
+                {'name': 'fake-feature-foo', 'state': True},
+                {'name': 'fake-feature-bar', 'state': False},
             ],
             ['fake-feature-foo'],
             None,
@@ -1938,18 +1938,18 @@ class TestCpc:
             (
                 CPC1_NAME,
                 CPC1_CAPACITY_PROPS,
-                dict(
-                    record_id='caprec1',
-                ),
+                {
+                    'record_id': 'caprec1',
+                },
                 CPC1_CAPACITY_PROPS,
             ),
             (
                 CPC1_NAME,
                 CPC1_CAPACITY_PROPS,
-                dict(
-                    record_id='caprec1',
-                    software_model='710',
-                ),
+                {
+                    'record_id': 'caprec1',
+                    'software_model': '710',
+                },
                 updated(
                     CPC1_CAPACITY_PROPS, {
                         'software-model-permanent-plus-temporary': '710',
@@ -1960,10 +1960,10 @@ class TestCpc:
             (
                 CPC1_NAME,
                 CPC1_CAPACITY_PROPS,
-                dict(
-                    record_id='caprec1',
-                    processor_info=dict(ifl=1),
-                ),
+                {
+                    'record_id': 'caprec1',
+                    'processor_info': {'ifl': 1},
+                },
                 updated(
                     CPC1_CAPACITY_PROPS, {
                         'processor-count-ifl': 5,
@@ -1997,9 +1997,9 @@ class TestCpc:
             (
                 CPC1_NAME,
                 CPC1_CAPACITY_PROPS,
-                dict(
-                    record_id='caprec1',
-                ),
+                {
+                    'record_id': 'caprec1',
+                },
                 CPC1_CAPACITY_PROPS,
             ),
             (
@@ -2010,10 +2010,10 @@ class TestCpc:
                         'processor-count-general-purpose': 10,
                     }
                 ),
-                dict(
-                    record_id='caprec1',
-                    software_model='705',
-                ),
+                {
+                    'record_id': 'caprec1',
+                    'software_model': '705',
+                },
                 updated(
                     CPC1_CAPACITY_PROPS, {
                         'processor-count-general-purpose': 5,
@@ -2023,10 +2023,10 @@ class TestCpc:
             (
                 CPC1_NAME,
                 CPC1_CAPACITY_PROPS,
-                dict(
-                    record_id='caprec1',
-                    processor_info=dict(ifl=1),
-                ),
+                {
+                    'record_id': 'caprec1',
+                    'processor_info': {'ifl': 1},
+                },
                 updated(
                     CPC1_CAPACITY_PROPS, {
                         'processor-count-ifl': 3,
@@ -2355,9 +2355,9 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
 
     (
         "Install all locally available updates - fail on disruptive",
-        dict(
-            wait_for_completion=False,
-        ),
+        {
+            'wait_for_completion': False,
+        },
         {},
         202,
         {
@@ -2367,10 +2367,10 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     ),
     (
         "Install all locally available updates - including disruptive",
-        dict(
-            install_disruptive=True,
-            wait_for_completion=False,
-        ),
+        {
+            'install_disruptive': True,
+            'wait_for_completion': False,
+        },
         {
             'install-disruptive': True,
         },
@@ -2382,10 +2382,10 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     ),
     (
         "Install a bundle level - fail on disruptive",
-        dict(
-            bundle_level='S78',
-            wait_for_completion=False,
-        ),
+        {
+            'bundle_level': 'S78',
+            'wait_for_completion': False,
+        },
         {
             'bundle-level': 'S78',
         },
@@ -2397,10 +2397,10 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     ),
     (
         "Install EC levels - fail on disruptive",
-        dict(
-            ec_levels=[('P12345', '001')],
-            wait_for_completion=False,
-        ),
+        {
+            'ec_levels': [('P12345', '001')],
+            'wait_for_completion': False,
+        },
         {
             'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
         },
@@ -2412,11 +2412,11 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     ),
     (
         "Install EC levels - including disruptive",
-        dict(
-            ec_levels=[('P12345', '001')],
-            install_disruptive=True,
-            wait_for_completion=False,
-        ),
+        {
+            'ec_levels': [('P12345', '001')],
+            'install_disruptive': True,
+            'wait_for_completion': False,
+        },
         {
             'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
             'install-disruptive': True,
@@ -2429,11 +2429,11 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     ),
     (
         "Error: bundle-level and ec-levels specified",
-        dict(
-            bundle_level='S78',
-            ec_levels=[('P12345', '001')],
-            wait_for_completion=False,
-        ),
+        {
+            'bundle_level': 'S78',
+            'ec_levels': [('P12345', '001')],
+            'wait_for_completion': False,
+        },
         {},
         400,
         {   # partial error response body
@@ -2515,9 +2515,9 @@ TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE = [
 
     (
         "Delete all retrieved but uninstalled updates",
-        dict(
-            wait_for_completion=False,
-        ),
+        {
+            'wait_for_completion': False,
+        },
         {},
         202,
         {
@@ -2527,10 +2527,10 @@ TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE = [
     ),
     (
         "Delete specific EC levels",
-        dict(
-            ec_levels=[('P12345', '001')],
-            wait_for_completion=False,
-        ),
+        {
+            'ec_levels': [('P12345', '001')],
+            'wait_for_completion': False,
+        },
         {
             'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
         },

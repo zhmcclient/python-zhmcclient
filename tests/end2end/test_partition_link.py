@@ -80,7 +80,7 @@ def replace_expressions(obj, replacements):
 
     if isinstance(obj, str):
         ret_obj = obj
-        if any(map(lambda rep: rep in obj, replacements.keys())):
+        if any(rep in obj for rep in replacements):
             ret_obj = eval(f'{obj}', replacements)  # pylint: disable=eval-used
         return ret_obj
 
@@ -249,10 +249,8 @@ def test_partlink_crud(zhmc_logger, dpm_mode_cpcs, pl_type):
 
             # Remove input properties that are not in data model or that are
             # different in data model, so that we can check.
-            if 'partitions' in partlink_input_props:
-                del partlink_input_props['partitions']  # not in data model
-            if 'paths' in partlink_input_props:
-                del partlink_input_props['paths']  # different in data model
+            partlink_input_props.pop('partitions', None)  # not in data model
+            partlink_input_props.pop('paths', None)  # different in data model
 
             for pn, exp_value in partlink_input_props.items():
                 assert partlink.properties[pn] == exp_value, (
@@ -276,7 +274,7 @@ def test_partlink_crud(zhmc_logger, dpm_mode_cpcs, pl_type):
             new_desc = "Updated partition link description."
 
             # The code to be tested
-            partlink.update_properties(dict(description=new_desc))
+            partlink.update_properties({'description': new_desc})
 
             assert partlink.properties['description'] == new_desc
             partlink.pull_full_properties()
@@ -285,7 +283,7 @@ def test_partlink_crud(zhmc_logger, dpm_mode_cpcs, pl_type):
             # Test renaming the partition link
 
             # The code to be tested
-            partlink.update_properties(dict(name=partlink_name_new))
+            partlink.update_properties({'name': partlink_name_new})
 
             assert partlink.properties['name'] == partlink_name_new
             partlink.pull_full_properties()

@@ -308,21 +308,15 @@ class _ResourceList:
         """
         Return a new list with the resource objects from this list of resources.
         """
-        res_list = []
         with self._lock:
-            for res_obj in self._resources.values():
-                res_list.append(res_obj)
-        return res_list
+            return list(self._resources.values())
 
     def list_uris(self):
         """
         Return a new list with the resource URIs from this list of resources.
         """
-        uri_list = []
         with self._lock:
-            for res_uri in self._resources:
-                uri_list.append(res_uri)
-        return uri_list
+            return list(self._resources.keys())
 
     def add_list(self, resource_obj_list):
         """
@@ -1458,7 +1452,7 @@ class BaseManager:
           Resource object.
         """
         # Get the resource object from the name-to-URI cache, if possible.
-        resource_obj = self._try_optimized_lookup(dict(name=name))
+        resource_obj = self._try_optimized_lookup({'name': name})
         if resource_obj:
             assert uri == resource_obj.uri
             return resource_obj

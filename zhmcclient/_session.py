@@ -984,12 +984,12 @@ class Session:
                 trunc = self._retry_timeout_config.log_content_truncate
                 if content_len > trunc > 0:
                     content_str = (f"content(first {trunc} B of {content_len} "
-                                   f"B): {repr(content[0:trunc])} "
+                                   f"B): {content[0:trunc]!r} "
                                    "...(truncated)'")
                 else:
-                    content_str = f"content({content_len} B): {repr(content)}"
+                    content_str = f"content({content_len} B): {content!r}"
             else:
-                content_str = f"content: {repr(content)}"
+                content_str = f"content: {content!r}"
 
             if resource:
                 names = []
@@ -1043,19 +1043,19 @@ class Session:
                 content = re.sub(BLANKED_OUT_PROPERTY_PATTERN,
                                  BLANKED_OUT_PROPERTY_REPLACE, content)
                 if status >= 400:
-                    content_str = f"content: {repr(content)}"
+                    content_str = f"content: {content!r}"
                 else:
                     trunc = self._retry_timeout_config.log_content_truncate
                     if content_len > trunc > 0:
                         content_str = (f"content(first {trunc} B of "
                                        f"{content_len} B): "
-                                       f"{repr(content[0:trunc])} "
+                                       f"{content[0:trunc]!r} "
                                        "...(truncated)'")
                     else:
                         content_str = (f"content({content_len} B): "
-                                       f"{repr(content)}")
+                                       f"{content!r}")
             else:
-                content_str = f"content: {repr(content)}"
+                content_str = f"content: {content!r}"
 
             if resource:
                 names = []

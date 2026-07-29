@@ -144,29 +144,29 @@ TESTCASES_AUTO_UPDATER_ALL = [
 
     (
         "no auto-updated resources, no changes, no notifications",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[],
-            exp_lists=[],
-            exp_resources=[],
-            exp_log_entries=[],
-        ),
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [],
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [],
+            'exp_lists': [],
+            'exp_resources': [],
+            'exp_log_entries': [],
+        },
     ),
     (
         "property change notification for an auto-updated CPC "
         "(top-level object)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -174,7 +174,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            notifications=[
+            'notifications': [
                 (
                     {
                         'notification-type': 'property-change',
@@ -191,7 +191,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -202,7 +202,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -210,7 +210,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -220,16 +220,16 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "property change notification for a non auto-updated CPC",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[],  # Not auto-updated
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [],  # Not auto-updated
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -237,7 +237,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            notifications=[
+            'notifications': [
                 (
                     {
                         'notification-type': 'property-change',
@@ -254,7 +254,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -265,7 +265,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -273,19 +273,19 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[],
-        ),
+            'exp_log_entries': [],
+        },
     ),
     (
         "property change notification with two changes",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -294,7 +294,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            notifications=[
+            'notifications': [
                 (
                     {
                         'notification-type': 'property-change',
@@ -316,7 +316,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -327,7 +327,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -336,7 +336,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -347,19 +347,19 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "property change notification on an auto-updated NIC "
         "(element resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/partitions/fake-part1/nics/fake-nic1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [
                 (
                     '/api/partitions/fake-part1/nics/fake-nic1',
                     {
@@ -367,7 +367,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            notifications=[
+            'notifications': [
                 (
                     {
                         'notification-type': 'property-change',
@@ -385,7 +385,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/api/partitions/fake-part1#nic',
                     [
@@ -396,7 +396,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/partitions/fake-part1/nics/fake-nic1',
                     {
@@ -404,7 +404,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -414,19 +414,19 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "status change notification on an auto-updated CPC "
         "(top-level resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -436,7 +436,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            notifications=[
+            'notifications': [
                 (
                     {
                         'notification-type': 'status-change',
@@ -455,7 +455,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -466,7 +466,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -476,7 +476,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -484,26 +484,26 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "inventory change notification for removing a partition from an "
         "auto-updated partition manager (object resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1#partition',
             ],
-            added_resources=[],
-            removed_resources=[
+            'added_resources': [],
+            'removed_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     'partitions',
                     'fake-part1',
                 ),
             ],
-            updated_resources=[],
-            notifications=[
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'inventory-change',
@@ -515,15 +515,15 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/api/cpcs/fake-cpc1#partition',
                     [],
                     [],
                 ),
             ],
-            exp_resources=[],
-            exp_log_entries=[
+            'exp_resources': [],
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -533,17 +533,17 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "inventory change notification for adding a partition to an "
         "auto-updated partition manager (object resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1#partition',
             ],
-            added_resources=[
+            'added_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -555,9 +555,9 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'inventory-change',
@@ -569,7 +569,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/api/cpcs/fake-cpc1#partition',
                     [
@@ -582,13 +582,13 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     TEST_PARTITION_2['object-uri'],
                     TEST_PARTITION_2,
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -598,26 +598,26 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "inventory change notification for removing a CPC from an "
         "auto-updated CPC manager (top-level resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/#cpc',
             ],
-            added_resources=[],
-            removed_resources=[
+            'added_resources': [],
+            'removed_resources': [
                 (
                     None,
                     'cpcs',
                     'fake-cpc1',
                 ),
             ],
-            updated_resources=[],
-            notifications=[
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'inventory-change',
@@ -629,15 +629,15 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [],
                     [],
                 ),
             ],
-            exp_resources=[],
-            exp_log_entries=[
+            'exp_resources': [],
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -647,17 +647,17 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "inventory change notification for adding a CPC to an "
         "auto-updated CPC manager ((top-level resource)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/#cpc',
             ],
-            added_resources=[
+            'added_resources': [
                 (
                     None,
                     {
@@ -669,9 +669,9 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'inventory-change',
@@ -683,7 +683,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -696,13 +696,13 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     TEST_CPC_2['object-uri'],
                     TEST_CPC_2,
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -712,20 +712,20 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "inventory change notification with invalid action "
         "(that would be an HMC error or a future extension)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1#partition',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'inventory-change',
@@ -737,7 +737,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/api/cpcs/fake-cpc1#partition',
                     [
@@ -748,8 +748,8 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[],
-            exp_log_entries=[
+            'exp_resources': [],
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.DEBUG,
@@ -762,20 +762,20 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "property change notification that misses both object-uri and "
         "element-uri (that would be an HMC error)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'property-change',
@@ -792,7 +792,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_lists=[
+            'exp_lists': [
                 (
                     '/#cpc',
                     [
@@ -803,7 +803,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     ],
                 ),
             ],
-            exp_resources=[
+            'exp_resources': [
                 (
                     '/api/cpcs/fake-cpc1',
                     {
@@ -811,7 +811,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     },
                 ),
             ],
-            exp_log_entries=[
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.ERROR,
@@ -820,19 +820,19 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
     (
         "valid notification unrelated to auto-updating (should be ignored)",
-        dict(
-            initial_resources=TEST_RESOURCES_BASE,
-            auto_updated_uris=[
+        {
+            'initial_resources': TEST_RESOURCES_BASE,
+            'auto_updated_uris': [
                 '/api/cpcs/fake-cpc1',
             ],
-            added_resources=[],
-            removed_resources=[],
-            updated_resources=[],
-            notifications=[
+            'added_resources': [],
+            'removed_resources': [],
+            'updated_resources': [],
+            'notifications': [
                 (
                     {
                         'notification-type': 'job-completion',  # unrelated
@@ -841,9 +841,9 @@ TESTCASES_AUTO_UPDATER_ALL = [
                     None,
                 ),
             ],
-            exp_lists=[],
-            exp_resources=[],
-            exp_log_entries=[
+            'exp_lists': [],
+            'exp_resources': [],
+            'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* established"),
                 ('zhmcclient.jms', logging.WARNING,
@@ -852,7 +852,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
                 ('zhmcclient.jms', logging.INFO,
                  "JMS session .* disconnected"),
             ],
-        ),
+        },
     ),
 ]
 

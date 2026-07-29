@@ -193,7 +193,8 @@ def x_test_print_fromtimestamp_max():
 
 def x_test_print_datetime_max():
     """Print datetime.max."""
-    print(f"\nMax value for Python datetime (datetime.max): {datetime.max!r}")
+    print("\nMax value for Python datetime (datetime.max): "
+          f"{datetime.max!r}")  # noqa: DTZ901
     sys.stdout.flush()
 
 
@@ -214,7 +215,7 @@ def test_success_datetime_from_timestamp(
         return
 
     # Expected result, as timezone-unaware (but implied UTC)
-    exp_dt_unaware = datetime(*datetime_tuple)
+    exp_dt_unaware = datetime(*datetime_tuple)  # noqa: DTZ001
 
     # Expected result, as timezone-aware
     exp_dt = exp_dt_unaware.replace(tzinfo=timezone.utc)
@@ -279,7 +280,7 @@ def test_success(datetime_tuple, timestamp, tz_name):
     """Test successful calls to timestamp_from_datetime()."""
 
     # Create a timezone-naive datetime object
-    dt = datetime(*datetime_tuple)
+    dt = datetime(*datetime_tuple)  # noqa: DTZ001
     offset = 0  # because of default UTC
 
     if tz_name is not None:
@@ -320,18 +321,18 @@ def test_datetime_max():
     """Test timestamp_from_datetime() with datetime.max."""
 
     # The test is that it does not raise an exception:
-    timestamp_from_datetime(datetime.max)
+    timestamp_from_datetime(datetime.max)  # noqa: DTZ901
 
 
 # Test cases for datetime_to_isoformat()
 TESTCASES_DATETIME_TO_ISOFORMAT = [
     # dt, exp_dt_str
     (
-        datetime(2017, 9, 5, 12, 13, 10, 0),
+        datetime(2017, 9, 5, 12, 13, 10, 0),  # noqa: DTZ001
         '2017-09-05 12:13:10'
     ),
     (
-        datetime(2017, 9, 5, 12, 13, 10, 123456),
+        datetime(2017, 9, 5, 12, 13, 10, 123456),  # noqa: DTZ001
         '2017-09-05 12:13:10.123456'
     ),
     (
@@ -374,15 +375,15 @@ TESTCASES_DATETIME_FROM_ISOFORMAT = [
     # dt_str, exp_dt
     (
         '2017-09-05 12:13:10',
-        datetime(2017, 9, 5, 12, 13, 10, 0)  # timezone-naive
+        datetime(2017, 9, 5, 12, 13, 10, 0)  # noqa: DTZ001
     ),
     (
         '2017-09-05T12:13:10',
-        datetime(2017, 9, 5, 12, 13, 10, 0)  # timezone-naive
+        datetime(2017, 9, 5, 12, 13, 10, 0)  # noqa: DTZ001
     ),
     (
         '2017-09-05 12:13:10.123456',
-        datetime(2017, 9, 5, 12, 13, 10, 123456)  # timezone-naive
+        datetime(2017, 9, 5, 12, 13, 10, 123456)  # noqa: DTZ001
     ),
     (
         '2017-09-05 12:13:10+00:00',

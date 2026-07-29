@@ -170,7 +170,7 @@ def test_capgrp_crud(zhmc_logger, dpm_mode_cpcs):
         new_desc = "Updated capacity group description."
 
         # The code to be tested
-        capgrp.update_properties(dict(description=new_desc))
+        capgrp.update_properties({'description': new_desc})
 
         assert capgrp.properties['description'] == new_desc
         capgrp.pull_full_properties()
@@ -179,7 +179,7 @@ def test_capgrp_crud(zhmc_logger, dpm_mode_cpcs):
         # Test renaming the capacity group
 
         # The code to be tested
-        capgrp.update_properties(dict(name=capgrp_name_new))
+        capgrp.update_properties({'name': capgrp_name_new})
 
         assert capgrp.properties['name'] == capgrp_name_new
         capgrp.pull_full_properties()

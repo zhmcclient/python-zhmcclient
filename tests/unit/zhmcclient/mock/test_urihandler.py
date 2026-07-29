@@ -650,7 +650,7 @@ class TestUriHandlerMethod:
         assert result == self.cpcs
 
         DummyHandler1.get.assert_called_with(
-            'GET', self.hmc, '/api/cpcs', tuple(), True)
+            'GET', self.hmc, '/api/cpcs', (), True)
         assert DummyHandler1.post.called == 0
         assert DummyHandler2.get.called == 0
         assert DummyHandler2.delete.called == 0
@@ -684,7 +684,7 @@ class TestUriHandlerMethod:
 
         assert DummyHandler1.get.called == 0
         DummyHandler1.post.assert_called_with(
-            'POST', self.hmc, '/api/cpcs', tuple(), {}, True, True)
+            'POST', self.hmc, '/api/cpcs', (), {}, True, True)
         assert DummyHandler2.get.called == 0
         assert DummyHandler2.delete.called == 0
 
@@ -4409,7 +4409,7 @@ class TestMetricsContextHandlers:
             ])
         faked_hmc.add_metric_values(mo_val2_input)
 
-        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
+        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # noqa: DTZ001
         ts3_offset = int(tzlocal().utcoffset(ts3_input).total_seconds())
         ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(

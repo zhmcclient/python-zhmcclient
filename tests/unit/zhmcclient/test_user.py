@@ -112,9 +112,9 @@ class TestUser:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'type']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['object-uri', 'name', 'type', 'description']),
             ({},  # test default for full_properties (False)
              ['object-uri', 'name', 'type']),

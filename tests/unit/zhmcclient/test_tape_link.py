@@ -64,7 +64,7 @@ class TestTapeLink:
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'available-features-list': [
-                dict(name='dpm-storage-management', state=True),
+                {'name': 'dpm-storage-management', 'state': True},
             ],
         })
         assert self.faked_cpc.uri == CPC_URI
@@ -134,7 +134,7 @@ class TestTapeLink:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'cpc-uri', 'name', 'fulfillment-state']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'cpc-uri', 'name', 'fulfillment-state']),
         ]
     )
@@ -477,7 +477,7 @@ class TestTapeLink:
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
         tape_links_list = tape_link_mgr.list(
-            filter_args=dict(name=tape_link_name))
+            filter_args={'name': tape_link_name})
         assert len(tape_links_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -502,7 +502,7 @@ class TestTapeLink:
 
         # Verify that the resource can be found by its new name, using list()
         new_tape_links_list = tape_link_mgr.list(
-            filter_args=dict(name=new_tape_link_name))
+            filter_args={'name': new_tape_link_name})
         assert len(new_tape_links_list) == 1
         new_tape_link_list = new_tape_links_list[0]
         assert new_tape_link_list.properties['name'] == \
