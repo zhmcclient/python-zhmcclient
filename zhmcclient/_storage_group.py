@@ -674,7 +674,9 @@ class StorageGroup(BaseResource):
         Return the current candidate storage adapter port list of this FCP
         storage group.
 
-        This operation only applies to storage groups of type "fcp".
+        This operation only returns candicate adapter ports for storage groups
+        of type "fcp".
+        When called for storage groups of type "fc", it returns `None`.
 
         The result reflects the actual list of ports used by the CPC, including
         any changes that have been made during discovery. The source for this
@@ -693,12 +695,12 @@ class StorageGroup(BaseResource):
             following short set: "element-uri", "element-id", "class",
             "parent".
 
-            TODO: Verify short list of properties.
-
         Returns:
 
-          List of :class:`~zhmcclient.Port` objects representing the
-          current candidate storage adapter ports of this storage group.
+          List of :class:`~zhmcclient.Port` objects representing the current
+          candidate storage adapter ports of this FCP-type storage group.
+
+          `None` for FC-type storage groups.
 
         Raises:
 
@@ -709,20 +711,22 @@ class StorageGroup(BaseResource):
         """
         sg_cpc = self.cpc
         adapter_mgr = sg_cpc.adapters
+        port_uris = self.prop('candidate-adapter-port-uris', None)
+        if port_uris is None:
+            # FC-type storage group
+            return None
         port_list = []
-        port_uris = self.get_property('candidate-adapter-port-uris')
-        if port_uris:
-            for port_uri in port_uris:
-                m = re.match(r'^(/api/adapters/[^/]*)/.*', port_uri)
+        for port_uri in port_uris:
+            m = re.match(r'^(/api/adapters/[^/]*)/.*', port_uri)
 
-                adapter_uri = m.group(1)
-                adapter = adapter_mgr.resource_object(adapter_uri)
+            adapter_uri = m.group(1)
+            adapter = adapter_mgr.resource_object(adapter_uri)
 
-                port_mgr = adapter.ports
-                port = port_mgr.resource_object(port_uri)
-                port_list.append(port)
-                if full_properties:
-                    port.pull_full_properties()
+            port_mgr = adapter.ports
+            port = port_mgr.resource_object(port_uri)
+            port_list.append(port)
+            if full_properties:
+                port.pull_full_properties()
 
         return port_list
 
