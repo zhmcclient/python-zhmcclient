@@ -18,10 +18,32 @@ target-version = "py38"
 
 # Keep in sync with flake8
 ignore = [
-    'F403',  # unable to detect undefined names (when using wildcard import)
+    'BLE001',   # Do not catch blind exception: Exception
+    'DTZ003',   # datetime.datetime.utcnow() used
+    'DTZ005',   # 'datetime.datetime.now()' called without a 'tz' argument
+    'DTZ011',   # 'datetime.date.today()' used
+    'F403',     # unable to detect undefined names (when using wildcard import)
+    'FURB167',  # Use of regular expression alias 're.I'
+    'I001',     # Import block is un-sorted or un-formatted
+    'ISC004',   # Unparenthesized implicit string concatenation in collection
+    'PIE790',   # Unnecessary pass statement
+    'PIE808',   # Unnecessary 'start' argument in 'range'
+    'PLC0206',  # Extracting value from dictionary without calling '.items()'
+    'PLR2044',  # Line with empty comment
+    'RUF012',   # Mutable default value for class attribute
+    'RUF022',   # __all__ is not sorted
+    'RUF100',   # Unused 'noqa' directive (non-enabled: 'E721')
+    'S112',     # try-except-continue detected, consider logging the exception
+    'SIM102',   # Use a single 'if' statement instead of nested 'if' statements
+    'SIM114',   # Combine 'if' branches using logical 'or' operator
+    'T100',     # Import for pdb found
+
+    # Remove this ignore once https://github.com/astral-sh/ruff/issues/27189
+    # is fixed:
+    'UP032',    # Use f-string instead of 'format' call
 ]
 
-# Allow fix for all enabled rules (when `--fix`) is provided.
+# Allow fix for all enabled rules (when '--fix') is provided.
 # fixable = ["ALL"]
 # unfixable = []
 

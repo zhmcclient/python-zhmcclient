@@ -158,7 +158,7 @@ def test_port_update(zhmc_logger, dpm_mode_cpcs):
             new_desc = "Updated port description."
 
             # The code to be tested
-            port.update_properties(dict(description=new_desc))
+            port.update_properties({'description': new_desc})
 
             assert port.properties['description'] == new_desc
             port.pull_full_properties()
@@ -169,7 +169,7 @@ def test_port_update(zhmc_logger, dpm_mode_cpcs):
             with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
                 # The code to be tested
-                port.update_properties(dict(name=port_name_new))
+                port.update_properties({'name': port_name_new})
 
             exc = exc_info.value
             assert exc.http_status == 400

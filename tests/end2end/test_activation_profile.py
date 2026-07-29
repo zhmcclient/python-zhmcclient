@@ -145,7 +145,7 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
                 profile_type, actprof_name, cpc.name)
 
             # The code to be tested
-            actprof.update_properties(dict(description=new_desc))
+            actprof.update_properties({'description': new_desc})
 
             assert actprof.properties['description'] == new_desc
             actprof.pull_full_properties()

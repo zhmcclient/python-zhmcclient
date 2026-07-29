@@ -58,7 +58,7 @@ class TestTapeLibrary:
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'available-features-list': [
-                dict(name='dpm-storage-management', state=True),
+                {'name': 'dpm-storage-management', 'state': True},
             ],
             'management-world-wide-port-name': None
         })
@@ -131,9 +131,9 @@ class TestTapeLibrary:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['object-uri', 'name', 'description']),
             ({},  # test default for full_properties (False)
              ['object-uri', 'name']),

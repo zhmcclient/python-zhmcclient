@@ -107,7 +107,7 @@ def test_tl_crud(zhmc_logger, hmc_session):
     new_desc = "Updated Tape Library description."
 
     # The code to be tested
-    tl.update_properties(dict(description=new_desc))
+    tl.update_properties({'description': new_desc})
 
     assert tl.properties['description'] == new_desc
     tl.pull_full_properties()
@@ -116,7 +116,7 @@ def test_tl_crud(zhmc_logger, hmc_session):
     # Test that Tape Library can be renamed
 
     # The code to be tested
-    tl.update_properties(dict(name=tl_name_new))
+    tl.update_properties({'name': tl_name_new})
     tl.pull_full_properties()
     with pytest.raises(zhmcclient.NotFound):
         console.tape_library.find(name='Tape Library')

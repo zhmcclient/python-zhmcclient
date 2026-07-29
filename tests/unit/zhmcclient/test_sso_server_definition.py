@@ -116,8 +116,8 @@ class TestSSOServerDefinition:
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names",
         [
-            (dict(full_properties=False), ["element-uri", "name", "type"]),
-            (dict(full_properties=True), ["element-uri", "name", "type"]),
+            ({"full_properties": False}, ["element-uri", "name", "type"]),
+            ({"full_properties": True}, ["element-uri", "name", "type"]),
             (
                 {},  # test default for full_properties (False)
                 ["element-uri", "name", "type"],

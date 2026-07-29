@@ -128,9 +128,9 @@ class TestActivationProfile:
         "full_properties_kwargs, prop_names", [
             ({},
              ['name', 'element-uri']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['name', 'element-uri']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -273,13 +273,13 @@ class TestActivationProfile:
         "list_kwargs, prop_names", [
             ({},
              ['element-uri', 'name']),
-            (dict(additional_properties=[]),
+            ({'additional_properties': []},
              ['element-uri', 'name']),
-            (dict(additional_properties=['description']),
+            ({'additional_properties': ['description']},
              ['element-uri', 'name', 'description']),
-            (dict(additional_properties=['description', 'ipl-address']),
+            ({'additional_properties': ['description', 'ipl-address']},
              ['element-uri', 'name', 'description', 'ipl-address']),
-            (dict(additional_properties=['ssc-host-name']),
+            ({'additional_properties': ['ssc-host-name']},
              ['element-uri', 'name', 'ssc-host-name']
              # ssc-host-name is not on every image profile
              ),

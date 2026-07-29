@@ -111,9 +111,9 @@ class TestPasswordRule:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri', 'name', 'type']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['element-uri', 'name', 'type', 'description']),
             ({},  # test default for full_properties (False)
              ['element-uri', 'name', 'type']),

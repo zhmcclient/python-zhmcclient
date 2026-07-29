@@ -311,7 +311,7 @@ class TestNotificationOneTopic:
         receiver, mocked_conn = self.setup_receiver()
 
         # Add one STOMP message to be sent
-        message_obj = dict(a=1, b=2)
+        message_obj = {'a': 1, 'b': 2}
         # pylint: disable=no-member
         mocked_conn.mock_add_message(self.std_headers, message_obj)
 
@@ -375,7 +375,7 @@ class TestNotificationTwoTopics:
         receiver, mocked_conn = self.setup_receiver()
 
         # Add one STOMP message to be sent
-        message_obj = dict(a=1, b=2)
+        message_obj = {'a': 1, 'b': 2}
         # pylint: disable=no-member
         mocked_conn.mock_add_message(self.std_headers, message_obj)
 

@@ -208,7 +208,7 @@ def repr_dict(dct, indent):
         raise TypeError(f"Object must be a mapping, but is a {type(dct)}")
     dct_lines = []
     dct_lines.append('{')
-    for key in dct.keys():
+    for key in dct:
         value = dct[key]
         dct_lines.append(_indent(f'{key!r}: {value!r},', 2))
     dct_lines.append('}')
@@ -694,7 +694,7 @@ def get_api_features(obj, name=None):
         # turn into "no features available at all".
         if e.http_status == 404:
             return []
-        raise e
+        raise
 
 
 def get_firmware_features(obj, pull=False):
@@ -806,7 +806,7 @@ def get_stomp_rt_kwargs(rt_config):
 
         dict: Additional kwargs for StompConnection from the config.
     """
-    rt_kwargs = dict()
+    rt_kwargs = {}
     if rt_config:
         if rt_config.connect_timeout == 0:
             rt_kwargs['timeout'] = None  # No timeout

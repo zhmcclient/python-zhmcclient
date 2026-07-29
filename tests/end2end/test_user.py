@@ -199,7 +199,7 @@ def test_user_crud(zhmc_logger, hmc_session):
     new_desc = "Updated user description."
 
     # The code to be tested
-    user.update_properties(dict(description=new_desc))
+    user.update_properties({'description': new_desc})
 
     assert user.properties['description'] == new_desc
     user.pull_full_properties()
@@ -210,7 +210,7 @@ def test_user_crud(zhmc_logger, hmc_session):
     with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
         # The code to be tested
-        user.update_properties(dict(name=user_name_new))
+        user.update_properties({'name': user_name_new})
 
     exc = exc_info.value
     assert exc.http_status == 400

@@ -218,9 +218,9 @@ class TestNic:
         "full_properties_kwargs, prop_names", [
             ({},
              ['element-uri']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['element-uri']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              None),
         ]
     )
@@ -576,7 +576,7 @@ class TestNic:
         # Verify that the resource is no longer found by its old name, using
         # list() (this does not use the name-to-URI cache).
         nics_list = nic_mgr.list(
-            filter_args=dict(name=nic_name))
+            filter_args={'name': nic_name})
         assert len(nics_list) == 0
 
         # Verify that the resource is no longer found by its old name, using
@@ -599,7 +599,7 @@ class TestNic:
 
         # Verify that the resource can be found by its new name, using list()
         new_nics_list = nic_mgr.list(
-            filter_args=dict(name=new_nic_name))
+            filter_args={'name': new_nic_name})
         assert len(new_nics_list) == 1
         new_nic_list = new_nics_list[0]
         assert new_nic_list.properties['name'] == new_nic_name
