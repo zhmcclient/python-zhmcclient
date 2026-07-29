@@ -1,0 +1,7 @@
+FC-type storage groups do not have a property "candidate-adapter-port-uris".
+The :meth:`zhmcclient.StorageGroup.list_candidate_adapter_ports` method
+raised ``KeyError`` when called for FC-type storage groups. However, this was
+not documented. Changed the method to return `None` when called for
+FC-type storage groups and documented that. This is an incompatible change
+for users that handle that ``KeyError`` exception. If you have such code,
+it needs to be changed to test for `None` instead.
