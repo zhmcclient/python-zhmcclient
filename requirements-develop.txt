@@ -174,4 +174,4 @@ pywinpty>=2.0.12; os_name == "nt" and python_version <= '3.12'
 pywinpty>=3.0.2; os_name == "nt" and python_version >= '3.13'
 
 # Pinning pip to <26.2 is a quick fix to circumvent https://github.com/adamtheturtle/pip-check-reqs/issues/570
-pip>=26.1.2,<26.2; python_version >= '3.10'
+pip>=26.2,<26.3; python_version >= '3.10'
