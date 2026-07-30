@@ -1,177 +1,69 @@
-# Pip requirements file for packages needed for development.
+# Pip requirements file for development dependencies.
 
 
-# Direct dependencies for development and indirect dependencies for development
-# that are needed for some reason (must be consistent with minimum-constraints-develop.txt)
-
-# PEP517 package builder, used in Makefile
-build>=1.0.0
-# build requires virtualenv.cli_run which was added in virtualenv 20.1
-virtualenv>=20.36.1
-pyproject-hooks>=1.1.0
-
-# Change log
-towncrier>=22.8.0
-
-# Unit test (imports into testcases):
-# pytest is covered in requirements-testutils.txt
-testfixtures>=6.9.0
-# For versions of importlib-metadata that are in Python, see https://pypi.org/project/importlib-metadata/
-importlib-metadata>=8.7.0
-# requests: covered in direct deps for installation
-requests-mock>=1.6.0
-requests-toolbelt>=0.8.0
-more-itertools>=4.0.0
-# pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
-# pytz 2024.2 introduced an issue that causes our tests to fail.
-# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
-# pytz 2025.2 introduced an issue that causes our tests to fail.
-pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
-# Python's built-in zoneinfo module needs the tzdata package on Windows.
-tzdata>=2023.4; sys_platform == 'win32'
-# rfc3986-validator is needed for jsonschema validation of format=uri-reference
-rfc3986-validator>=0.1.1
-
-# packaging is used by pytest, pip-check-reqs, sphinx
-packaging>=24.2
-
-# Unit test (indirect dependencies):
-# pluggy is used by pytest, tox
-# pytest 8.4.0 depends on pluggy<2,>=1.5
-pluggy>=1.5.0
-# decorator: covered in requirements.txt
-
-# Coverage reporting (no imports, invoked via coveralls script):
-# coveralls versions 4.0.0/4.0.1 require Python>=3.8 and pin Python<=3.12.
-# coveralls version 4.0.2 requires Python>=3.10 and no longer pins to a Python 3.x version.
-coverage>=7.8.0
-coveralls>=4.0.1; python_version == '3.9'
-coveralls>=4.0.2; python_version >= '3.10'
-
-# Safety CI by pyup.io
-safety>=3.8.1
-safety-schemas>=0.0.16
-dparse>=0.6.4
-ruamel.yaml>=0.19.1
-Authlib>=1.6.12
-marshmallow>=3.26.2
-pydantic>=2.12.0
-pydantic_core>=2.41.1
-typer>=0.16.0
-typer-cli>=0.16.0
-typer-slim>=0.16.0
-# safety 3.8.1 depends on ruststore>=0.10.4 only on Python>=3.10
-truststore>=0.10.4; python_version >= '3.10'
-
-# Bandit checker
-bandit>=1.7.8
+# Direct dependencies for development
+# (must be consistent with minimum-constraints-develop.txt)
 
 # Tox
 tox>=4.15.0
 
-# Sphinx (no imports, invoked via sphinx-build script):
+# Package builder
+build>=1.0.0
+
+# Change log manager
+towncrier>=22.8.0
+
+# Test tools
+pytest>=8.4.0; python_version == '3.9'
+pytest>=9.0.3; python_version >= '3.10'
+requests-mock>=1.6.0
+testfixtures>=6.9.0
+tzdata>=2023.4; sys_platform == 'win32'
+
+# Coverage reporting tools
+coverage>=7.8.0
+coveralls>=4.0.1; python_version == '3.9'
+coveralls>=4.0.2; python_version >= '3.10'
+
+# Sphinx doc builder and optional extensions
 Sphinx>=7.2.0
-# Sphinx 7.1.0 pins docutils to <0.21
-docutils>=0.20.1
-sphinx-git>=10.1.1
-GitPython>=3.1.50
-Pygments>=2.20.0
-sphinx-rtd-theme>=2.0.0
-sphinxcontrib-applehelp>=1.0.4
-sphinxcontrib-devhelp>=1.0.2
-sphinxcontrib-htmlhelp>=2.0.1
-sphinxcontrib-jquery>=4.1
-sphinxcontrib-jsmath>=1.0.1
-sphinxcontrib-qthelp>=1.0.3
-sphinxcontrib-serializinghtml>=1.1.9
-sphinxcontrib-websupport>=1.2.4
 autodocsumm>=0.2.12
-Babel>=2.11.0
-# snowballstemmer 3.0.0 does not include algorithms used by Sphinx.
-# For details, see https://github.com/snowballstem/snowball/issues/229
-snowballstemmer>=2.0.0,!=3.0.0
-# Sphinx 8.2.0 started using roman-numerals-py>=1.0.0
-roman-numerals-py>=3.1.0
-roman-numerals>=3.1.0
+sphinx-git>=10.1.1
+sphinx-rtd-theme>=2.0.0
 
-# PyLint (no imports, invoked via pylint script)
-pylint>=3.3.1
-astroid>=3.3.7
-lazy-object-proxy>=1.4.3
-wrapt>=1.14
-# isort 4.3.8 fixes an issue with py310 and works on py310 (Note that isort 5.10.0 has official support for py310)
-isort>=4.3.8
-tomlkit>=0.10.1
-dill>=0.3.7
+# Package dependency checkers
+pipdeptree>=2.24.0
+pip-check-reqs>=2.5.1
 
-# Flake8 and dependents (no imports, invoked via flake8 script):
+# Safety checker
+safety>=3.8.1
+
+# Flake8 checker
 flake8>=6.1.0
-mccabe>=0.7.0
-pycodestyle>=2.11.0
-pyflakes>=3.1.0
-entrypoints>=0.3.0
 
-# Ruff checker (no imports, invoked via ruff script):
+# Ruff checker
 ruff>=0.16.0
 
-# Jupyter Notebook (no imports, invoked via jupyter script):
-# Note: The packages for Jupyter Notebook are prone to causing endless pip backtracking when
-#       installed with minimum versions. This was addressed by pinning the package versions
-#       to a maximum in order to reduce the search space for pip.
-# Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
-#       dependency resolution, so for now we pin notebook to <6.5.
+# PyLint checker
+pylint>=3.3.1
+
+# Bandit checker
+bandit>=1.7.8
+
+# Jupyter notebook
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
 #       https://github.com/mhammond/pywin32/issues/2367
 notebook>=7.5.6; sys_platform != 'win32' or python_version <= '3.12'
-ipykernel>=6.31.0; sys_platform != 'win32' or python_version <= '3.12'
-ipython-genutils>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
-ipython>=8.18.1; sys_platform != 'win32' or python_version <= '3.12'
-ipywidgets>=8.1.8; sys_platform != 'win32' or python_version <= '3.12'
-jupyter_client>=8.6.3; sys_platform != 'win32' or python_version <= '3.12'
-jupyter-console>=6.6.3; sys_platform != 'win32' or python_version <= '3.12'
-jupyter_core>=5.8.1; sys_platform != 'win32' or python_version <= '3.12'
-jupyter_server>=2.18.2; python_version == '3.9' and (sys_platform != 'win32' or python_version <= '3.12')
-jupyter_server>=2.20.0; python_version >= '3.10' and (sys_platform != 'win32' or python_version <= '3.12')
 jupyter>=1.1.1; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab_pygments>=0.3.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab_server>=2.28.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab_widgets>=3.0.16; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab>=4.5.9; sys_platform != 'win32' or python_version <= '3.12'
-nbclient>=0.10.2; sys_platform != 'win32' or python_version <= '3.12'
-nbconvert>=7.17.1; sys_platform != 'win32' or python_version <= '3.12'
-nbformat>=5.10.4; sys_platform != 'win32' or python_version <= '3.12'
-notebook_shim>=0.2.4; sys_platform != 'win32' or python_version <= '3.12'
-qtconsole>=5.7.2; sys_platform != 'win32' or python_version <= '3.12'
 
-# Pywin32 is used (at least?) by jupyter.
-# Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
-# pywin32 version 302 added support for Python 3.10
-# pywin32 version 303 added support for Python 3.11
-pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
-# TODO: Re-enable for Python 3.13 once pywin32 install issue is solved, see
-#       https://github.com/mhammond/pywin32/issues/2367
-pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
-# The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.5.7
+# Indirect dependencies for development that are needed for some reason
 
-# pyzmq 26.1.0 added wheel archives for Python 3.13
-# pyzmq 27.0.1 added wheel archives for Python 3.14
-pyzmq>=27.0.1
-
-# Aditional dependencies of examples
-tabulate>=0.8.1
-progressbar2>=3.12.0
-
-# Package dependency management tools (not used by any make rules)
-pipdeptree>=2.24.0
-pip-check-reqs>=2.5.6
-
-# pywinpty is used by terminado <- notebook <- jupyter
-# pywinpty>=1.0 requires maturin to build. Meanwhile, it works.
-# pywinpty 2.0.12/13 has the above issue on Python 3.13
-pywinpty>=2.0.12; os_name == "nt" and python_version <= '3.12'
-pywinpty>=3.0.2; os_name == "nt" and python_version >= '3.13'
-
+# Pip is covered by requirements-base.txt but needs to be repeated here because it is used by pip-check-reqs.
 # Pinning pip to <26.2 is a quick fix to circumvent https://github.com/adamtheturtle/pip-check-reqs/issues/570
 pip>=26.1.2,<26.2; python_version >= '3.10'
+
+# Click is covered by requirements.txt but needs to be repeated here because it is used by safety.
+# Click 8.2 made some attributes read-only and click-repl 0.2.0/0.3.0 does not
+#   support that yet, see https://github.com/click-contrib/click-repl/issues/128
+click>=8.0.2,<8.2.0
