@@ -61,7 +61,7 @@ jupyter>=1.1.1; sys_platform != 'win32' or python_version <= '3.12'
 
 # Pip is covered by requirements-base.txt but needs to be repeated here because it is used by pip-check-reqs.
 # Pinning pip to <26.2 is a quick fix to circumvent https://github.com/adamtheturtle/pip-check-reqs/issues/570
-pip>=26.1.2,<26.2; python_version >= '3.10'
+pip>=26.2.1,<26.3; python_version >= '3.10'
 
 # Click is covered by requirements.txt but needs to be repeated here because it is used by safety.
 # Click 8.2 made some attributes read-only and click-repl 0.2.0/0.3.0 does not
