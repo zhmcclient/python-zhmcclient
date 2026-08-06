@@ -3231,13 +3231,11 @@ def get_inventory_for_storage_site(hmc):
 
 
 def get_inventory_for_storage_fabric(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-fabric'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stofabrics = hmc.consoles.console.storage_fabrics.list()
-    # for stofabric in stofabrics:
-    #     result.append(properties_copy(stofabric.properties))
+    stofabrics = hmc.consoles.console.storage_fabrics.list()
+    for stofabric in stofabrics:
+        result.append(properties_copy(stofabric.properties))
     return result
 
 
@@ -5609,6 +5607,53 @@ class StorageTemplateVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class StorageFabricsHandler:
+    """
+    Handler class for HTTP methods on the set of StorageFabric resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name']
+
+    returned_props = ['object-uri', 'name', 'cpc-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Fabrics (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_fabrics = []
+        for sf in hmc.consoles.console.storage_fabrics.list(filter_args):
+            result_sf = {}
+            for prop in cls.returned_props:
+                result_sf[prop] = prop_copy(sf.properties.get(prop))
+            result_storage_fabrics.append(result_sf)
+        return {'storage-fabrics': result_storage_fabrics}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Storage Fabric."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['cpc-uri', 'name'])
+
+        new_storage_fabric = hmc.consoles.console.storage_fabrics.add(body)
+        return {'object-uri': new_storage_fabric.uri}
+
+
+class StorageFabricHandler(GenericGetPropertiesHandler,
+                           GenericUpdatePropertiesHandler,
+                           GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on a single StorageFabric resource.
+    """
+    pass
+
+
 class TapeLibrariesHandler:
     """
     Handler class for HTTP methods on set of TapeLibraries resources.
@@ -7350,6 +7395,11 @@ URIS = (
      StorageTemplateVolumesHandler),
     (r'/api/storage-templates/([^/]+)/storage-template-volumes/'
      r'([^?/]+)(?:\?(.*))?', StorageTemplateVolumeHandler),
+
+    (r'/api/storage-fabrics(?:\?(.*))?',
+     StorageFabricsHandler),
+    (r'/api/storage-fabrics/([^?/]+)(?:\?(.*))?',
+     StorageFabricHandler),
 
     (r'/api/tape-libraries(?:\?(.*))?',
      TapeLibrariesHandler),
