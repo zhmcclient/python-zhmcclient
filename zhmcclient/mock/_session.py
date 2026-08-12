@@ -260,6 +260,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageSwitch"
                     },
                 },
+                "storage_subsystems": {
+                    "description": "The Storage Subsystems defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSubsystem"
+                    },
+                },
                 "hw_messages": {
                     "description": "The hardware mesages for this Console",
                     "type": "array",
@@ -508,6 +515,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "StorageSite": {
             "description": "A storage site defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSubsystem": {
+            "description": "A storage subsystem defined on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [
