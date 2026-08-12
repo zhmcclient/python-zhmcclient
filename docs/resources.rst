@@ -458,6 +458,26 @@ Storage Volume Templates
    :special-members: __str__
 
 
+.. _`Storage Fabrics`:
+
+Storage Fabrics
+---------------
+
+.. automodule:: zhmcclient._storage_fabric
+
+.. autoclass:: zhmcclient.StorageFabricManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageFabric
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Storage Sites`:
 
 Storage Sites
@@ -472,6 +492,26 @@ Storage Sites
    :special-members: __str__
 
 .. autoclass:: zhmcclient.StorageSite
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Switches`:
+
+Storage Switches
+----------------
+
+.. automodule:: zhmcclient._storage_switch
+
+.. autoclass:: zhmcclient.StorageSwitchManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSwitch
    :members:
    :autosummary:
    :autosummary-inherited-members:
