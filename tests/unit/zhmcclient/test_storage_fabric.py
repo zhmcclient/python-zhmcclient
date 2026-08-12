@@ -64,7 +64,7 @@ class TestStorageFabric:
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'available-features-list': [
-                dict(name='dpm-storage-management', state=True),
+                {'name': 'dpm-storage-management', 'state': True},
             ],
         })
         assert self.faked_cpc.uri == CPC_URI
@@ -126,7 +126,7 @@ class TestStorageFabric:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'cpc-uri', 'name']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'cpc-uri', 'name']),
         ]
     )
@@ -415,7 +415,7 @@ class TestStorageFabric:
         fabric.update_properties(properties={'name': new_name})
 
         # Old name: list() should return no results
-        fabrics_old = fabric_mgr.list(filter_args=dict(name=fabric_name))
+        fabrics_old = fabric_mgr.list(filter_args={'name': fabric_name})
         assert len(fabrics_old) == 0
 
         # Old name: find() must raise NotFound
@@ -434,7 +434,7 @@ class TestStorageFabric:
         assert fabric_found.properties['name'] == new_name
 
         # New name: list() must return exactly one result
-        fabrics_new = fabric_mgr.list(filter_args=dict(name=new_name))
+        fabrics_new = fabric_mgr.list(filter_args={'name': new_name})
         assert len(fabrics_new) == 1
         assert fabrics_new[0].properties['name'] == new_name
 
