@@ -85,7 +85,7 @@ class TestStorageSwitch:
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'available-features-list': [
-                dict(name='dpm-storage-management', state=True),
+                {'name': 'dpm-storage-management', 'state': True},
             ],
         })
         self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
@@ -176,7 +176,7 @@ class TestStorageSwitch:
         "full_properties_kwargs, prop_names", [
             ({},
              ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']),
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']),
         ]
     )

@@ -5815,8 +5815,7 @@ class StorageSwitchUndefineHandler:
             except KeyError:
                 pass
 
-        sw.manager.remove(sw.oid)
-        return None  # 204 No Content
+        sw.manager.remove(sw.oid)  # 204 No Content
 
 
 class StorageSwitchMoveSiteHandler:
@@ -5850,8 +5849,7 @@ class StorageSwitchMoveSiteHandler:
             new_exc.__cause__ = None
             raise new_exc
 
-        sw.update({'storage-site-uri': new_site_uri})
-        return None  # 204 No Content
+        sw.update({'storage-site-uri': new_site_uri})  # 204 No Content
 
 
 class StorageSwitchMoveFabricHandler:
@@ -5904,8 +5902,7 @@ class StorageSwitchMoveFabricHandler:
             new_uris.append(sw_uri)
         new_fabric.update({'storage-switch-uris': new_uris})
 
-        sw.update({'storage-fabric-uri': new_fabric_uri})
-        return None  # 204 No Content
+        sw.update({'storage-fabric-uri': new_fabric_uri})  # 204 No Content
 
 
 class StorageSiteSwitchesHandler:

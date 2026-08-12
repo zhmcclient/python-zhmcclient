@@ -56,7 +56,7 @@ class TestStorageSite:
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'available-features-list': [
-                dict(name='dpm-storage-management', state=True),
+                {'name': 'dpm-storage-management', 'state': True},
             ],
         })
         assert self.faked_cpc.uri == CPC_URI
@@ -99,9 +99,9 @@ class TestStorageSite:
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(full_properties=False),
+            ({'full_properties': False},
              ['object-uri', 'name', 'cpc-uris']),
-            (dict(full_properties=True),
+            ({'full_properties': True},
              ['object-uri', 'name', 'cpc-uris', 'description']),
             ({},  # test default for full_properties (False)
              ['object-uri', 'name', 'cpc-uris']),
