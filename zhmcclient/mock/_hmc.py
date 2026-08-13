@@ -65,6 +65,8 @@ __all__ = ['InputError',
            'FakedStorageFabricManager', 'FakedStorageFabric',
            'FakedStorageSwitchManager', 'FakedStorageSwitch',
            'FakedStorageSubsystemManager', 'FakedStorageSubsystem',
+           'FakedStorageControlUnitManager', 'FakedStorageControlUnit',
+           'FakedStoragePathManager', 'FakedStoragePath',
            ]
 
 # All currently defined metric groups with their metrics.
@@ -1129,6 +1131,7 @@ class FakedConsoleManager(FakedBaseManager):
 
 
 class FakedConsole(FakedBaseResource):
+    # pylint: disable=too-many-instance-attributes
     """
     A faked Console resource within a faked HMC (see
     :class:`zhmcclient.mock.FakedHmc`).
@@ -1157,6 +1160,8 @@ class FakedConsole(FakedBaseResource):
         self._storage_switches = FakedStorageSwitchManager(
             hmc=manager.hmc, console=self)
         self._storage_subsystems = FakedStorageSubsystemManager(
+            hmc=manager.hmc, console=self)
+        self._storage_control_units = FakedStorageControlUnitManager(
             hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
@@ -1273,6 +1278,14 @@ class FakedConsole(FakedBaseResource):
         the faked Storage Subsystem resources of this Console.
         """
         return self._storage_subsystems
+
+    @property
+    def storage_control_units(self):
+        """
+        :class:`~zhmcclient.mock.FakedStorageControlUnitManager`: Access to
+        the faked Storage Control Unit resources of this Console.
+        """
+        return self._storage_control_units
 
     @property
     def users(self):
@@ -4800,6 +4813,189 @@ class FakedStorageSubsystemManager(FakedBaseManager):
 class FakedStorageSubsystem(FakedBaseResource):
     """
     A faked Storage Subsystem resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedStorageControlUnitManager(FakedBaseManager):
+    """
+    A manager for faked Storage Control Unit resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedStorageControlUnit,
+            base_uri='/api/storage-control-units',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='storage-control-unit',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked Storage Control Unit resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-control-unit',
+              if not specified.
+
+        Returns:
+
+          :class:`~zhmcclient.mock.FakedStorageControlUnit`: The faked
+          StorageControlUnit resource.
+        """
+        new_cu = super().add(properties)
+
+        # Resource type specific default values
+        new_cu.properties.setdefault('description', '')
+        new_cu.properties.setdefault('storage-path-uris', [])
+        new_cu.properties.setdefault('volume-ranges', [])
+
+        # Register this control unit URI in the parent subsystem's
+        # storage-control-unit-uris array, keeping both sides consistent.
+        subsystem_uri = new_cu.properties.get('parent')
+        if subsystem_uri:
+            try:
+                subsystem = self._hmc.lookup_by_uri(subsystem_uri)
+                cu_uris = list(
+                    subsystem.properties.get(
+                        'storage-control-unit-uris', []))
+                if new_cu.uri not in cu_uris:
+                    cu_uris.append(new_cu.uri)
+                subsystem.update({'storage-control-unit-uris': cu_uris})
+            except KeyError:
+                pass  # subsystem not yet registered — caller's responsibility
+
+        return new_cu
+
+
+class FakedStorageControlUnit(FakedBaseResource):
+    """
+    A faked Storage Control Unit resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+        self._storage_paths = FakedStoragePathManager(
+            hmc=manager.hmc, storage_control_unit=self)
+
+    @property
+    def storage_paths(self):
+        """
+        :class:`~zhmcclient.mock.FakedStoragePathManager`: Access to the
+        faked Storage Path resources of this Storage Control Unit.
+        """
+        return self._storage_paths
+
+
+class FakedStoragePathManager(FakedBaseManager):
+    """
+    A manager for faked Storage Path resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, storage_control_unit):
+        super().__init__(
+            hmc=hmc,
+            parent=storage_control_unit,
+            resource_class=FakedStoragePath,
+            base_uri=storage_control_unit.uri + '/storage-paths',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='storage-path',
+            name_prop='element-uri')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked Storage Path resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-path', if not
+              specified.
+
+        Returns:
+
+          :class:`~zhmcclient.mock.FakedStoragePath`: The faked
+          StoragePath resource.
+        """
+        new_path = super().add(properties)
+
+        # Register this path URI in the parent control unit's storage-path-uris
+        cu = self.parent
+        path_uris = list(cu.properties.get('storage-path-uris', []))
+        if new_path.uri not in path_uris:
+            path_uris.append(new_path.uri)
+        cu.update({'storage-path-uris': path_uris})
+
+        return new_path
+
+    def remove(self, oid):
+        """
+        Remove a faked Storage Path resource and deregister it from the
+        parent control unit's storage-path-uris.
+
+        Parameters:
+
+          oid (string):
+            The element ID of the faked Storage Path resource.
+        """
+        path = self.lookup_by_oid(oid)
+        cu = self.parent
+        path_uris = list(cu.properties.get('storage-path-uris', []))
+        if path.uri in path_uris:
+            path_uris.remove(path.uri)
+        cu.update({'storage-path-uris': path_uris})
+        super().remove(oid)
+
+
+class FakedStoragePath(FakedBaseResource):
+    """
+    A faked Storage Path resource within a faked HMC (see
     :class:`zhmcclient.mock.FakedHmc`).
 
     Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for

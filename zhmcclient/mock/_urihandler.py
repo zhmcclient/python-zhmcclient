@@ -39,7 +39,14 @@ __all__ = ['UriHandler', 'LparActivateHandler', 'LparDeactivateHandler',
            'StorageSubsystemsHandler', 'StorageSubsystemHandler',
            'StorageSubsystemMoveSiteHandler',
            'StorageSubsystemAddEndpointHandler',
-           'StorageSubsystemRemoveEndpointHandler']
+           'StorageSubsystemRemoveEndpointHandler',
+           'StorageControlUnitsHandler', 'StorageControlUnitHandler',
+           'StorageSubsystemControlUnitsHandler',
+           'StorageControlUnitDefineHandler',
+           'StorageControlUnitUndefineHandler',
+           'StorageControlUnitAddVolumeRangeHandler',
+           'SCURemoveVolumeRangeHandler',
+           'StoragePathsHandler', 'StoragePathHandler']
 
 # CPC status values
 CPC_ACTIVE_STATUSES = (
@@ -3251,30 +3258,20 @@ def get_inventory_for_storage_switch(hmc):
 
 
 def get_inventory_for_storage_subsystem(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-subsystem'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stosites = hmc.consoles.console.storage_sites.list()
-    # for stosite in stosites:
-    #     stosubsystems = stosite.storage_subsystems.list()
-    #     for stosubsystem in stosubsystems:
-    #         result.append(properties_copy(stosubsystem.properties))
+    stosubsystems = hmc.consoles.console.storage_subsystems.list()
+    for stosubsystem in stosubsystems:
+        result.append(properties_copy(stosubsystem.properties))
     return result
 
 
 def get_inventory_for_storage_control_unit(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-control-unit'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stosites = hmc.consoles.console.storage_sites.list()
-    # for stosite in stosites:
-    #     stosubsystems = stosite.storage_subsystems.list()
-    #     for stosubsystem in stosubsystems:
-    #         stocus = stosubsystem.storage_control_units.list()
-    #         for stocu in stocus:
-    #             result.append(properties_copy(stocu.properties))
+    stocus = hmc.consoles.console.storage_control_units.list()
+    for stocu in stocus:
+        result.append(properties_copy(stocu.properties))
     return result
 
 
@@ -6278,6 +6275,382 @@ class StorageSiteSubsystemsHandler:
         return {'storage-subsystems': result_subsystems}
 
 
+class StorageControlUnitsHandler:
+    """
+    Handler class for HTTP methods on the global set of StorageControlUnit
+    resources.
+    GET /api/storage-control-units
+    """
+
+    valid_query_parms_get = ['name', 'logical-address']
+
+    returned_props = ['object-uri', 'name', 'logical-address']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Control Units (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_cus = []
+        for cu in hmc.consoles.console.storage_control_units.list(
+                filter_args):
+            result_cu = {}
+            for prop in cls.returned_props:
+                result_cu[prop] = prop_copy(cu.properties.get(prop))
+            result_cus.append(result_cu)
+        return {'storage-control-units': result_cus}
+
+
+class StorageControlUnitHandler(GenericGetPropertiesHandler,
+                                GenericUpdatePropertiesHandler):  # noqa: E127
+    """
+    Handler class for HTTP methods on a single StorageControlUnit resource
+    (Get Properties and Update Properties).
+    POST /api/storage-control-units/{storage-control-unit-id}
+    """
+    pass
+
+
+class StorageSubsystemControlUnitsHandler:
+    """
+    Handler class for listing storage control units of a storage subsystem.
+    GET /api/storage-subsystems/{id}/storage-control-units
+    """
+
+    valid_query_parms_get = ['name', 'logical-address']
+
+    returned_props = ['object-uri', 'name', 'logical-address']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Control Units of a Storage Subsystem."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        ss_oid = uri_parms[0]
+        ss_uri = '/api/storage-subsystems/' + ss_oid
+        try:
+            hmc.lookup_by_uri(ss_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        filter_args = dict(query_parms)
+        filter_args['parent'] = ss_uri
+
+        result_cus = []
+        for cu in hmc.consoles.console.storage_control_units.list(
+                filter_args):
+            result_cu = {}
+            for prop in cls.returned_props:
+                result_cu[prop] = prop_copy(cu.properties.get(prop))
+            result_cus.append(result_cu)
+        return {'storage-control-units': result_cus}
+
+
+class StorageControlUnitDefineHandler:
+    """
+    Handler class for the "Define Storage Control Unit" operation.
+    POST /api/storage-subsystems/{id}/operations/define-storage-control-unit
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Define Storage Control Unit."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['logical-address'])
+
+        ss_oid = uri_parms[0]
+        ss_uri = '/api/storage-subsystems/' + ss_oid
+        try:
+            hmc.lookup_by_uri(ss_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        logical_addr = body['logical-address']
+
+        # Check for duplicate logical-address within this subsystem (409/447)
+        existing = hmc.consoles.console.storage_control_units.list(
+            {'parent': ss_uri})
+        for cu in existing:
+            if cu.properties.get('logical-address') == logical_addr:
+                raise ConflictError(
+                    method, uri, reason=447,
+                    message="A storage control unit with logical-address "
+                    f"{logical_addr!r} already exists in subsystem "
+                    f"{ss_uri}")
+
+        # Check for duplicate name within this subsystem (400/8)
+        cu_name = body.get('name')
+        if cu_name:
+            for cu in existing:
+                if cu.properties.get('name') == cu_name:
+                    raise BadRequestError(
+                        method, uri, reason=8,
+                        message="A storage control unit with name "
+                        f"{cu_name!r} already exists in subsystem "
+                        f"{ss_uri}")
+
+        props = dict(body)
+        props['parent'] = ss_uri
+        # Default name to "Control unit {logical-address}" per spec
+        props.setdefault('name', f'Control unit {logical_addr}')
+
+        new_cu = hmc.consoles.console.storage_control_units.add(props)
+        return {'object-uri': new_cu.uri}
+
+
+class StorageControlUnitUndefineHandler:
+    """
+    Handler class for the "Undefine Storage Control Unit" operation.
+    POST /api/storage-control-units/{id}/operations/undefine
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Undefine Storage Control Unit."""
+        assert wait_for_completion is True  # always synchronous
+        cu_oid = uri_parms[0]
+        cu_uri = '/api/storage-control-units/' + cu_oid
+        try:
+            cu = hmc.lookup_by_uri(cu_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Remove all child storage paths
+        for path in list(cu.storage_paths.list(None)):
+            cu.storage_paths.remove(path.oid)
+
+        # Remove this CU's URI from the parent subsystem's
+        # storage-control-unit-uris
+        ss_uri = cu.properties.get('parent')
+        if ss_uri:
+            try:
+                ss = hmc.lookup_by_uri(ss_uri)
+                cu_uris = list(
+                    ss.properties.get('storage-control-unit-uris', []))
+                if cu_uri in cu_uris:
+                    cu_uris.remove(cu_uri)
+                ss.update({'storage-control-unit-uris': cu_uris})
+            except KeyError:
+                pass
+
+        cu.manager.remove(cu.oid)  # 204 No Content
+
+
+class StorageControlUnitAddVolumeRangeHandler:
+    """
+    Handler class for the "Add Volume Range" operation.
+    POST /api/storage-control-units/{id}/operations/add-volume-range
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Add Volume Range."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['starting-volume'])
+        cu_oid = uri_parms[0]
+        cu_uri = '/api/storage-control-units/' + cu_oid
+        try:
+            cu = hmc.lookup_by_uri(cu_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        starting = body['starting-volume']
+        ending = body.get('ending-volume', starting)
+        vol_type = body.get('type', 'base')
+
+        new_range = {
+            'starting-volume': starting,
+            'ending-volume': ending,
+            'type': vol_type,
+        }
+        volume_ranges = list(cu.properties.get('volume-ranges', []))
+        volume_ranges.append(new_range)
+        cu.update({'volume-ranges': volume_ranges})  # 204 No Content
+
+
+class SCURemoveVolumeRangeHandler:
+    """
+    Handler class for the "Remove Volume Range" operation.
+    POST /api/storage-control-units/{id}/operations/remove-volume-range
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Remove Volume Range."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['starting-volume'])
+        cu_oid = uri_parms[0]
+        cu_uri = '/api/storage-control-units/' + cu_oid
+        try:
+            cu = hmc.lookup_by_uri(cu_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        starting = body['starting-volume']
+        ending = body.get('ending-volume', starting)
+        vol_type = body.get('type', 'base')
+
+        volume_ranges = list(cu.properties.get('volume-ranges', []))
+        found_idx = None
+        for idx, vr in enumerate(volume_ranges):
+            if (vr.get('starting-volume') == starting
+                    and vr.get('ending-volume') == ending
+                    and vr.get('type') == vol_type):
+                found_idx = idx
+                break
+
+        if found_idx is None:
+            raise ConflictError(
+                method, uri, reason=444,
+                message=f"Volume range starting at {starting!r} not found "
+                f"on storage control unit {cu_uri}")
+
+        volume_ranges.pop(found_idx)
+        cu.update({'volume-ranges': volume_ranges})  # 204 No Content
+
+
+class StoragePathsHandler:
+    """
+    Handler class for HTTP methods on the set of StoragePath resources.
+    POST /api/storage-control-units/{id}/storage-paths (Create)
+    GET  /api/storage-control-units/{id}/storage-paths (List)
+    """
+
+    returned_props = ['element-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Paths of a Storage Control Unit."""
+        uri, _ = parse_query_parms(method, uri)
+        cu_oid = uri_parms[0]
+        cu_uri = '/api/storage-control-units/' + cu_oid
+        try:
+            cu = hmc.lookup_by_uri(cu_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        result_paths = []
+        for path in cu.storage_paths.list(None):
+            result_path = {}
+            for prop in cls.returned_props:
+                result_path[prop] = prop_copy(path.properties.get(prop))
+            result_paths.append(result_path)
+        return {'storage-paths': result_paths}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Storage Path."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['adapter-port-uri'])
+        cu_oid = uri_parms[0]
+        cu_uri = '/api/storage-control-units/' + cu_oid
+        try:
+            cu = hmc.lookup_by_uri(cu_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Validate max 8 paths
+        existing_paths = cu.storage_paths.list(None)
+        if len(existing_paths) >= 8:
+            raise ConflictError(
+                method, uri, reason=486,
+                message="Cannot create storage path: maximum of 8 paths "
+                f"already defined for storage control unit {cu_uri}")
+
+        # Validate adapter-port-uri resolves
+        adapter_port_uri = body['adapter-port-uri']
+        try:
+            hmc.lookup_by_uri(adapter_port_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=adapter_port_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Validate exit-switch-uri / exit-port corequisite (400/442):
+        # exit-port requires exit-switch-uri; exit-switch-uri requires exit-port
+        exit_switch_uri = body.get('exit-switch-uri')
+        exit_port = body.get('exit-port')
+        if (exit_switch_uri is None) != (exit_port is None):
+            raise BadRequestError(
+                method, uri, reason=442,
+                message="'exit-switch-uri' and 'exit-port' must both be "
+                "present or both be absent")
+
+        # Check for duplicate path (400/8)
+        for ep in existing_paths:
+            if (ep.properties.get('adapter-port-uri') == adapter_port_uri
+                    and ep.properties.get('exit-switch-uri') == exit_switch_uri
+                    and ep.properties.get('exit-port') == exit_port):
+                raise BadRequestError(
+                    method, uri, reason=8,
+                    message="A storage path with the same properties "
+                    f"already exists in storage control unit {cu_uri}")
+
+        props = dict(body)
+        props['parent'] = cu_uri
+        props.setdefault('exit-switch-uri', None)
+        props.setdefault('exit-port', None)
+
+        new_path = cu.storage_paths.add(props)
+        return {'element-uri': new_path.uri}
+
+
+class StoragePathHandler(GenericGetPropertiesHandler,
+                         GenericUpdatePropertiesHandler,  # noqa: E127
+                         GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on a single StoragePath element resource
+    (Get, Update, Delete).
+    GET/POST/DELETE /api/storage-control-units/{cu-id}/storage-paths/{path-id}
+    """
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Delete Storage Path."""
+        try:
+            path = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        # Remove from parent control unit's storage-path-uris
+        path.manager.remove(path.oid)
+
+
 class TapeLibrariesHandler:
     """
     Handler class for HTTP methods on set of TapeLibraries resources.
@@ -8056,10 +8429,30 @@ URIS = (
      StorageSubsystemAddEndpointHandler),
     (r'/api/storage-subsystems/([^/]+)/operations/remove-connection-endpoint',
      StorageSubsystemRemoveEndpointHandler),
+    (r'/api/storage-subsystems/([^/]+)/operations/'
+     r'define-storage-control-unit',
+     StorageControlUnitDefineHandler),
+    (r'/api/storage-subsystems/([^/]+)/storage-control-units(?:\?(.*))?',
+     StorageSubsystemControlUnitsHandler),
     (r'/api/storage-subsystems/([^?/]+)(?:\?(.*))?',
      StorageSubsystemHandler),
     (r'/api/storage-subsystems(?:\?(.*))?',
      StorageSubsystemsHandler),
+
+    (r'/api/storage-control-units/([^/]+)/operations/undefine',
+     StorageControlUnitUndefineHandler),
+    (r'/api/storage-control-units/([^/]+)/operations/add-volume-range',
+     StorageControlUnitAddVolumeRangeHandler),
+    (r'/api/storage-control-units/([^/]+)/operations/remove-volume-range',
+     SCURemoveVolumeRangeHandler),
+    (r'/api/storage-control-units/([^/]+)/storage-paths/([^?/]+)(?:\?(.*))?',
+     StoragePathHandler),
+    (r'/api/storage-control-units/([^/]+)/storage-paths(?:\?(.*))?',
+     StoragePathsHandler),
+    (r'/api/storage-control-units/([^?/]+)(?:\?(.*))?',
+     StorageControlUnitHandler),
+    (r'/api/storage-control-units(?:\?(.*))?',
+     StorageControlUnitsHandler),
 
     (r'/api/tape-libraries(?:\?(.*))?',
      TapeLibrariesHandler),
