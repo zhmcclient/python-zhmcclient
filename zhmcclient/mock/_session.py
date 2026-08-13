@@ -246,6 +246,35 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/TapeLink"
                     },
                 },
+                "storage_sites": {
+                    "description": "The storage sites defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSite"
+                    },
+                },
+                "storage_switches": {
+                    "description": "The Storage Switches defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSwitch"
+                    },
+                },
+                "storage_subsystems": {
+                    "description": "The Storage Subsystems defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSubsystem"
+                    },
+                },
+                "storage_control_units": {
+                    "description":
+                        "The Storage Control Units defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageControlUnit"
+                    },
+                },
                 "hw_messages": {
                     "description": "The hardware mesages for this Console",
                     "type": "array",
@@ -426,6 +455,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                 },
             },
         },
+        "StorageSwitch": {
+            "description": "A Storage Switch on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
         "TapeLibrary": {
             "description": "A Tape Library on an HMC",
             "type": "object",
@@ -468,6 +510,66 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "VirtualTapeResource": {
             "description": "A virtual tape resource of a tape link",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSite": {
+            "description": "A storage site defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSubsystem": {
+            "description": "A storage subsystem defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageControlUnit": {
+            "description": "A storage control unit defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "storage_paths": {
+                    "description": "The storage paths of this storage control "
+                                   "unit",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StoragePath"
+                    },
+                },
+            },
+        },
+        "StoragePath": {
+            "description": "A storage path of a storage control unit",
             "type": "object",
             "additionalProperties": False,
             "required": [

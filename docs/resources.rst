@@ -458,6 +458,126 @@ Storage Volume Templates
    :special-members: __str__
 
 
+.. _`Storage Fabrics`:
+
+Storage Fabrics
+---------------
+
+.. automodule:: zhmcclient._storage_fabric
+
+.. autoclass:: zhmcclient.StorageFabricManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageFabric
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Sites`:
+
+Storage Sites
+-------------
+
+.. automodule:: zhmcclient._storage_site
+
+.. autoclass:: zhmcclient.StorageSiteManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSite
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Switches`:
+
+Storage Switches
+----------------
+
+.. automodule:: zhmcclient._storage_switch
+
+.. autoclass:: zhmcclient.StorageSwitchManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSwitch
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Control Units`:
+
+Storage Control Units
+---------------------
+
+.. automodule:: zhmcclient._storage_control_unit
+
+.. autoclass:: zhmcclient.StorageControlUnitManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageControlUnit
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Paths`:
+
+Storage Paths
+-------------
+
+.. automodule:: zhmcclient._storage_path
+
+.. autoclass:: zhmcclient.StoragePathManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StoragePath
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Subsystems`:
+
+Storage Subsystems
+------------------
+
+.. automodule:: zhmcclient._storage_subsystem
+
+.. autoclass:: zhmcclient.StorageSubsystemManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSubsystem
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Partition Links`:
 
 Partition Links

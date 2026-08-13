@@ -449,6 +449,112 @@ hmc_definition:
                   world-wide-port-name: "c05076ffe8000003"
                 degraded-reasons: []
 
+      storage_sites:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss1
+            name: Primary Site
+            description: Primary storage site local to the CPC
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss2
+            name: Alternate Site
+            description: Alternate storage site at a remote location
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+
+      storage_switches:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw1
+            name: "Storage switch 11"
+            domain-id: "11"
+            storage-fabric-uri: /api/storage-fabrics/sfabric1
+            storage-site-uri: /api/storage-sites/ss1
+            description: "Storage switch 11 on Fabric A at Primary Site"
+            port-count: 256
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw2
+            name: "Storage switch 21"
+            domain-id: "21"
+            storage-fabric-uri: /api/storage-fabrics/sfabric2
+            storage-site-uri: /api/storage-sites/ss2
+            description: "Storage switch 21 on Fabric B at Alternate Site"
+            port-count: 256
+
+      storage_subsystems:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: subsys1
+            name: "DS8886 A"
+            description: "DS8886 A storage subsystem at Primary Site"
+            storage-site-uri: /api/storage-sites/ss1
+            storage-control-unit-uris:
+              - /api/storage-control-units/cu1
+            connection-endpoints:
+              - endpoint-uri: /api/storage-switches/sw1
+                endpoint-class: storage-switch
+                port-id: "00"
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: subsys2
+            name: "DS8886 B"
+            description: "DS8886 B storage subsystem at Alternate Site"
+            storage-site-uri: /api/storage-sites/ss2
+            storage-control-unit-uris:
+              - /api/storage-control-units/cu2
+            connection-endpoints:
+              - endpoint-uri: /api/storage-switches/sw2
+                endpoint-class: storage-switch
+                port-id: "00"
+
+      storage_control_units:
+        - properties:
+            # class: created automatically
+            # object-uri: created automatically
+            object-id: cu1
+            name: "Control Unit 50"
+            description: "Mocked storage control unit 50 in DS8886 A"
+            logical-address: "50"
+            parent: /api/storage-subsystems/subsys1
+          storage_paths:
+            - properties:
+                # class: created automatically
+                # element-uri: created automatically
+                adapter-port-uri: /api/adapters/fcp1/storage-ports/port0
+                exit-switch-uri: /api/storage-switches/sw1
+                exit-port: "10"
+        - properties:
+            # class: created automatically
+            # object-uri: created automatically
+            object-id: cu2
+            name: "Control Unit 60"
+            description: "Mocked storage control unit 60 in DS8886 B"
+            logical-address: "60"
+            parent: /api/storage-subsystems/subsys2
+          storage_paths:
+            - properties:
+                # class: created automatically
+                # element-uri: created automatically
+                adapter-port-uri: /api/adapters/fcp1/storage-ports/port0
+                exit-switch-uri: /api/storage-switches/sw2
+                exit-port: "10"
+
       hw_messages:
         - properties:
             # class: created automatically
