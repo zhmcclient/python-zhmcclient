@@ -234,7 +234,7 @@ class TestStoragePath:
         assert p1.uri != p2.uri
         assert len(self.cu.storage_paths.list()) == 2
 
-    def test_create_missing_required_field_raises(self):  # pylint: disable=invalid-name
+    def test_create_missing_required_field_raises(self):  # pylint: disable=invalid-name  # noqa: E501
         """create() without adapter-port-uri raises HTTPError 400."""
         with pytest.raises(HTTPError) as exc_info:
             self.cu.storage_paths.create({'exit-port': '00'})
@@ -308,7 +308,7 @@ class TestStoragePath:
         self.cu.storage_paths.delete(element_id)
         assert self.cu.storage_paths.list() == []
 
-    def test_manager_delete_removes_from_path_uris(self):  # pylint: disable=invalid-name
+    def test_manager_delete_removes_from_path_uris(self):  # pylint: disable=invalid-name  # noqa: E501
         """StoragePathManager.delete() deregisters URI from parent CU."""
         path = self.cu.storage_paths.create({
             'adapter-port-uri': ADAPTER_PORT_URI,
@@ -410,7 +410,7 @@ class TestStoragePath:
         assert isinstance(result, dict)
         assert 'properties' in result
 
-    def test_dump_properties_contain_adapter_port_uri(self):  # pylint: disable=invalid-name
+    def test_dump_properties_contain_adapter_port_uri(self):  # pylint: disable=invalid-name  # noqa: E501
         """dump() properties include adapter-port-uri."""
         path = self.cu.storage_paths.create({
             'adapter-port-uri': ADAPTER_PORT_URI,
@@ -431,7 +431,7 @@ class TestStoragePath:
         path_uris = self.faked_cu.properties.get('storage-path-uris', [])
         assert faked_path.uri in path_uris
 
-    def test_faked_remove_deregisters_uri_from_cu(self):  # pylint: disable=invalid-name
+    def test_faked_remove_deregisters_uri_from_cu(self):  # pylint: disable=invalid-name  # noqa: E501
         """FakedStoragePathManager.remove() deregisters path URI from
         parent CU."""
         faked_path = self.faked_cu.storage_paths.add({

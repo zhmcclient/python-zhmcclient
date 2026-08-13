@@ -1125,7 +1125,7 @@ class TestStorageSubsystem:
                  if r.get('class') == 'storage-subsystem'}
         assert names == {SUBSYS1_NAME, SUBSYS2_NAME}
 
-    def test_inventory_dpm_resources_includes_subsystem(self):  # pylint: disable=invalid-name
+    def test_inventory_dpm_resources_includes_subsystem(self):  # pylint: disable=invalid-name  # noqa: E501
         """get_inventory(['dpm-resources']) includes storage-subsystem
         entries."""
         self.add_subsystem1()

@@ -766,7 +766,7 @@ class TestStorageControlUnit:
 
     # ── Inventory ──────────────────────────────────────────────────────────
 
-    def test_inventory_storage_control_unit_empty(self):  # pylint: disable=invalid-name
+    def test_inventory_storage_control_unit_empty(self):  # pylint: disable=invalid-name  # noqa: E501
         """get_inventory(['storage-control-unit']) returns empty when none
         exist."""
         result = self.client.get_inventory(['storage-control-unit'])
