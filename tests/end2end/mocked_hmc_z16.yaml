@@ -493,6 +493,34 @@ hmc_definition:
             description: "Storage switch 21 on Fabric B at Alternate Site"
             port-count: 256
 
+      storage_subsystems:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: subsys1
+            name: "DS8886 A"
+            description: "DS8886 A storage subsystem at Primary Site"
+            storage-site-uri: /api/storage-sites/ss1
+            storage-control-unit-uris: []
+            connection-endpoints:
+              - endpoint-uri: /api/storage-switches/sw1
+                endpoint-class: storage-switch
+                port-id: "00"
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: subsys2
+            name: "DS8886 B"
+            description: "DS8886 B storage subsystem at Alternate Site"
+            storage-site-uri: /api/storage-sites/ss2
+            storage-control-unit-uris: []
+            connection-endpoints:
+              - endpoint-uri: /api/storage-switches/sw2
+                endpoint-class: storage-switch
+                port-id: "00"
+
       hw_messages:
         - properties:
             # class: created automatically

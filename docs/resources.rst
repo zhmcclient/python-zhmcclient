@@ -518,6 +518,26 @@ Storage Switches
    :special-members: __str__
 
 
+.. _`Storage Subsystems`:
+
+Storage Subsystems
+------------------
+
+.. automodule:: zhmcclient._storage_subsystem
+
+.. autoclass:: zhmcclient.StorageSubsystemManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSubsystem
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Partition Links`:
 
 Partition Links
