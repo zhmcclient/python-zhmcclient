@@ -527,6 +527,15 @@ Resources scoped to CPCs in DPM mode
   Storage Port
      Short term for a :term:`Port` of a :term:`Storage Adapter`.
 
+  Storage Site
+     A location that houses a set of storage switches and storage subsystems
+     within the FICON storage configuration of a DPM-enabled :term:`CPC`.
+     A Storage Site object with `type="primary"` always exists for the primary
+     site and cannot be deleted. Additional Storage Site objects can be created
+     and deleted.
+
+     For details, see section :ref:`Storage Sites`.
+
   Storage Volume
      An FCP or ECKD (=FICON) storage volume defined in context of a
      :term:`storage group`. The life cycle of a storage volume includes being
