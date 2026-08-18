@@ -66,6 +66,8 @@ from ._storage_fabric import *          # noqa: F401
 from ._storage_site import *            # noqa: F401
 from ._storage_switch import *          # noqa: F401
 from ._storage_subsystem import *       # noqa: F401
+from ._storage_control_unit import *    # noqa: F401
+from ._storage_path import *            # noqa: F401
 from ._partition_link import *         # noqa: F401
 from ._capacity_group import *         # noqa: F401
 from ._certificates import *         # noqa: F401

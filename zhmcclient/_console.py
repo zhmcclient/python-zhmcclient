@@ -36,6 +36,7 @@ from ._storage_fabric import StorageFabricManager
 from ._storage_site import StorageSiteManager
 from ._storage_switch import StorageSwitchManager
 from ._storage_subsystem import StorageSubsystemManager
+from ._storage_control_unit import StorageControlUnitManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -222,6 +223,7 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         self._storage_fabrics = None
         self._storage_switches = None
         self._storage_subsystems = None
+        self._storage_control_units = None
         self._partition_links = None
         self._storage_sites = None
         self._users = None
@@ -326,6 +328,18 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         if not self._storage_subsystems:
             self._storage_subsystems = StorageSubsystemManager(self)
         return self._storage_subsystems
+
+    @property
+    def storage_control_units(self):
+        """
+        :class:`~zhmcclient.StorageControlUnitManager`:
+          Manager object for the Storage Control Units in scope of this
+          Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_control_units:
+            self._storage_control_units = StorageControlUnitManager(self)
+        return self._storage_control_units
 
     @property
     def partition_links(self):
