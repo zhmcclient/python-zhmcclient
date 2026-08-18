@@ -35,6 +35,7 @@ from ._tape_link import TapeLinkManager
 from ._storage_fabric import StorageFabricManager
 from ._storage_site import StorageSiteManager
 from ._storage_switch import StorageSwitchManager
+from ._storage_subsystem import StorageSubsystemManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -220,6 +221,7 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         self._tape_links = None
         self._storage_fabrics = None
         self._storage_switches = None
+        self._storage_subsystems = None
         self._partition_links = None
         self._storage_sites = None
         self._users = None
@@ -313,6 +315,17 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         if not self._storage_switches:
             self._storage_switches = StorageSwitchManager(self)
         return self._storage_switches
+
+    @property
+    def storage_subsystems(self):
+        """
+        :class:`~zhmcclient.StorageSubsystemManager`:
+          Manager object for the Storage Subsystems in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_subsystems:
+            self._storage_subsystems = StorageSubsystemManager(self)
+        return self._storage_subsystems
 
     @property
     def partition_links(self):

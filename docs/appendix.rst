@@ -268,7 +268,7 @@ This documentation uses a few special terms:
 
    fulfillment
       The act of satisfying requests for creation, modification, or deletion of
-      storage volumes in a storage subsystem (i.e. of the actual storage
+      storage volumes in a :term:`Storage Subsystem` (i.e. of the actual storage
       backing a :term:`storage volume` object).
 
       Storage volume objects have a fulfillment state indicating whether the
@@ -543,6 +543,16 @@ Resources scoped to CPCs in DPM mode
      to which :term:`Storage Switches <Storage Switch>` belong.
 
      For details, see section :ref:`Storage Fabrics`.
+
+  Storage Subsystem
+     A physical storage device (e.g. an IBM DS8000 series system) in the FICON
+     storage configuration of a DPM-enabled :term:`CPC`. A storage subsystem
+     belongs to exactly one :term:`Storage Site` and can be moved between sites
+     within the same FICON configuration. Connection endpoints (storage switches
+     or adapters) can be added and removed from a storage subsystem to describe
+     how it is physically connected to the storage network.
+
+     For details, see section :ref:`Storage Subsystems`.
 
   Storage Switch
      A physical storage switch in the FICON storage configuration of a
