@@ -1410,7 +1410,7 @@ class UserRolesHandler:
         if 'associated-system-defined-user-role-uri' not in properties:
             # Use the default
             uroles = console.user_roles.list(
-                filter_args=dict(name='hmc-operator-tasks'))
+                filter_args={'name': 'hmc-operator-tasks'})
             if not uroles:
                 new_exc = ServerError(
                     method, uri, reason=99,
@@ -1951,9 +1951,12 @@ class SSOServerDefinitionsHandler:
     Handler class for HTTP methods on set of SSOServerDefinition resources.
     """
 
-    valid_query_parms_get = ['name']
+    valid_query_parms_get = ['name', 'type', 'additional-properties']
 
-    returned_props = ['element-uri', 'name', 'type']
+    returned_props = [
+        'element-uri', 'name', 'type'
+        # plus additional-properties
+    ]
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -1962,6 +1965,9 @@ class SSOServerDefinitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = get_additional_properties(
+            query_parms, SSOServerDefinitionHandler.wo_properties)
+
         filter_args = query_parms
 
         try:
@@ -1973,7 +1979,7 @@ class SSOServerDefinitionsHandler:
         result_sso_srv_defs = []
         for sso_srv_def in console.sso_server_definitions.list(filter_args):
             result_sso_srv_def = {}
-            for prop in cls.returned_props:
+            for prop in cls.returned_props + add_props:
                 result_sso_srv_def[prop] = \
                     sso_srv_def.properties.get(prop)
             result_sso_srv_defs.append(result_sso_srv_def)
@@ -1995,7 +2001,14 @@ class SSOServerDefinitionsHandler:
                               ['name', 'type', 'client-id', 'client-secret',
                                'issuer-url', 'authentication-url', 'token-url',
                                'jwks-url'])
-        new_sso_srv_def = console.sso_server_definitions.add(body)
+        # These properties are server-controlled on create: the real HMC ignores
+        # any caller-supplied value and auto-sets them. Strip them here so the
+        # setdefault() calls in FakedSSOServerDefinitionManager.add() apply.
+        auto_props = ('logout-url',
+                      'logout-sso-session-on-reauthentication-failure')
+        store_body = {k: v for k, v in body.items()
+                      if k not in auto_props}
+        new_sso_srv_def = console.sso_server_definitions.add(store_body)
         return {'element-uri': new_sso_srv_def.uri}
 
 
@@ -2004,6 +2017,8 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
     """
     Handler class for HTTP methods on single SSOServerDefinition resource.
     """
+
+    valid_query_parms_get = ['properties']
 
     wo_properties = ["client-secret"]
 
@@ -3214,26 +3229,20 @@ def get_inventory_for_storage_site(hmc):
 
 
 def get_inventory_for_storage_fabric(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-fabric'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stofabrics = hmc.consoles.console.storage_fabrics.list()
-    # for stofabric in stofabrics:
-    #     result.append(properties_copy(stofabric.properties))
+    stofabrics = hmc.consoles.console.storage_fabrics.list()
+    for stofabric in stofabrics:
+        result.append(properties_copy(stofabric.properties))
     return result
 
 
 def get_inventory_for_storage_switch(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-switch'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stosites = hmc.consoles.console.storage_sites.list()
-    # for stosite in stosites:
-    #     stoswitches = stosite.storage_switches.list()
-    #     for stoswitch in stoswitches:
-    #         result.append(properties_copy(stoswitch.properties))
+    stoswitches = hmc.consoles.console.storage_switches.list()
+    for stoswitch in stoswitches:
+        result.append(properties_copy(stoswitch.properties))
     return result
 
 
@@ -5310,10 +5319,10 @@ class StorageVolumesHandler:
     """
 
     valid_query_parms_get = ['name', 'fulfillment-state', 'maximum-size',
-                             'minimum-size', 'usage']
+                             'minimum-size', 'usage', 'additional-properties']
 
     returned_props = ['element-uri', 'name', 'fulfillment-state', 'size',
-                      'usage']
+                      'usage']  # plus additional-properties
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -5322,6 +5331,8 @@ class StorageVolumesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = get_additional_properties(
+            query_parms, StorageVolumeHandler.wo_properties)
         filter_args = query_parms
 
         sg_uri = re.sub('/storage-volumes$', '', uri)
@@ -5334,7 +5345,7 @@ class StorageVolumesHandler:
         result_storage_volumes = []
         for sv in sg.storage_volumes.list(filter_args):
             result_sv = {}
-            for prop in cls.returned_props:
+            for prop in cls.returned_props + add_props:
                 result_sv[prop] = prop_copy(sv.properties.get(prop))
             result_storage_volumes.append(result_sv)
         return {'storage-volumes': result_storage_volumes}
@@ -5590,6 +5601,53 @@ class StorageTemplateVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class StorageFabricsHandler:
+    """
+    Handler class for HTTP methods on the set of StorageFabric resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name']
+
+    returned_props = ['object-uri', 'name', 'cpc-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Fabrics (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_fabrics = []
+        for sf in hmc.consoles.console.storage_fabrics.list(filter_args):
+            result_sf = {}
+            for prop in cls.returned_props:
+                result_sf[prop] = prop_copy(sf.properties.get(prop))
+            result_storage_fabrics.append(result_sf)
+        return {'storage-fabrics': result_storage_fabrics}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Storage Fabric."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['cpc-uri', 'name'])
+
+        new_storage_fabric = hmc.consoles.console.storage_fabrics.add(body)
+        return {'object-uri': new_storage_fabric.uri}
+
+
+class StorageFabricHandler(GenericGetPropertiesHandler,
+                           GenericUpdatePropertiesHandler,
+                           GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on a single StorageFabric resource.
+    """
+    pass
+
+
 class StorageSitesHandler:
     """
     Handler class for HTTP methods on the set of StorageSite resources.
@@ -5637,6 +5695,294 @@ class StorageSiteHandler(GenericGetPropertiesHandler,
     pass
 
 
+class StorageSwitchesHandler:
+    """
+    Handler class for HTTP methods on the global set of StorageSwitch resources.
+    """
+
+    valid_query_parms_get = ['name', 'domain-id']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_storage_switches.append(result_sw)
+        return {'storage-switches': result_storage_switches}
+
+
+class StorageSwitchHandler(GenericGetPropertiesHandler,
+                           GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on a single StorageSwitch resource
+    (Get Properties and Update Properties).
+    """
+    pass
+
+
+class StorageSwitchDefineHandler:
+    """
+    Handler class for the "Define Storage Switch" operation.
+    POST /api/console/operations/define-storage-switch
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Define Storage Switch."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(
+            method, uri, body,
+            ['domain-id', 'storage-fabric-uri', 'storage-site-uri'])
+
+        # Validate storage-fabric-uri references a known fabric
+        fabric_uri = body['storage-fabric-uri']
+        try:
+            hmc.lookup_by_uri(fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=440,
+                                           resource_uri=fabric_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Validate storage-site-uri references a known site
+        site_uri = body['storage-site-uri']
+        try:
+            hmc.lookup_by_uri(site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=site_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_sw = hmc.consoles.console.storage_switches.add(body)
+
+        # Update storage-switch-uris on the parent fabric
+        try:
+            fabric = hmc.lookup_by_uri(fabric_uri)
+            sw_uris = list(fabric.properties.get('storage-switch-uris', []))
+            if new_sw.uri not in sw_uris:
+                sw_uris.append(new_sw.uri)
+            fabric.update({'storage-switch-uris': sw_uris})
+        except KeyError:
+            pass
+
+        return {'object-uri': new_sw.uri}
+
+
+class StorageSwitchUndefineHandler:
+    """
+    Handler class for the "Undefine Storage Switch" operation.
+    POST /api/storage-switches/{id}/operations/undefine
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Undefine Storage Switch."""
+        assert wait_for_completion is True  # always synchronous
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Remove the switch URI from the parent fabric's storage-switch-uris
+        fabric_uri = sw.properties.get('storage-fabric-uri')
+        if fabric_uri:
+            try:
+                fabric = hmc.lookup_by_uri(fabric_uri)
+                sw_uris = list(fabric.properties.get('storage-switch-uris', []))
+                if sw_uri in sw_uris:
+                    sw_uris.remove(sw_uri)
+                fabric.update({'storage-switch-uris': sw_uris})
+            except KeyError:
+                pass
+
+        sw.manager.remove(sw.oid)  # 204 No Content
+
+
+class StorageSwitchMoveSiteHandler:
+    """
+    Handler class for the "Move Storage Switch to Storage Site" operation.
+    POST /api/storage-switches/{id}/operations/move-storage-site
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Move Storage Switch to Storage Site."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['storage-site-uri'])
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_site_uri = body['storage-site-uri']
+        try:
+            hmc.lookup_by_uri(new_site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=new_site_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        sw.update({'storage-site-uri': new_site_uri})  # 204 No Content
+
+
+class StorageSwitchMoveFabricHandler:
+    """
+    Handler class for the "Move Storage Switch to Storage Fabric" operation.
+    POST /api/storage-switches/{id}/operations/move-storage-fabric
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Move Storage Switch to Storage Fabric."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['storage-fabric-uri'])
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_fabric_uri = body['storage-fabric-uri']
+        try:
+            new_fabric = hmc.lookup_by_uri(new_fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=new_fabric_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Remove from old fabric's storage-switch-uris
+        old_fabric_uri = sw.properties.get('storage-fabric-uri')
+        if old_fabric_uri and old_fabric_uri != new_fabric_uri:
+            try:
+                old_fabric = hmc.lookup_by_uri(old_fabric_uri)
+                old_uris = list(
+                    old_fabric.properties.get('storage-switch-uris', []))
+                if sw_uri in old_uris:
+                    old_uris.remove(sw_uri)
+                old_fabric.update({'storage-switch-uris': old_uris})
+            except KeyError:
+                pass
+
+        # Add to new fabric's storage-switch-uris
+        new_uris = list(new_fabric.properties.get('storage-switch-uris', []))
+        if sw_uri not in new_uris:
+            new_uris.append(sw_uri)
+        new_fabric.update({'storage-switch-uris': new_uris})
+
+        sw.update({'storage-fabric-uri': new_fabric_uri})  # 204 No Content
+
+
+class StorageSiteSwitchesHandler:
+    """
+    Handler class for listing storage switches of a storage site.
+    GET /api/storage-sites/{storage-site-id}/storage-switches
+    """
+
+    valid_query_parms_get = ['name', 'domain-id', 'storage-fabric-uri']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches of a Storage Site."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        site_oid = uri_parms[0]
+        site_uri = '/api/storage-sites/' + site_oid
+        try:
+            hmc.lookup_by_uri(site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        filter_args = dict(query_parms)
+        filter_args['storage-site-uri'] = site_uri
+
+        result_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_switches.append(result_sw)
+        return {'storage-switches': result_switches}
+
+
+class StorageFabricSwitchesHandler:
+    """
+    Handler class for listing storage switches of a storage fabric.
+    GET /api/storage-fabrics/{storage-fabric-id}/storage-switches
+    """
+
+    valid_query_parms_get = ['name', 'domain-id', 'storage-site-uri']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-site-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches of a Storage Fabric."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        fabric_oid = uri_parms[0]
+        fabric_uri = '/api/storage-fabrics/' + fabric_oid
+        try:
+            hmc.lookup_by_uri(fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        filter_args = dict(query_parms)
+        filter_args['storage-fabric-uri'] = fabric_uri
+
+        result_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_switches.append(result_sw)
+        return {'storage-switches': result_switches}
+
+
 class TapeLibrariesHandler:
     """
     Handler class for HTTP methods on set of TapeLibraries resources.
@@ -5672,7 +6018,7 @@ class TapeLibraryHandler(GenericGetPropertiesHandler,
     pass
 
 
-class TapeLibraryUndefineHandler():
+class TapeLibraryUndefineHandler:
     """
     Handler class for operation: Undefine Tape Library.
     """
@@ -5755,6 +6101,312 @@ class TapeLibraryDiscoverHandler:
         raise ConflictError(
             method, uri, reason=501,
             message=f"The CPC with the {cpc_uri} has not been zoned.")
+
+
+class TapeLinksHandler:
+    """
+    Handler class for HTTP methods on set of TapeLink resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state',
+                             'tape-library-uri']
+
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state',
+                      'tape-library-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Tape Links."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        filter_args = query_parms
+
+        result_tape_links = []
+        for tl in hmc.consoles.console.tape_links.list(filter_args):
+            result_tl = {}
+            for prop in cls.returned_props:
+                result_tl[prop] = prop_copy(tl.properties.get(prop))
+            result_tape_links.append(result_tl)
+        return {'tape-links': result_tape_links}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Tape Link."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name', 'cpc-uri'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        body2 = body.copy()
+        body2.setdefault('description', '')
+        body2['fulfillment-state'] = 'pending'
+        new_tape_link = hmc.consoles.console.tape_links.add(body2)
+        return {
+            'object-uri': new_tape_link.uri
+        }
+
+
+class TapeLinkHandler(GenericGetPropertiesHandler,
+                      GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single TapeLink resource.
+    """
+    pass
+
+
+class TapeLinkDeleteHandler:
+    """
+    Handler class for operation: Delete Tape Link.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Delete Tape Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = '/api/tape-links/' + tape_link_oid
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # TODO: Check that the Tape Link is detached from any partitions
+
+        # Reflect the result of deleting the tape_link
+        tape_link.manager.remove(tape_link.oid)
+
+
+class TapeLinkUpdateHandler:
+    """
+    Handler class for operation: Delete Tape Link.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Modify Tape Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = '/api/tape-links/' + tape_link_oid
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        body2 = body.copy()
+        tape_link.update(body2)
+
+
+class TapeLinkGetHistoriesHandler:
+    """
+    Handler class for operation: Get Tape Link Histories.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Tape Link Histories."""
+
+        # Extract tape link OID from URI
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
+
+        try:
+            hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Return mock history data
+        # In a real implementation, this would return actual history records
+        return {
+            'tape-link-histories': []
+        }
+
+
+class TapeLinkGetPartitionsHandler:
+    """
+    Handler class for operation: Get Partitions attached to Tape Link.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Partitions for a Tape Link."""
+
+        # Extract tape link OID from URI
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Get the CPC for this tape link
+        cpc_uri = tape_link.properties.get('cpc-uri')
+        if not cpc_uri:
+            # Return empty list if no CPC is associated
+            return {'partitions': []}
+
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            # Return empty list if CPC not found
+            return {'partitions': []}
+
+        # Return all partitions from the CPC
+        # In a real implementation, this would filter based on actual
+        # attachments
+        result_partitions = []
+        for partition in cpc.partitions.list():
+            result_partition = {
+                'object-uri': partition.uri,
+                'name': partition.properties.get('name'),
+                'status': partition.properties.get('status', 'stopped')
+            }
+            result_partitions.append(result_partition)
+
+        return {'partitions': result_partitions}
+
+
+class TapeLinkGetEnvironmentReportHandler:
+    """
+    Handler class for operation: Get Tape Link Environment Report.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Tape Link Environment Report."""
+
+        # Extract tape link OID from URI
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Return mock environment report
+        # In a real implementation, this would return actual environment data
+        report = tape_link.properties.get('environment-report', {})
+        if not report:
+            report = {
+                'status': 'ok',
+                'last-updated': '2024-01-01T00:00:00Z',
+                'details': {}
+            }
+
+        return report
+
+
+class TapeLinkUpdateEnvironmentReportHandler:
+    """
+    Handler class for operation: Update Tape Link Environment Report.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update Tape Link Environment Report."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # Extract tape link OID from URI
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Update the environment report in the tape link properties
+        if body:
+            tape_link.properties['environment-report'] = body
+
+        return {}
+
+
+class VirtualTapeResourcesHandler:
+    """
+    Handler class for HTTP methods on set of VirtualTapeResource resources.
+    """
+
+    valid_query_parms_get = [
+        'name', 'device-number', 'adapter-port-uri', 'partition-uri']
+
+    returned_props = [
+        'element-uri', 'name', 'device-number',
+        'adapter-port-uri', 'partition-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Virtual Tape Resources of a Tape Link."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        # Extract tape link OID from URI
+        tape_link_oid = uri_parms[0]
+        tape_link_uri = f'/api/tape-links/{tape_link_oid}'
+
+        try:
+            tape_link = hmc.lookup_by_uri(tape_link_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        filter_args = query_parms
+
+        result_vtrs = []
+        for vtr in tape_link.virtual_tape_resources.list(filter_args):
+            result_vtr = {}
+            for prop in cls.returned_props:
+                result_vtr[prop] = prop_copy(vtr.properties.get(prop))
+            result_vtrs.append(result_vtr)
+        return {'virtual-tape-resources': result_vtrs}
+
+
+class VirtualTapeResourceHandler(GenericGetPropertiesHandler,
+                                 GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single VirtualTapeResource resource.
+    """
+    pass
 
 
 class CapacityGroupsHandler:
@@ -7073,10 +7725,33 @@ URIS = (
     (r'/api/storage-templates/([^/]+)/storage-template-volumes/'
      r'([^?/]+)(?:\?(.*))?', StorageTemplateVolumeHandler),
 
+    (r'/api/storage-fabrics(?:\?(.*))?',
+     StorageFabricsHandler),
+    (r'/api/storage-fabrics/([^/]+)/storage-switches(?:\?(.*))?',
+     StorageFabricSwitchesHandler),
+    (r'/api/storage-fabrics/([^?/]+)(?:\?(.*))?',
+     StorageFabricHandler),
+
     (r'/api/storage-sites(?:\?(.*))?',
      StorageSitesHandler),
+    (r'/api/storage-sites/([^/]+)/storage-switches(?:\?(.*))?',
+     StorageSiteSwitchesHandler),
     (r'/api/storage-sites/([^?/]+)(?:\?(.*))?',
      StorageSiteHandler),
+
+    (r'/api/storage-switches/([^/]+)/operations/undefine',
+     StorageSwitchUndefineHandler),
+    (r'/api/storage-switches/([^/]+)/operations/move-storage-site',
+     StorageSwitchMoveSiteHandler),
+    (r'/api/storage-switches/([^/]+)/operations/move-storage-fabric',
+     StorageSwitchMoveFabricHandler),
+    (r'/api/storage-switches/([^?/]+)(?:\?(.*))?',
+     StorageSwitchHandler),
+    (r'/api/storage-switches(?:\?(.*))?',
+     StorageSwitchesHandler),
+
+    (r'/api/console/operations/define-storage-switch',
+     StorageSwitchDefineHandler),
 
     (r'/api/tape-libraries(?:\?(.*))?',
      TapeLibrariesHandler),
@@ -7088,6 +7763,36 @@ URIS = (
      TapeLibraryRequestZoningHandler),
     (r'/api/tape-libraries/operations/discover-tape-libraries',
      TapeLibraryDiscoverHandler),
+
+    (r'/api/tape-links(?:\?(.*))?',
+     TapeLinksHandler),
+    (r'/api/tape-links/([^?/]+)(?:\?(.*))?',
+     TapeLinkHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/delete',
+     TapeLinkDeleteHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/modify',
+     TapeLinkUpdateHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/get-tape-link-histories(?:\?(.*))?',
+     TapeLinkGetHistoriesHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/get-partitions(?:\?(.*))?',
+     TapeLinkGetPartitionsHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/get-tape-link-environment-report(?:\?(.*))?',
+     TapeLinkGetEnvironmentReportHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'operations/update-tape-link-environment-report(?:\?(.*))?',
+     TapeLinkUpdateEnvironmentReportHandler),
+
+    (r'/api/tape-links/([^/]+)/'
+     r'virtual-tape-resources(?:\?(.*))?',
+     VirtualTapeResourcesHandler),
+    (r'/api/tape-links/([^/]+)/'
+     r'virtual-tape-resources/([^?/]+)(?:\?(.*))?',
+     VirtualTapeResourceHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^?/]+)(?:\?(.*))?',

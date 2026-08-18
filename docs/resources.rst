@@ -358,6 +358,46 @@ Tape Libraries
    :special-members: __str__
 
 
+.. _`Tape Links`:
+
+Tape Links
+----------
+
+.. automodule:: zhmcclient._tape_link
+
+.. autoclass:: zhmcclient.TapeLinkManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.TapeLink
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Virtual Tape Resources`:
+
+Virtual Tape Resources
+----------------------
+
+.. automodule:: zhmcclient._virtual_tape_resource
+
+.. autoclass:: zhmcclient.VirtualTapeResourceManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.VirtualTapeResource
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Virtual Storage Resources`:
 
 Virtual Storage Resources
@@ -418,6 +458,26 @@ Storage Volume Templates
    :special-members: __str__
 
 
+.. _`Storage Fabrics`:
+
+Storage Fabrics
+---------------
+
+.. automodule:: zhmcclient._storage_fabric
+
+.. autoclass:: zhmcclient.StorageFabricManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageFabric
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Storage Sites`:
 
 Storage Sites
@@ -432,6 +492,26 @@ Storage Sites
    :special-members: __str__
 
 .. autoclass:: zhmcclient.StorageSite
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Switches`:
+
+Storage Switches
+----------------
+
+.. automodule:: zhmcclient._storage_switch
+
+.. autoclass:: zhmcclient.StorageSwitchManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageSwitch
    :members:
    :autosummary:
    :autosummary-inherited-members:

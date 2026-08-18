@@ -225,11 +225,25 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageGroup"
                     },
                 },
-                "tape_library": {
-                    "description": "The Tape Library defined on this HMC",
+                "storage_fabrics": {
+                    "description": "The Storage Fabrics defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageFabric"
+                    },
+                },
+                "tape_libraries": {
+                    "description": "The Tape Libraries defined on this HMC",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/TapeLibrary"
+                    },
+                },
+                "tape_links": {
+                    "description": "The tape links defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TapeLink"
                     },
                 },
                 "storage_sites": {
@@ -237,6 +251,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/StorageSite"
+                    },
+                },
+                "storage_switches": {
+                    "description": "The Storage Switches defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSwitch"
                     },
                 },
                 "hw_messages": {
@@ -406,10 +427,76 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                 },
             },
         },
-        "TapeLibrary": {
-            "description": "An Tape Library on an HMC",
+        "StorageFabric": {
+            "description": "A Storage Fabric on an HMC",
             "type": "object",
-            "additionalProperties": True,
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSwitch": {
+            "description": "A Storage Switch on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "TapeLibrary": {
+            "description": "A Tape Library on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "tape_links": {
+                    "description": "The tape links of this tape library",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TapeLink"
+                    },
+                },
+            },
+        },
+        "TapeLink": {
+            "description": "A tape link of a tape library",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "virtual_tape_resources": {
+                    "description": "Virtual tape resources of this tape link",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VirtualTapeResource"
+                    },
+                },
+            },
+        },
+        "VirtualTapeResource": {
+            "description": "A virtual tape resource of a tape link",
+            "type": "object",
+            "additionalProperties": False,
             "required": [
                 "properties",
             ],

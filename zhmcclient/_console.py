@@ -31,7 +31,10 @@ from ._utils import timestamp_from_datetime, divide_filter_args, \
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._tape_library import TapeLibraryManager
+from ._tape_link import TapeLinkManager
+from ._storage_fabric import StorageFabricManager
 from ._storage_site import StorageSiteManager
+from ._storage_switch import StorageSwitchManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -180,7 +183,7 @@ class ConsoleManager(BaseManager):
         return [resource_obj]
 
 
-class Console(BaseResource):
+class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
     """
     Representation of a :term:`Console`.
 
@@ -214,6 +217,9 @@ class Console(BaseResource):
         self._storage_groups = None
         self._storage_group_templates = None
         self._tape_library = None
+        self._tape_links = None
+        self._storage_fabrics = None
+        self._storage_switches = None
         self._partition_links = None
         self._storage_sites = None
         self._users = None
@@ -265,6 +271,28 @@ class Console(BaseResource):
         return self._tape_library
 
     @property
+    def tape_links(self):
+        """
+        :class:`~zhmcclient.StorageGroupManager`:
+          Manager object for the Storage Groups in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._tape_links:
+            self._tape_links = TapeLinkManager(self)
+        return self._tape_links
+
+    @property
+    def storage_fabrics(self):
+        """
+        :class:`~zhmcclient.StorageFabricManager`:
+          Manager object for the Storage Fabrics in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_fabrics:
+            self._storage_fabrics = StorageFabricManager(self)
+        return self._storage_fabrics
+
+    @property
     def storage_sites(self):
         """
         :class:`~zhmcclient.StorageSiteManager`:
@@ -274,6 +302,17 @@ class Console(BaseResource):
         if not self._storage_sites:
             self._storage_sites = StorageSiteManager(self)
         return self._storage_sites
+
+    @property
+    def storage_switches(self):
+        """
+        :class:`~zhmcclient.StorageSwitchManager`:
+          Manager object for the Storage Switches in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_switches:
+            self._storage_switches = StorageSwitchManager(self)
+        return self._storage_switches
 
     @property
     def partition_links(self):
@@ -1655,6 +1694,8 @@ class Console(BaseResource):
                 "sso_server_definitions": [...],
                 "unmanaged_cpcs": [...],
                 "storage_groups": [...],
+                "tape_libraries": [...],
+                "tape_links": [...],
             }
 
         Returns:
@@ -1693,6 +1734,12 @@ class Console(BaseResource):
         storage_groups = self.storage_groups.dump()
         if storage_groups:
             resource_dict['storage_groups'] = storage_groups
+        tape_libraries = self.tape_library.dump()
+        if tape_libraries:
+            resource_dict['tape_libraries'] = tape_libraries
+        tape_links = self.tape_links.dump()
+        if tape_links:
+            resource_dict['tape_links'] = tape_links
 
         # Note: Unmanaged CPCs are not dumped, since their properties cannot
         #       be retrieved.

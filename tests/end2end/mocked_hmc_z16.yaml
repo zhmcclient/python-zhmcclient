@@ -355,7 +355,27 @@ hmc_definition:
                 adapter-port-uri: /api/adapters/fcp1
                 partition-uri: /api/partitions/part1
 
-      tape_library:
+      storage_fabrics:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric1
+            name: "Storage Fabric A"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Primary storage fabric for CPC DPM"
+            high-integrity: false
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric2
+            name: "Storage Fabric B"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Alternate storage fabric for CPC DPM"
+            high-integrity: true
+
+      tape_libraries:
         - properties:
             # class : created automatically
             # parent : created automatically
@@ -364,6 +384,70 @@ hmc_definition:
             name : Tape Library
             description : Tape Library resource 1
             cpc-uri : /api/cpcs/cpc_dpm
+
+      tape_links:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: tlink1
+            name: "Tape Link 1"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Tape link connecting Tape Library to PART1"
+            tape-library-uri: /api/tape-libraries/tl1
+          virtual_tape_resources:
+            - properties:
+                # class: created automatically
+                # parent: created automatically
+                # element-uri: created automatically
+                element-id: vtr1
+                name: "Virtual Tape Resource 1"
+                description: "Virtual tape resource 1"
+                device-number: "0001"
+                adapter-port-uri: /api/adapters/fcp1/storage-ports/0
+                partition-uri: /api/partitions/part1
+                world-wide-port-name-info:
+                  status: validated
+                  world-wide-port-name: "c05076ffe8000001"
+                degraded-reasons: []
+            - properties:
+                # class: created automatically
+                # parent: created automatically
+                # element-uri: created automatically
+                element-id: vtr2
+                name: "Virtual Tape Resource 2"
+                description: "Virtual tape resource 2"
+                device-number: "0002"
+                adapter-port-uri: /api/adapters/fcp1/storage-ports/1
+                partition-uri: /api/partitions/part1
+                world-wide-port-name-info:
+                  status: validated
+                  world-wide-port-name: "c05076ffe8000002"
+                degraded-reasons: []
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: tlink2
+            name: "Tape Link 2"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Tape link for testing"
+            tape-library-uri: /api/tape-libraries/tl1
+          virtual_tape_resources:
+            - properties:
+                # class: created automatically
+                # parent: created automatically
+                # element-uri: created automatically
+                element-id: vtr3
+                name: "Virtual Tape Resource 3"
+                description: "Virtual tape resource 3"
+                device-number: "0003"
+                adapter-port-uri: /api/adapters/fcp1/storage-ports/0
+                partition-uri: /api/partitions/part1
+                world-wide-port-name-info:
+                  status: not-validated
+                  world-wide-port-name: "c05076ffe8000003"
+                degraded-reasons: []
 
       storage_sites:
         - properties:
@@ -384,6 +468,30 @@ hmc_definition:
             description: Alternate storage site at a remote location
             cpc-uris:
               - /api/cpcs/cpc_dpm
+
+      storage_switches:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw1
+            name: "Storage switch 11"
+            domain-id: "11"
+            storage-fabric-uri: /api/storage-fabrics/sfabric1
+            storage-site-uri: /api/storage-sites/ss1
+            description: "Storage switch 11 on Fabric A at Primary Site"
+            port-count: 256
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw2
+            name: "Storage switch 21"
+            domain-id: "21"
+            storage-fabric-uri: /api/storage-fabrics/sfabric2
+            storage-site-uri: /api/storage-sites/ss2
+            description: "Storage switch 21 on Fabric B at Alternate Site"
+            port-count: 256
 
       hw_messages:
         - properties:
