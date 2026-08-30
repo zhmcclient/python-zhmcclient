@@ -63,7 +63,7 @@ tox==4.15.0
 Sphinx==7.2.0
 docutils==0.20.1
 sphinx-git==10.1.1
-GitPython==3.1.50
+GitPython==3.1.59
 sphinx-rtd-theme==2.0.0
 sphinxcontrib-applehelp==1.0.4
 sphinxcontrib-devhelp==1.0.2
@@ -115,7 +115,7 @@ jupyter==1.1.1; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab_pygments==0.3.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab_server==2.28.0; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab_widgets==3.0.16; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab==4.5.9; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab==4.5.10; sys_platform != 'win32' or python_version <= '3.12'
 nbclient==0.10.2; sys_platform != 'win32' or python_version <= '3.12'
 nbconvert==7.17.1; sys_platform != 'win32' or python_version <= '3.12'
 nbformat==5.10.4; sys_platform != 'win32' or python_version <= '3.12'
@@ -201,6 +201,9 @@ MarkupSafe==2.0.0
 matplotlib-inline==0.2.2
 mdurl==0.1.2
 mistune==3.3.0
+mypy_extensions==1.1.0
+nab-project==0.0.15
+nab-provider==0.0.15
 nest-asyncio==1.5.4
 nest-asyncio2==1.7.2
 nltk==3.9.2; python_version == '3.9'
