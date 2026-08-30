@@ -42,6 +42,8 @@ security:
             reason: Fixed pip version 26.1.2 requires Python>=3.10 and is used there
         SFTY-20260427-69629:
             reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
+        SFTY-20260721-58460:
+            reason: Fixed setuptools version 83.0.0 requires Python>=3.10 and cannot be used because pyproject.toml does not support specifying different build dependencies for each Python version
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
