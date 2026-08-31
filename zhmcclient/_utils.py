@@ -107,6 +107,7 @@ RC_CHILDREN_CONSOLE = (
     RC_SSO_SERVER_DEFINITION,
     RC_CPC,  # For unmanaged CPCs
     RC_PARTITION_LINK,
+    RC_STORAGE_SITE,
 )
 # Resource classes that are children of zhmcclient.Client (= top level)
 RC_CHILDREN_CLIENT = (
@@ -378,7 +379,7 @@ def append_query_parms(query_parms, prop_name, prop_match):
         query_parms.append(qp)
 
 
-def divide_filter_args(query_props, filter_args):
+def divide_filter_args(query_props, filter_args, query_props_names=None):
     """
     Divide the filter arguments into filter query parameters for filtering
     on the server side, and the remaining client-side filters.
@@ -402,6 +403,12 @@ def divide_filter_args(query_props, filter_args):
         `None` causes no filtering to happen, i.e. all resources are
         returned.
 
+      query_props_names (dict):
+        Optional mapping from resource property name to the query parameter
+        name used in the HMC list operation, for cases where the two names
+        differ. Properties not listed here use the property name as the
+        query parameter name. May be `None`.
+
     Returns:
 
       : tuple (query_parms, client_filter_args), with:
@@ -417,7 +424,8 @@ def divide_filter_args(query_props, filter_args):
         for prop_name in filter_args:
             prop_match = filter_args[prop_name]
             if prop_name in query_props:
-                append_query_parms(query_parms, prop_name, prop_match)
+                qp_name = (query_props_names or {}).get(prop_name, prop_name)
+                append_query_parms(query_parms, qp_name, prop_match)
             else:
                 client_filter_args[prop_name] = prop_match
 

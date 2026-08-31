@@ -89,6 +89,7 @@ chardet==5.2.0
 click-default-group==1.2.4
 click==8.0.2
 comm==0.2.3
+cloudpickle==3.1.2
 cryptography==48.0.1
 debugpy==1.8.21
 decorator==4.0.11
