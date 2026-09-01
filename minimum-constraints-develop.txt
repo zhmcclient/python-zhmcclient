@@ -59,7 +59,7 @@ jupyter==1.1.1
 
 # Pip is covered by requirements-base.txt but needs to be repeated here because it is used by pip-check-reqs.
 pip==26.0.1; python_version == '3.9'
-pip==26.1.2; python_version >= '3.10'
+pip==26.2; python_version >= '3.10'
 
 
 # Indirect dependencies for development that are not in requirements-develop.txt
