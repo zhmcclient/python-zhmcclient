@@ -246,6 +246,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/TapeLink"
                     },
                 },
+                "storage_sites": {
+                    "description": "The storage sites defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSite"
+                    },
+                },
                 "hw_messages": {
                     "description": "The hardware mesages for this Console",
                     "type": "array",
@@ -468,6 +475,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "VirtualTapeResource": {
             "description": "A virtual tape resource of a tape link",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSite": {
+            "description": "A storage site defined on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [

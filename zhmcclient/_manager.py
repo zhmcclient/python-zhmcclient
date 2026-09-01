@@ -424,6 +424,11 @@ class BaseManager:
         #     If the support for a resource property changes within the set of
         #     HMC versions that support this type of resource, this list must
         #     represent the version of the HMC this session is connected to.
+        #   query_props_names (dict): Optional mapping from resource property
+        #     name to the query parameter name used in the HMC list operation,
+        #     for cases where the two names differ. Properties not listed here
+        #     use the property name as the query parameter name.
+        #     May be `None`.
         #   list_has_name (bool):
         #     Indicates whether the list() method for the resource populates
         #     the name property (i.e. name_prop). For example, for NICs the
@@ -456,6 +461,7 @@ class BaseManager:
         self._uri_prop = uri_prop
         self._name_prop = name_prop
         self._query_props = query_props
+        self._query_props_names = {}
         self._list_has_name = list_has_name
         self._case_insensitive_names = case_insensitive_names
         self._supports_properties = supports_properties
@@ -753,7 +759,7 @@ class BaseManager:
                     resource_obj_list.append(resource_obj)
         else:
             _query_parms, client_filters = divide_filter_args(
-                self._query_props, filter_args)
+                self._query_props, filter_args, self._query_props_names)
             if additional_properties:
                 ap_parm = \
                     f"additional-properties={','.join(additional_properties)}"
