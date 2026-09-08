@@ -32,8 +32,9 @@ sphinx-git>=10.1.1
 sphinx-rtd-theme>=2.0.0
 
 # Package dependency checkers
-pipdeptree>=2.24.0
-pip-check-reqs>=2.5.1
+pipdeptree>=2.28.0
+pip-check-reqs>=2.5.6; python_version == '3.9'
+pip-check-reqs>=3.0.0; python_version >= '3.10'
 
 # Safety checker
 safety>=3.8.1
@@ -60,8 +61,8 @@ jupyter>=1.1.1; sys_platform != 'win32' or python_version <= '3.12'
 # Indirect dependencies for development that are needed for some reason
 
 # Pip is covered by requirements-base.txt but needs to be repeated here because it is used by pip-check-reqs.
-# Pinning pip to <26.2 is a quick fix to circumvent https://github.com/adamtheturtle/pip-check-reqs/issues/570
-pip>=26.1.2,<26.2; python_version >= '3.10'
+pip>=26.0.1; python_version == '3.9'
+pip>=26.2.0; python_version >= '3.10'
 
 # Click is covered by requirements.txt but needs to be repeated here because it is used by safety.
 # Click 8.2 made some attributes read-only and click-repl 0.2.0/0.3.0 does not
