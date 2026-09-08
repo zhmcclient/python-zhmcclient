@@ -87,6 +87,10 @@ default_testhmc := default
 package_name := zhmcclient
 mock_package_name := zhmcclient_mock
 
+# Path names of the package directories
+package_dir := zhmcclient
+mock_package_dir := zhmcclient_mock
+
 # Package version (e.g. "1.8.0a1.dev10+gd013028e" during development, or "1.8.0"
 # when releasing).
 # Note: The package version is automatically calculated by setuptools_scm based
@@ -96,7 +100,7 @@ package_version := $(shell $(PYTHON_CMD) -m setuptools_scm)
 
 # The version file is recreated by setuptools-scm on every build, so it is
 # excluuded from git, and also from some dependency lists.
-version_file := $(package_name)/_version_scm.py
+version_file := $(package_dir)/_version_scm.py
 
 # Python versions
 python_version := $(shell $(PYTHON_CMD) tools/python_version.py 3)
@@ -114,18 +118,18 @@ sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 dist_files := $(bdist_file) $(sdist_file)
 
 # Vendorized files
-vendor_dir := $(package_name)/_vendor
+vendor_dir := $(package_dir)/_vendor
 vendor_py_files := \
     $(wildcard $(vendor_dir)/*.py) \
     $(wildcard $(vendor_dir)/*/*.py) \
 
 # Source files in the packages, excluding the $(version_file)
 package_py_files := \
-    $(filter-out $(version_file), $(wildcard $(package_name)/*.py)) \
-    $(wildcard $(package_name)/*/*.py) \
-    $(wildcard $(package_name)/*/*/*.py) \
-    $(wildcard $(mock_package_name)/*.py) \
-    $(wildcard $(mock_package_name)/*/*.py) \
+    $(filter-out $(version_file), $(wildcard $(package_dir)/*.py)) \
+    $(wildcard $(package_dir)/*/*.py) \
+    $(wildcard $(package_dir)/*/*/*.py) \
+    $(wildcard $(mock_package_dir)/*.py) \
+    $(wildcard $(mock_package_dir)/*/*.py) \
 
 # Directory with example scripts
 example_dir := examples
@@ -613,7 +617,7 @@ $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$
 $(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(bandit_rc_file) $(check_py_files)
 	@echo "Makefile: Running Bandit"
 	rm -f $@
-	bandit -c $(bandit_rc_file) -l -r $(package_name) $(mock_package_name)
+	bandit -c $(bandit_rc_file) -l -r $(package_dir) $(mock_package_dir)
 	echo "done" >$@
 	@echo "Makefile: Done running Bandit"
 
@@ -658,8 +662,8 @@ ifeq ($(PLATFORM),Windows_native)
 	@echo "Makefile: Warning: Skipping the use of pip-missing-reqs on native Windows" >&2
 else
 	cat requirements.txt requirements-testutils.txt >tmp_requirements.txt
-	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=tmp_requirements.txt
-	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=minimum-constraints-install.txt
+	pip-missing-reqs $(package_dir) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=tmp_requirements.txt
+	pip-missing-reqs $(package_dir) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=minimum-constraints-install.txt
 	rm -f tmp_requirements.txt
 endif
 	cat minimum-constraints-develop.txt minimum-constraints-install.txt >tmp_minimum-constraints.txt

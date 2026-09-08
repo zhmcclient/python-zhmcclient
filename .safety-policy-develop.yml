@@ -62,14 +62,42 @@ security:
             reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
         SFTY-20260309-65600:
             reason: Fixed nltk version 3.9.3 requires Python>=3.10 and is used there
+        SFTY-20260420-60812:
+            reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
+        SFTY-20260427-69629:
+            reason: Fixed pip version 26.1 requires Python>=3.10 and is used there
+        SFTY-20260601-69199:
+            reason: Fixed pip version 26.1.2 requires Python>=3.10 and is used there
         SFTY-20260616-24225:
-            reason: Fixed bleach version 6.4.0 requires Python>=3.10 and is used there
-        SFTY-20260616-76367:
             reason: Fixed bleach version 6.4.0 requires Python>=3.10 and is used there
         SFTY-20260616-58930:
             reason: Fixed nltk version 3.10.0 requires Python>=3.10 and is used there
+        SFTY-20260616-76367:
+            reason: Fixed bleach version 6.4.0 requires Python>=3.10 and is used there
         SFTY-20260618-91928:
             reason: Fixed jupyter-server version 2.20.0 requires Python>=3.10 and is used there
+        SFTY-20260722-11341:
+            reason: Fixed jupyterlab version 4.6.0 requires Python>=3.10 and is used there
+        SFTY-20260722-17244:
+            reason: Fixed jupyterlab version 4.6.0 requires Python>=3.10 and is used there
+        SFTY-20260722-20756:
+            reason: Fixed jupyterlab version 4.6.0 requires Python>=3.10 and is used there
+        SFTY-20260722-26820:
+            reason: Fixed jupyterlab version 4.6.0 requires Python>=3.10 and is used there
+        SFTY-20260722-69121:
+            reason: Fixed jupyterlab version 4.6.0 requires Python>=3.10 and is used there
+        SFTY-20260725-27090:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        SFTY-20260729-70233:
+            reason: Fixed pip version 26.2 requires Python>=3.10 and is used there
+        SFTY-20260731-78787:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        SFTY-20260731-74449:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        SFTY-20260731-71411:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
+        SFTY-20260731-83123:
+            reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
