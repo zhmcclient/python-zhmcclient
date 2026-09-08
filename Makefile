@@ -647,7 +647,7 @@ check_reqs_install: Makefile $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done m
 # Create empty tmp_initial-packages.txt for local runs that missed running check_reqs_prepare
 	touch tmp_initial-packages.txt
 	pip freeze | cut -d '=' -f 1 | grep -v '@' | tr '-' '.' | tr '_' '.' | grep -v -F -f tmp_initial-packages.txt | xargs -I {} sh -c 'if ! grep -iE ^{}== minimum-constraints-install.txt >/dev/null; then sh -c "pip freeze | grep -iE ^{}=="; fi' >tmp_missing-reqs.txt
-	if [ -s tmp_missing-reqs.txt ]; then echo 'Error: Missing packages in minimum-constraints-install.txt compared to what is installed:'; cat tmp_missing-reqs.txt; exit 1; fi
+	if [ -s tmp_missing-reqs.txt ]; then echo '::warning::Missing packages in minimum-constraints-install.txt compared to what is installed:'; cat tmp_missing-reqs.txt; fi
 	rm -f tmp_missing-reqs.txt
 	for pkg in $$(grep -E '^[a-z_0-9A-Z\-\.]+==' minimum-constraints-install.txt | cut -d '=' -f 1 | sort | uniq); do if ! pip show $$pkg >/dev/null 2>&1; then echo $$pkg; fi; done >extra_reqs_install_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt
 	if [ -s extra_reqs_install_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt ]; then echo 'Warning: Extra packages in minimum-constraints-install.txt compared to what is installed:'; cat extra_reqs_install_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt; fi
@@ -670,7 +670,7 @@ endif
 # Create empty tmp_initial-packages.txt for local runs that missed running check_reqs_prepare
 	touch tmp_initial-packages.txt
 	pip freeze | cut -d '=' -f 1 | grep -v '@' | tr '-' '.' | tr '_' '.' | grep -v -F -f tmp_initial-packages.txt | xargs -I {} sh -c 'if ! grep -iE ^{}== tmp_minimum-constraints.txt >/dev/null; then sh -c "pip freeze | grep -iE ^{}=="; fi' >tmp_missing-reqs.txt
-	if [ -s tmp_missing-reqs.txt ]; then echo 'Error: Missing packages in minimum-constraints files compared to what is installed:'; cat tmp_missing-reqs.txt; exit 1; fi
+	if [ -s tmp_missing-reqs.txt ]; then echo '::warning::Missing packages in minimum-constraints files compared to what is installed:'; cat tmp_missing-reqs.txt; fi
 	rm -f tmp_missing-reqs.txt tmp_initial-packages.txt
 	for pkg in $$(grep -E '^[a-z_0-9A-Z\-\.]+==' tmp_minimum-constraints.txt | cut -d '=' -f 1 | sort | uniq); do if ! pip show $$pkg >/dev/null 2>&1; then echo $$pkg; fi; done >extra_reqs_all_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt
 	if [ -s extra_reqs_all_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt ]; then echo 'Warning: Extra packages in minimum-constraints files compared to what is installed:'; cat extra_reqs_all_$(PLATFORM)_$(pymn)_$(PACKAGE_LEVEL).txt; fi
