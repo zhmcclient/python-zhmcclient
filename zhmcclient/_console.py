@@ -33,6 +33,7 @@ from ._storage_group_template import StorageGroupTemplateManager
 from ._tape_library import TapeLibraryManager
 from ._tape_link import TapeLinkManager
 from ._storage_fabric import StorageFabricManager
+from ._storage_site import StorageSiteManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -218,6 +219,7 @@ class Console(BaseResource):
         self._tape_links = None
         self._storage_fabrics = None
         self._partition_links = None
+        self._storage_sites = None
         self._users = None
         self._user_roles = None
         self._user_patterns = None
@@ -287,6 +289,17 @@ class Console(BaseResource):
         if not self._storage_fabrics:
             self._storage_fabrics = StorageFabricManager(self)
         return self._storage_fabrics
+
+    @property
+    def storage_sites(self):
+        """
+        :class:`~zhmcclient.StorageSiteManager`:
+          Manager object for the Storage Sites in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_sites:
+            self._storage_sites = StorageSiteManager(self)
+        return self._storage_sites
 
     @property
     def partition_links(self):
