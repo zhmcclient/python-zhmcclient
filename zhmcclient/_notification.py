@@ -704,7 +704,7 @@ class NotificationReceiver:
 
             # Now we have an item from the listener
             if item.msgtype == 'message':
-                if item.message is None:
+                if not item.message:
                     msg_obj = None
                 else:
                     try:
