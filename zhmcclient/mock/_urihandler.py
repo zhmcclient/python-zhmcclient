@@ -3198,13 +3198,11 @@ def get_inventory_for_partition(hmc):
 
 
 def get_inventory_for_partition_link(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'partition-link'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # partlinks = hmc.consoles.console.partition_links.list()
-    # for partlink in partlinks:
-    #     result.append(properties_copy(partlink.properties))
+    partlinks = hmc.consoles.console.partition_links.list()
+    for partlink in partlinks:
+        result.append(properties_copy(partlink.properties))
     return result
 
 
@@ -5829,6 +5827,196 @@ class TapeLibraryDiscoverHandler:
             message=f"The CPC with the {cpc_uri} has not been zoned.")
 
 
+class PartitionLinksHandler:
+    """
+    Handler class for HTTP methods on set of PartitionLink resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name', 'state']
+
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'state', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Partition Links."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        filter_args = query_parms
+
+        result_plinks = []
+        for pl in hmc.consoles.console.partition_links.list(filter_args):
+            result_pl = {}
+            for prop in cls.returned_props:
+                if prop in pl.properties:
+                    result_pl[prop] = prop_copy(pl.properties.get(prop))
+            result_plinks.append(result_pl)
+        return {'partition-links': result_plinks}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Partition Link."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name', 'cpc-uri', 'type'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        body2 = body.copy()
+        body2.setdefault('description', '')
+        body2.setdefault('state', 'incomplete')
+        body2.setdefault('pending-operations', [])
+        body2.setdefault('bus-connections', [])
+        body2['cpc-name'] = cpc.properties.get('name', '')
+
+        # Process bus-connections from the request (smc-d / hipersockets)
+        pl_type = body2.get('type')
+        if pl_type in ('smc-d', 'hipersockets'):
+            bus_connections = body2.get('bus-connections', [])
+            for bc in bus_connections:
+                bc.setdefault('nics', [])
+        elif pl_type == 'ctc':
+            body2.setdefault('paths', [])
+
+        new_plink = hmc.consoles.console.partition_links.add(body2)
+
+        # The real session.post() adds 'location-uri' from the HTTP Location
+        # header after the async job completes.  The faked session does not
+        # do that, so we add it to the return value directly here so that
+        # PartitionLinkManager.create() can retrieve the new resource URI.
+        return {
+            'location-uri': new_plink.uri,
+            'operation-results': [
+                {'partition-uri': bc.get('partition-uri'),
+                 'operation-status': 'attached'}
+                for bc in body2.get('bus-connections', [])
+            ],
+        }
+
+
+class PartitionLinkHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on a single PartitionLink resource.
+    """
+    pass
+
+
+class PartitionLinkDeleteHandler:
+    """
+    Handler class for operation: Delete Partition Link.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Delete Partition Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        plink_oid = uri_parms[0]
+        plink_uri = '/api/partition-links/' + plink_oid
+        try:
+            plink = hmc.lookup_by_uri(plink_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Reflect deletion
+        plink.manager.remove(plink.oid)
+
+
+class PartitionLinkModifyHandler:
+    """
+    Handler class for operation: Modify Partition Link.
+
+    Handles attach (added-connections) and detach (removed-partition-uris)
+    for SMC-D and HiperSockets partition links.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Modify Partition Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        plink_oid = uri_parms[0]
+        plink_uri = '/api/partition-links/' + plink_oid
+        try:
+            plink = hmc.lookup_by_uri(plink_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        operation_results = []
+        props = plink.properties
+        bus_connections = list(props.get('bus-connections', []))
+
+        # Process detachments
+        removed_uris = (body or {}).get('removed-partition-uris', [])
+        for part_uri in removed_uris:
+            bus_connections = [
+                bc for bc in bus_connections
+                if bc.get('partition-uri') != part_uri
+            ]
+            operation_results.append({
+                'partition-uri': part_uri,
+                'operation-status': 'detached',
+            })
+
+        # Process attachments (smc-d / hipersockets)
+        added_connections = (body or {}).get('added-connections', [])
+        for bc in added_connections:
+            part_uri = bc.get('partition-uri')
+            number_of_nics = bc.get('number-of-nics', 1)
+            nics = bc.get('nics', [])
+            # Pad nics list to number_of_nics with empty dicts
+            while len(nics) < number_of_nics:
+                nics.append({})
+            try:
+                part = hmc.lookup_by_uri(part_uri)
+                part_name = part.properties.get('name', '')
+            except KeyError:
+                part_name = ''
+            new_bc = {
+                'partition-uri': part_uri,
+                'partition-name': part_name,
+                'nics': [{'uuid': str(id(n)), **n} for n in nics],
+            }
+            bus_connections.append(new_bc)
+            operation_results.append({
+                'partition-uri': part_uri,
+                'operation-status': 'attached',
+            })
+
+        # Update scalar writable properties
+        body2 = {k: v for k, v in (body or {}).items()
+                 if k not in ('added-connections', 'removed-partition-uris',
+                              'modified-connections')}
+        plink.update(body2)
+        plink.properties['bus-connections'] = bus_connections
+
+        # Derive state from number of connected partitions
+        n_parts = len({bc.get('partition-uri') for bc in bus_connections
+                       if bc.get('partition-uri')})
+        plink.properties['state'] = 'complete' if n_parts >= 2 else 'incomplete'
+
+        return {'operation-results': operation_results}
+
+
 class TapeLinksHandler:
     """
     Handler class for HTTP methods on set of TapeLink resources.
@@ -7471,6 +7659,15 @@ URIS = (
      TapeLibraryRequestZoningHandler),
     (r'/api/tape-libraries/operations/discover-tape-libraries',
      TapeLibraryDiscoverHandler),
+
+    (r'/api/partition-links(?:\?(.*))?',
+     PartitionLinksHandler),
+    (r'/api/partition-links/([^?/]+)(?:\?(.*))?',
+     PartitionLinkHandler),
+    (r'/api/partition-links/([^/]+)/operations/delete',
+     PartitionLinkDeleteHandler),
+    (r'/api/partition-links/([^/]+)/operations/modify',
+     PartitionLinkModifyHandler),
 
     (r'/api/tape-links(?:\?(.*))?',
      TapeLinksHandler),
