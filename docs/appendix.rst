@@ -536,6 +536,23 @@ Resources scoped to CPCs in DPM mode
 
      For details, see section :ref:`Storage Sites`.
 
+  Storage Fabric
+     A collection of interconnected storage switches in the FICON storage
+     configuration of a DPM-enabled :term:`CPC`. A storage fabric can span
+     multiple :term:`Storage Sites <Storage Site>` and is the logical grouping
+     to which :term:`Storage Switches <Storage Switch>` belong.
+
+     For details, see section :ref:`Storage Fabrics`.
+
+  Storage Switch
+     A physical storage switch in the FICON storage configuration of a
+     DPM-enabled :term:`CPC`. A storage switch belongs to exactly one
+     :term:`Storage Site` and one :term:`Storage Fabric`, and can be moved
+     between sites and fabrics. Storage switches can be defined and undefined
+     via the :term:`Console`.
+
+     For details, see section :ref:`Storage Switches`.
+
   Storage Volume
      An FCP or ECKD (=FICON) storage volume defined in context of a
      :term:`storage group`. The life cycle of a storage volume includes being
