@@ -325,6 +325,26 @@ class TestNotificationOneTopic:
         assert msg0[0] == self.std_headers
         assert msg0[1] == message_obj
 
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_empty_body_message(self):
+        """Test that a notification with an empty message body yields None."""
+
+        receiver, mocked_conn = self.setup_receiver()
+
+        # Add a STOMP message with an empty body (e.g. job-completion)
+        # pylint: disable=no-member
+        mocked_conn.mock_add_message(self.std_headers, '')
+
+        mocked_conn.mock_start()  # pylint: disable=no-member
+        msg_items = receive_notifications(receiver)
+        mocked_conn.mock_stop()  # pylint: disable=no-member
+
+        assert len(msg_items) == 1
+
+        msg0 = msg_items[0]
+        assert msg0[0] == self.std_headers
+        assert msg0[1] is None
+
 
 class TestNotificationTwoTopics:
     """
