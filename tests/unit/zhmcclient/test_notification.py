@@ -533,3 +533,36 @@ class TestNotificationSubscriptionMgmt:
         assert mocked_conn.mock_get_subscription('fake-topic1')
         # pylint: disable=no-member
         assert mocked_conn.mock_get_subscription('fake-topic2')
+
+
+@pytest.mark.parametrize(
+    "verify_cert, exp_ca_certs, exp_cert_validator",
+    [
+        (False, None, False),
+        (True, True, True),
+        ('/path/to/cert.pem', '/path/to/cert.pem', True),
+    ]
+)
+@patch(target='stomp.Connection', new=MockedStompConnection)
+def test_notification_receiver_verify_cert(
+        verify_cert, exp_ca_certs, exp_cert_validator):
+    """Test SSL options passed to stomp for NotificationReceiver."""
+    receiver = NotificationReceiver(
+        'fake-topic', 'fake-hmc', 'fake-userid', 'fake-password',
+        verify_cert=verify_cert)
+    receiver.connect()
+    # pylint: disable=protected-access
+    mocked_conn = receiver._conn
+    assert isinstance(mocked_conn, MockedStompConnection)
+    ssl_kwargs = mocked_conn._ssl_kwargs  # pylint: disable=no-member
+    if exp_ca_certs is True:
+        assert 'ca_certs' in ssl_kwargs
+    elif exp_ca_certs is not None:
+        assert ssl_kwargs.get('ca_certs') == exp_ca_certs
+    else:
+        assert 'ca_certs' not in ssl_kwargs
+    if exp_cert_validator:
+        assert ssl_kwargs.get('cert_validator') is not None
+    else:
+        assert 'cert_validator' not in ssl_kwargs
+    receiver.close()
