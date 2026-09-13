@@ -31,7 +31,7 @@ from zhmcclient.mock import FakedSession
 from zhmcclient import Client, FilterConversionError
 from zhmcclient._utils import datetime_from_timestamp, \
     timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat, \
-    matches_filters, divide_filter_args, tzlocal
+    matches_filters, divide_filter_args, tzlocal, parse_version
 
 # datetime.fromisoformnat() supports 'hhmm' without colon as timezone offset
 ISOFORMAT_SUPPORTS_HHMM = tuple(map(int, sys.version_info[:2])) >= (3, 11)
@@ -1212,5 +1212,87 @@ def test_divide_filter_args(
 
         # The function to be tested
         result = divide_filter_args(query_props, filter_args)
+
+        assert result == exp_result
+
+
+TESTCASES_PARSE_VERSION = [
+    # Test cases for test_parse_version().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - version_str (str): Input version string
+    # - exp_result (tuple: Expected return value
+    # - exp_exc_type: Expected exception type raised from method to be tested,
+    #   or None for success.
+    # - exp_exc_pattern: Regex pattern to check exception message,
+    #   or None for success.
+
+    (
+        "None is not allowed",
+        None,
+        None,
+        AttributeError,
+        "'NoneType' object has no attribute 'split'"
+    ),
+    (
+        "Empty string",
+        "",
+        ("",),
+        None,
+        None
+    ),
+    (
+        "Only major version as a decimal string",
+        "9",
+        (9,),
+        None,
+        None
+    ),
+    (
+        "Major, minor, patch version as decimal strings",
+        "9.1.7",
+        (9, 1, 7),
+        None,
+        None
+    ),
+    (
+        "Additional fourth version part as a decimal string",
+        "9.1.7.42",
+        (9, 1, 7, 42),
+        None,
+        None
+    ),
+    (
+        "Major, minor, patch version followed by non-integer string",
+        "9.1.7.a1",
+        (9, 1, 7, "a1"),
+        None,
+        None
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, version_str, exp_result, exp_exc_type, exp_exc_pattern",
+    TESTCASES_PARSE_VERSION)
+def test_parse_version(
+        desc, version_str, exp_result, exp_exc_type, exp_exc_pattern):
+    # pylint: disable=unused-argument
+    """
+    Test function for parse_version().
+    """
+
+    if exp_exc_type:
+        with pytest.raises(exp_exc_type) as exc_info:
+
+            # Execute the code to be tested
+            parse_version(version_str)
+
+        exc = exc_info.value
+        assert re.search(exp_exc_pattern, str(exc))
+    else:
+
+        # The function to be tested
+        result = parse_version(version_str)
 
         assert result == exp_result
