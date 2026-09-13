@@ -1025,13 +1025,29 @@ local clone of the python-zhmcclient Git repo.
 
     :ref:`Backport <Backporting>` the PR into the latest ``stable_M.N`` branch.
 
-3.  Check for any
+3.  Run the check for missing dependencies:
+
+    .. code-block:: sh
+
+        make check_reqs
+
+    If this fails, add the missing dependencies that are reported to the
+    correct minimum-constraints*.txt file, in a separate branch/PR.
+
+    You can determine the correct minimum-constraints*.txt file for a dependent
+    package by using ``python -m pipdeptree -r -p <package-name>`` to see which
+    other packages use it. The dependent package should be put into the
+    minimum-constraints*.txt file that has the package(s) using it.
+
+    :ref:`Backport <Backporting>` the PR into the latest ``stable_M.N`` branch.
+
+4.  Check for any
     `Dependabot alerts <https://github.com/zhmcclient/python-zhmcclient/security/dependabot>`_ and `Dependabot PRs <https://github.com/zhmcclient/python-zhmcclient/pulls?q=is%3Apr+label%3Adependencies+is%3Aopen>`_.
 
     If there are any Dependabot alerts or PRs, fix them as described in
     :ref:`Handling Dependabot alerts and PRs`.
 
-4.  Check for any Mend issues
+5.  Check for any Mend issues
 
     1. Push the ``master`` branch to the internal repo to bring it in sync with
        the public repo. This only makes a change for Mend if the pip
@@ -1051,7 +1067,7 @@ local clone of the python-zhmcclient Git repo.
 
        :ref:`Backport <Backporting>` the PR(s) into the latest ``stable_M.N`` branch.
 
-5.  Create and push the release branch (replace M,N,U accordingly):
+6.  Create and push the release branch (replace M,N,U accordingly):
 
     .. code-block:: sh
 
@@ -1078,7 +1094,7 @@ local clone of the python-zhmcclient Git repo.
     If this command fails, the fix can be committed to the release branch
     and the command above can be retried.
 
-6.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
+7.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: GitHub uses ``master`` as the default target branch. When
     releasing based on a stable branch, you need to change the target branch
@@ -1093,18 +1109,18 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-7.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+8.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-8.  On GitHub, close milestone ``M.N.U``.
+9.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix (probably step 1 was not performed).
 
-9.  Publish the package (replace M,N,U accordingly):
+10. Publish the package (replace M,N,U accordingly):
 
     .. code-block:: sh
 
@@ -1126,7 +1142,7 @@ local clone of the python-zhmcclient Git repo.
     GitHub, and finally creates a new stable branch on GitHub if the master
     branch was released.
 
-10. Verify the publishing
+11. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -1139,7 +1155,7 @@ local clone of the python-zhmcclient Git repo.
     * Verify that the new version has a release on GitHub at
       https://github.com/zhmcclient/python-zhmcclient/releases
 
-11. Verify the documentation on ReadTheDocs
+12. Verify the documentation on ReadTheDocs
 
     ReadTheDocs automatically activates the new version and sets it as a
     default version. Branches such as 'master' or 'stable' are no longer
@@ -1154,7 +1170,7 @@ local clone of the python-zhmcclient Git repo.
       the URL for the new version. This verifies that it has been activated and
       set as the default version.
 
-12. Hide previous fix version on ReadTheDocs
+13. Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
     https://readthedocs.org/accounts/login/, go to
