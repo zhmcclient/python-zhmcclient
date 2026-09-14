@@ -57,7 +57,6 @@ __all__ = ['InputError',
            'FakedTapeLibraryManager', 'FakedTapeLibrary',
            'FakedTapeLinkManager', 'FakedTapeLink',
            'FakedVirtualTapeResourceManager', 'FakedVirtualTapeResource',
-           'FakedPartitionLinkManager', 'FakedPartitionLink',
            'FakedStorageSiteManager', 'FakedStorageSite',
            'FakedPartitionLinkManager', 'FakedPartitionLink',
            'FakedMetricsContextManager', 'FakedMetricsContext',
@@ -1149,8 +1148,6 @@ class FakedConsole(FakedBaseResource):
             manager=manager,
             properties=properties)
         self.api_features = []
-        self._partition_links = FakedPartitionLinkManager(
-            hmc=manager.hmc, console=self)
         self._storage_groups = FakedStorageGroupManager(
             hmc=manager.hmc, console=self)
         self._storage_group_templates = FakedStorageGroupTemplateManager(
@@ -1220,14 +1217,6 @@ class FakedConsole(FakedBaseResource):
         return ret
 
     @property
-    def partition_links(self):
-        """
-        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to the
-        faked Partition Link resources of this Console.
-        """
-        return self._partition_links
-
-    @property
     def storage_groups(self):
         """
         :class:`~zhmcclient.mock.FakedStorageGroupManager`: Access to the faked
@@ -1258,6 +1247,14 @@ class FakedConsole(FakedBaseResource):
         the faked Storage Group Template resources of this Console.
         """
         return self._tape_links
+
+    @property
+    def partition_links(self):
+        """
+        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to the
+        faked Partition Link resources of this Console.
+        """
+        return self._partition_links
 
     @property
     def storage_fabrics(self):
