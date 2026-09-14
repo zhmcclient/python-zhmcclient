@@ -476,7 +476,7 @@ class TestAdapter:
         with pytest.raises(NotFound):
             adapter_mgr.find(name=faked_hs.name)
 
-    def test_adapter_delete_with_ctc_partition_links(self):
+    def test_adapter_delete_with_ctc_pl(self):
         """Test Adapter.delete() for Hipersocket adapter when CTC partition
         links are also present on the CPC (issue #2276)."""
 
