@@ -57,6 +57,7 @@ __all__ = ['InputError',
            'FakedTapeLibraryManager', 'FakedTapeLibrary',
            'FakedTapeLinkManager', 'FakedTapeLink',
            'FakedVirtualTapeResourceManager', 'FakedVirtualTapeResource',
+           'FakedPartitionLinkManager', 'FakedPartitionLink',
            'FakedStorageSiteManager', 'FakedStorageSite',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
@@ -1146,6 +1147,8 @@ class FakedConsole(FakedBaseResource):
             manager=manager,
             properties=properties)
         self.api_features = []
+        self._partition_links = FakedPartitionLinkManager(
+            hmc=manager.hmc, console=self)
         self._storage_groups = FakedStorageGroupManager(
             hmc=manager.hmc, console=self)
         self._storage_group_templates = FakedStorageGroupTemplateManager(
@@ -1209,6 +1212,14 @@ class FakedConsole(FakedBaseResource):
             f"  _groups = {repr_manager(self.groups, indent=2)}\n"
             ")")
         return ret
+
+    @property
+    def partition_links(self):
+        """
+        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to the
+        faked Partition Link resources of this Console.
+        """
+        return self._partition_links
 
     @property
     def storage_groups(self):
@@ -3967,6 +3978,42 @@ class FakedVirtualTapeResource(FakedBaseResource):
     """
     A faked VirtualTapeResource resource within a faked TapeLink (see
     :class:`zhmcclient.mock.FakedTapeLink`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedPartitionLinkManager(FakedBaseManager):
+    """
+    A manager for faked PartitionLink resources within a faked Console (see
+    :class:`zhmcclient.mock.FakedConsole`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedPartitionLink,
+            base_uri=self.api_root + '/partition-links',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='partition-link',
+            name_prop='name')
+
+
+class FakedPartitionLink(FakedBaseResource):
+    """
+    A faked PartitionLink resource within a faked Console (see
+    :class:`zhmcclient.mock.FakedConsole`).
 
     Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.

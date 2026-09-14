@@ -515,6 +515,8 @@ class Adapter(BaseResource):
             )
             part_links_for_adapter = []
             for part_link in part_links:
+                if part_link.get_properties_local('type') == 'ctc':
+                    continue
                 if part_link.get_property('adapter-uri') == self.uri:
                     part_links_for_adapter.append(part_link)
             num_pl = len(part_links_for_adapter)
