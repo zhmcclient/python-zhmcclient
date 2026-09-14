@@ -454,6 +454,70 @@ hmc_definition:
                   world-wide-port-name: "c05076ffe8000003"
                 degraded-reasons: []
 
+      storage_fabrics:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric1
+            name: "Storage Fabric A"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Primary storage fabric for CPC DPM"
+            high-integrity: false
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sfabric2
+            name: "Storage Fabric B"
+            cpc-uri: /api/cpcs/cpc_dpm
+            description: "Alternate storage fabric for CPC DPM"
+            high-integrity: true
+
+      storage_sites:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss1
+            name: Primary Site
+            description: Primary storage site local to the CPC
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ss2
+            name: Alternate Site
+            description: Alternate storage site at a remote location
+            cpc-uris:
+              - /api/cpcs/cpc_dpm
+
+      storage_switches:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw1
+            name: "Storage switch 11"
+            domain-id: "11"
+            storage-fabric-uri: /api/storage-fabrics/sfabric1
+            storage-site-uri: /api/storage-sites/ss1
+            description: "Storage switch 11 on Fabric A at Primary Site"
+            port-count: 256
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: sw2
+            name: "Storage switch 21"
+            domain-id: "21"
+            storage-fabric-uri: /api/storage-fabrics/sfabric2
+            storage-site-uri: /api/storage-sites/ss2
+            description: "Storage switch 21 on Fabric B at Alternate Site"
+            port-count: 256
+
       hw_messages:
         - properties:
             # class: created automatically

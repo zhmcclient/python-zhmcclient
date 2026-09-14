@@ -1,0 +1,2 @@
+AutoUpdater: Fixed an issue where the 'verify_cert' setting from the
+Session was not passed to the STOMP connection.

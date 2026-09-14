@@ -124,14 +124,10 @@ class TestStorageFabric:
 
     testcases_sfm_list_full_properties = (
         "full_properties_kwargs, prop_names", [
-            (
-                {},
-                ['object-uri', 'cpc-uri', 'name']
-            ),
-            (
-                {'full_properties': False},
-                ['object-uri', 'cpc-uri', 'name']
-            ),
+            ({},
+             ['object-uri', 'cpc-uri', 'name']),
+            ({'full_properties': False},
+             ['object-uri', 'cpc-uri', 'name']),
         ]
     )
 

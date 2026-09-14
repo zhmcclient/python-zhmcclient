@@ -59,11 +59,13 @@ __all__ = ['InputError',
            'FakedVirtualTapeResourceManager', 'FakedVirtualTapeResource',
            'FakedPartitionLinkManager', 'FakedPartitionLink',
            'FakedStorageSiteManager', 'FakedStorageSite',
+           'FakedPartitionLinkManager', 'FakedPartitionLink',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            'FakedCapacityGroupManager', 'FakedCapacityGroup',
            'FakedHwMessageManager', 'FakedHwMessage',
            'FakedStorageFabricManager', 'FakedStorageFabric',
+           'FakedStorageSwitchManager', 'FakedStorageSwitch',
            ]
 
 # All currently defined metric groups with their metrics.
@@ -1157,9 +1159,13 @@ class FakedConsole(FakedBaseResource):
             hmc=manager.hmc, console=self)
         self._tape_links = FakedTapeLinkManager(
             hmc=manager.hmc, console=self)
+        self._partition_links = FakedPartitionLinkManager(
+            hmc=manager.hmc, console=self)
         self._storage_fabrics = FakedStorageFabricManager(
             hmc=manager.hmc, console=self)
         self._storage_sites = FakedStorageSiteManager(
+            hmc=manager.hmc, console=self)
+        self._storage_switches = FakedStorageSwitchManager(
             hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
@@ -1254,6 +1260,14 @@ class FakedConsole(FakedBaseResource):
         return self._tape_links
 
     @property
+    def partition_links(self):
+        """
+        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to
+        the faked Partition Link resources of this Console.
+        """
+        return self._partition_links
+
+    @property
     def storage_fabrics(self):
         """
         :class:`~zhmcclient.mock.FakedStorageFabricManager`: Access to
@@ -1268,6 +1282,14 @@ class FakedConsole(FakedBaseResource):
         the faked Storage Site resources of this Console.
         """
         return self._storage_sites
+
+    @property
+    def storage_switches(self):
+        """
+        :class:`~zhmcclient.mock.FakedStorageSwitchManager`: Access to
+        the faked Storage Switch resources of this Console.
+        """
+        return self._storage_switches
 
     @property
     def users(self):
@@ -4009,6 +4031,33 @@ class FakedPartitionLinkManager(FakedBaseManager):
             class_value='partition-link',
             name_prop='name')
 
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked PartitionLink resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * ``object-id`` will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * ``object-uri`` will be auto-generated based upon the object ID,
+              if not specified.
+            * ``class`` will be auto-generated to ``'partition-link'``,
+              if not specified.
+            * ``parent`` will be auto-generated to the URI of the console,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient.mock.FakedPartitionLink`: The faked
+          PartitionLink resource.
+        """
+        return super().add(properties)
+
 
 class FakedPartitionLink(FakedBaseResource):
     """
@@ -4023,6 +4072,10 @@ class FakedPartitionLink(FakedBaseResource):
         super().__init__(
             manager=manager,
             properties=properties)
+        # Set defaults for list-type properties that the modify handler mutates
+        self._properties.setdefault('bus-connections', [])
+        self._properties.setdefault('pending-operations', [])
+        self._properties.setdefault('state', 'incomplete')
 
 
 class FakedStorageSiteManager(FakedBaseManager):
@@ -4679,6 +4732,74 @@ class FakedStorageFabricManager(FakedBaseManager):
 class FakedStorageFabric(FakedBaseResource):
     """
     A faked Storage Fabric resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedStorageSwitchManager(FakedBaseManager):
+    """
+    A manager for faked Storage Switch resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedStorageSwitch,
+            base_uri='/api/storage-switches',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='storage-switch',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked Storage Switch resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-switch',
+              if not specified.
+
+        Returns:
+
+          :class:`~zhmcclient.mock.FakedStorageSwitch`: The faked
+          StorageSwitch resource.
+        """
+        new_switch = super().add(properties)
+
+        # Resource type specific default values
+        new_switch.properties.setdefault('description', '')
+        new_switch.properties.setdefault('port-count', 256)
+
+        return new_switch
+
+
+class FakedStorageSwitch(FakedBaseResource):
+    """
+    A faked Storage Switch resource within a faked HMC (see
     :class:`zhmcclient.mock.FakedHmc`).
 
     Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for

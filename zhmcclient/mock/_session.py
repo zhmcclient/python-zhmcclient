@@ -253,6 +253,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageSite"
                     },
                 },
+                "storage_switches": {
+                    "description": "The Storage Switches defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageSwitch"
+                    },
+                },
                 "hw_messages": {
                     "description": "The hardware mesages for this Console",
                     "type": "array",
@@ -422,6 +429,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "StorageFabric": {
             "description": "A Storage Fabric on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageSwitch": {
+            "description": "A Storage Switch on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [

@@ -34,6 +34,7 @@ from ._tape_library import TapeLibraryManager
 from ._tape_link import TapeLinkManager
 from ._storage_fabric import StorageFabricManager
 from ._storage_site import StorageSiteManager
+from ._storage_switch import StorageSwitchManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -182,7 +183,7 @@ class ConsoleManager(BaseManager):
         return [resource_obj]
 
 
-class Console(BaseResource):
+class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
     """
     Representation of a :term:`Console`.
 
@@ -218,6 +219,7 @@ class Console(BaseResource):
         self._tape_library = None
         self._tape_links = None
         self._storage_fabrics = None
+        self._storage_switches = None
         self._partition_links = None
         self._storage_sites = None
         self._users = None
@@ -300,6 +302,17 @@ class Console(BaseResource):
         if not self._storage_sites:
             self._storage_sites = StorageSiteManager(self)
         return self._storage_sites
+
+    @property
+    def storage_switches(self):
+        """
+        :class:`~zhmcclient.StorageSwitchManager`:
+          Manager object for the Storage Switches in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_switches:
+            self._storage_switches = StorageSwitchManager(self)
+        return self._storage_switches
 
     @property
     def partition_links(self):

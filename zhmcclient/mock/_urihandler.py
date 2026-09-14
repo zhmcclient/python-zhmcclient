@@ -3198,13 +3198,11 @@ def get_inventory_for_partition(hmc):
 
 
 def get_inventory_for_partition_link(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'partition-link'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # partlinks = hmc.consoles.console.partition_links.list()
-    # for partlink in partlinks:
-    #     result.append(properties_copy(partlink.properties))
+    partlinks = hmc.consoles.console.partition_links.list()
+    for partlink in partlinks:
+        result.append(properties_copy(partlink.properties))
     return result
 
 
@@ -3238,15 +3236,11 @@ def get_inventory_for_storage_fabric(hmc):
 
 
 def get_inventory_for_storage_switch(hmc):
-    # pylint: disable=unused-argument
     """Get inventory data for resource class 'storage-switch'"""
     result = []
-    # TODO: Implement mock support for this resource class; then enable:
-    # stosites = hmc.consoles.console.storage_sites.list()
-    # for stosite in stosites:
-    #     stoswitches = stosite.storage_switches.list()
-    #     for stoswitch in stoswitches:
-    #         result.append(properties_copy(stoswitch.properties))
+    stoswitches = hmc.consoles.console.storage_switches.list()
+    for stoswitch in stoswitches:
+        result.append(properties_copy(stoswitch.properties))
     return result
 
 
@@ -5709,6 +5703,294 @@ class StorageSiteHandler(GenericGetPropertiesHandler,
     pass
 
 
+class StorageSwitchesHandler:
+    """
+    Handler class for HTTP methods on the global set of StorageSwitch resources.
+    """
+
+    valid_query_parms_get = ['name', 'domain-id']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches (global with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_storage_switches.append(result_sw)
+        return {'storage-switches': result_storage_switches}
+
+
+class StorageSwitchHandler(GenericGetPropertiesHandler,
+                           GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on a single StorageSwitch resource
+    (Get Properties and Update Properties).
+    """
+    pass
+
+
+class StorageSwitchDefineHandler:
+    """
+    Handler class for the "Define Storage Switch" operation.
+    POST /api/console/operations/define-storage-switch
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Define Storage Switch."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(
+            method, uri, body,
+            ['domain-id', 'storage-fabric-uri', 'storage-site-uri'])
+
+        # Validate storage-fabric-uri references a known fabric
+        fabric_uri = body['storage-fabric-uri']
+        try:
+            hmc.lookup_by_uri(fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=440,
+                                           resource_uri=fabric_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Validate storage-site-uri references a known site
+        site_uri = body['storage-site-uri']
+        try:
+            hmc.lookup_by_uri(site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=site_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_sw = hmc.consoles.console.storage_switches.add(body)
+
+        # Update storage-switch-uris on the parent fabric
+        try:
+            fabric = hmc.lookup_by_uri(fabric_uri)
+            sw_uris = list(fabric.properties.get('storage-switch-uris', []))
+            if new_sw.uri not in sw_uris:
+                sw_uris.append(new_sw.uri)
+            fabric.update({'storage-switch-uris': sw_uris})
+        except KeyError:
+            pass
+
+        return {'object-uri': new_sw.uri}
+
+
+class StorageSwitchUndefineHandler:
+    """
+    Handler class for the "Undefine Storage Switch" operation.
+    POST /api/storage-switches/{id}/operations/undefine
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Undefine Storage Switch."""
+        assert wait_for_completion is True  # always synchronous
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Remove the switch URI from the parent fabric's storage-switch-uris
+        fabric_uri = sw.properties.get('storage-fabric-uri')
+        if fabric_uri:
+            try:
+                fabric = hmc.lookup_by_uri(fabric_uri)
+                sw_uris = list(fabric.properties.get('storage-switch-uris', []))
+                if sw_uri in sw_uris:
+                    sw_uris.remove(sw_uri)
+                fabric.update({'storage-switch-uris': sw_uris})
+            except KeyError:
+                pass
+
+        sw.manager.remove(sw.oid)  # 204 No Content
+
+
+class StorageSwitchMoveSiteHandler:
+    """
+    Handler class for the "Move Storage Switch to Storage Site" operation.
+    POST /api/storage-switches/{id}/operations/move-storage-site
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Move Storage Switch to Storage Site."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['storage-site-uri'])
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_site_uri = body['storage-site-uri']
+        try:
+            hmc.lookup_by_uri(new_site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=new_site_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        sw.update({'storage-site-uri': new_site_uri})  # 204 No Content
+
+
+class StorageSwitchMoveFabricHandler:
+    """
+    Handler class for the "Move Storage Switch to Storage Fabric" operation.
+    POST /api/storage-switches/{id}/operations/move-storage-fabric
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Move Storage Switch to Storage Fabric."""
+        assert wait_for_completion is True  # always synchronous
+        check_required_fields(method, uri, body, ['storage-fabric-uri'])
+        sw_oid = uri_parms[0]
+        sw_uri = '/api/storage-switches/' + sw_oid
+        try:
+            sw = hmc.lookup_by_uri(sw_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        new_fabric_uri = body['storage-fabric-uri']
+        try:
+            new_fabric = hmc.lookup_by_uri(new_fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=new_fabric_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        # Remove from old fabric's storage-switch-uris
+        old_fabric_uri = sw.properties.get('storage-fabric-uri')
+        if old_fabric_uri and old_fabric_uri != new_fabric_uri:
+            try:
+                old_fabric = hmc.lookup_by_uri(old_fabric_uri)
+                old_uris = list(
+                    old_fabric.properties.get('storage-switch-uris', []))
+                if sw_uri in old_uris:
+                    old_uris.remove(sw_uri)
+                old_fabric.update({'storage-switch-uris': old_uris})
+            except KeyError:
+                pass
+
+        # Add to new fabric's storage-switch-uris
+        new_uris = list(new_fabric.properties.get('storage-switch-uris', []))
+        if sw_uri not in new_uris:
+            new_uris.append(sw_uri)
+        new_fabric.update({'storage-switch-uris': new_uris})
+
+        sw.update({'storage-fabric-uri': new_fabric_uri})  # 204 No Content
+
+
+class StorageSiteSwitchesHandler:
+    """
+    Handler class for listing storage switches of a storage site.
+    GET /api/storage-sites/{storage-site-id}/storage-switches
+    """
+
+    valid_query_parms_get = ['name', 'domain-id', 'storage-fabric-uri']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches of a Storage Site."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        site_oid = uri_parms[0]
+        site_uri = '/api/storage-sites/' + site_oid
+        try:
+            hmc.lookup_by_uri(site_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        filter_args = dict(query_parms)
+        filter_args['storage-site-uri'] = site_uri
+
+        result_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_switches.append(result_sw)
+        return {'storage-switches': result_switches}
+
+
+class StorageFabricSwitchesHandler:
+    """
+    Handler class for listing storage switches of a storage fabric.
+    GET /api/storage-fabrics/{storage-fabric-id}/storage-switches
+    """
+
+    valid_query_parms_get = ['name', 'domain-id', 'storage-site-uri']
+
+    returned_props = ['object-uri', 'name', 'domain-id', 'storage-site-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Switches of a Storage Fabric."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
+        fabric_oid = uri_parms[0]
+        fabric_uri = '/api/storage-fabrics/' + fabric_oid
+        try:
+            hmc.lookup_by_uri(fabric_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        filter_args = dict(query_parms)
+        filter_args['storage-fabric-uri'] = fabric_uri
+
+        result_switches = []
+        for sw in hmc.consoles.console.storage_switches.list(filter_args):
+            result_sw = {}
+            for prop in cls.returned_props:
+                result_sw[prop] = prop_copy(sw.properties.get(prop))
+            result_switches.append(result_sw)
+        return {'storage-switches': result_switches}
+
+
 class TapeLibrariesHandler:
     """
     Handler class for HTTP methods on set of TapeLibraries resources.
@@ -5860,6 +6142,55 @@ class PartitionLinksHandler:
             result_partition_links.append(result_pl)
         return {'partition-links': result_partition_links}
 
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Partition Link."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name', 'cpc-uri', 'type'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        body2 = body.copy()
+        body2.setdefault('description', '')
+        body2.setdefault('state', 'incomplete')
+        body2.setdefault('pending-operations', [])
+        body2.setdefault('bus-connections', [])
+        body2['cpc-name'] = cpc.properties.get('name', '')
+
+        # Process bus-connections from the request (smc-d / hipersockets)
+        pl_type = body2.get('type')
+        if pl_type in ('smc-d', 'hipersockets'):
+            bus_connections = body2.get('bus-connections', [])
+            for bc in bus_connections:
+                bc.setdefault('nics', [])
+        elif pl_type == 'ctc':
+            body2.setdefault('paths', [])
+
+        new_plink = hmc.consoles.console.partition_links.add(body2)
+
+        # The real session.post() adds 'location-uri' from the HTTP Location
+        # header after the async job completes.  The faked session does not
+        # do that, so we add it to the return value directly here so that
+        # PartitionLinkManager.create() can retrieve the new resource URI.
+        return {
+            'location-uri': new_plink.uri,
+            'operation-results': [
+                {'partition-uri': bc.get('partition-uri'),
+                 'operation-status': 'attached'}
+                for bc in body2.get('bus-connections', [])
+            ],
+        }
+
 
 class PartitionLinkHandler(GenericGetPropertiesHandler):
     """
@@ -5899,6 +6230,86 @@ class PartitionLinkDeleteHandler:
             except KeyError:
                 pass
         partition_link.manager.remove(partition_link.oid)
+
+
+class PartitionLinkModifyHandler:
+    """
+    Handler class for operation: Modify Partition Link.
+
+    Handles attach (added-connections) and detach (removed-partition-uris)
+    for SMC-D and HiperSockets partition links.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Modify Partition Link."""
+        assert wait_for_completion is True  # async not supported yet
+
+        plink_oid = uri_parms[0]
+        plink_uri = '/api/partition-links/' + plink_oid
+        try:
+            plink = hmc.lookup_by_uri(plink_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        operation_results = []
+        props = plink.properties
+        bus_connections = list(props.get('bus-connections', []))
+
+        # Process detachments
+        removed_uris = (body or {}).get('removed-partition-uris', [])
+        for part_uri in removed_uris:
+            bus_connections = [
+                bc for bc in bus_connections
+                if bc.get('partition-uri') != part_uri
+            ]
+            operation_results.append({
+                'partition-uri': part_uri,
+                'operation-status': 'detached',
+            })
+
+        # Process attachments (smc-d / hipersockets)
+        added_connections = (body or {}).get('added-connections', [])
+        for bc in added_connections:
+            part_uri = bc.get('partition-uri')
+            number_of_nics = bc.get('number-of-nics', 1)
+            nics = bc.get('nics', [])
+            # Pad nics list to number_of_nics with empty dicts
+            while len(nics) < number_of_nics:
+                nics.append({})
+            try:
+                part = hmc.lookup_by_uri(part_uri)
+                part_name = part.properties.get('name', '')
+            except KeyError:
+                part_name = ''
+            new_bc = {
+                'partition-uri': part_uri,
+                'partition-name': part_name,
+                'nics': [{'uuid': str(id(n)), **n} for n in nics],
+            }
+            bus_connections.append(new_bc)
+            operation_results.append({
+                'partition-uri': part_uri,
+                'operation-status': 'attached',
+            })
+
+        # Update scalar writable properties
+        body2 = {k: v for k, v in (body or {}).items()
+                 if k not in ('added-connections', 'removed-partition-uris',
+                              'modified-connections')}
+        plink.update(body2)
+        plink.properties['bus-connections'] = bus_connections
+
+        # Derive state from number of connected partitions
+        n_parts = len({bc.get('partition-uri') for bc in bus_connections
+                       if bc.get('partition-uri')})
+        plink.properties['state'] = 'complete' if n_parts >= 2 else 'incomplete'
+
+        return {'operation-results': operation_results}
 
 
 class TapeLinksHandler:
@@ -7525,13 +7936,31 @@ URIS = (
 
     (r'/api/storage-fabrics(?:\?(.*))?',
      StorageFabricsHandler),
+    (r'/api/storage-fabrics/([^/]+)/storage-switches(?:\?(.*))?',
+     StorageFabricSwitchesHandler),
     (r'/api/storage-fabrics/([^?/]+)(?:\?(.*))?',
      StorageFabricHandler),
 
     (r'/api/storage-sites(?:\?(.*))?',
      StorageSitesHandler),
+    (r'/api/storage-sites/([^/]+)/storage-switches(?:\?(.*))?',
+     StorageSiteSwitchesHandler),
     (r'/api/storage-sites/([^?/]+)(?:\?(.*))?',
      StorageSiteHandler),
+
+    (r'/api/storage-switches/([^/]+)/operations/undefine',
+     StorageSwitchUndefineHandler),
+    (r'/api/storage-switches/([^/]+)/operations/move-storage-site',
+     StorageSwitchMoveSiteHandler),
+    (r'/api/storage-switches/([^/]+)/operations/move-storage-fabric',
+     StorageSwitchMoveFabricHandler),
+    (r'/api/storage-switches/([^?/]+)(?:\?(.*))?',
+     StorageSwitchHandler),
+    (r'/api/storage-switches(?:\?(.*))?',
+     StorageSwitchesHandler),
+
+    (r'/api/console/operations/define-storage-switch',
+     StorageSwitchDefineHandler),
 
     (r'/api/tape-libraries(?:\?(.*))?',
      TapeLibrariesHandler),
@@ -7550,6 +7979,8 @@ URIS = (
      PartitionLinkHandler),
     (r'/api/partition-links/([^/]+)/operations/delete',
      PartitionLinkDeleteHandler),
+    (r'/api/partition-links/([^/]+)/operations/modify',
+     PartitionLinkModifyHandler),
 
     (r'/api/tape-links(?:\?(.*))?',
      TapeLinksHandler),

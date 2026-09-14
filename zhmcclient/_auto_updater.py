@@ -22,6 +22,7 @@ import logging
 import json
 from json import JSONDecodeError
 import ssl
+import certifi
 
 from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME, \
     DEFAULT_STOMP_CONNECT_TIMEOUT, \
@@ -35,7 +36,7 @@ from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._notification import StompRetryTimeoutConfig
+from ._notification import StompRetryTimeoutConfig, validate_cert_hostname
 
 __all__ = ['AutoUpdater']
 
@@ -156,6 +157,19 @@ class AutoUpdater:
             [(self._session.actual_host, DEFAULT_STOMP_PORT)], **rt_kwargs)
         set_kwargs = {}
         set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        if self._session.verify_cert is True:
+            ca_cert = certifi.where()
+        elif isinstance(self._session.verify_cert, str):
+            ca_cert = self._session.verify_cert
+        else:
+            ca_cert = None
+        if ca_cert:
+            JMS_LOGGER.info(
+                "Enabling certificate validation with CA path: %s", ca_cert)
+            set_kwargs['ca_certs'] = ca_cert
+            set_kwargs['cert_validator'] = validate_cert_hostname
+        else:
+            JMS_LOGGER.warning("Certificate validation is disabled")
         self._conn.set_ssl(
             for_hosts=[(self._session.actual_host, DEFAULT_STOMP_PORT)],
             **set_kwargs)
