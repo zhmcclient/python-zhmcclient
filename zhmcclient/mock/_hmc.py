@@ -1260,14 +1260,6 @@ class FakedConsole(FakedBaseResource):
         return self._tape_links
 
     @property
-    def partition_links(self):
-        """
-        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to
-        the faked Partition Link resources of this Console.
-        """
-        return self._partition_links
-
-    @property
     def storage_fabrics(self):
         """
         :class:`~zhmcclient.mock.FakedStorageFabricManager`: Access to
