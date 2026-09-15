@@ -476,6 +476,57 @@ class TestAdapter:
         with pytest.raises(NotFound):
             adapter_mgr.find(name=faked_hs.name)
 
+    def test_adapter_delete_with_ctc_pl(self):
+        """Test Adapter.delete() for Hipersocket adapter when CTC partition
+        links are also present on the CPC (issue #2276)."""
+
+        # Add a faked hipersocket adapter
+        faked_hs = self.add_standard_hipersocket()
+
+        # Enable the partition-link management API feature on the faked CPC
+        self.faked_cpc.api_features = [
+            'dpm-hipersockets-partition-link-management']
+
+        # Add a faked console (needed for the partition_links path)
+        faked_console = self.session.hmc.consoles.add({
+            'name': 'fake-console-name',
+            'description': 'The HMC',
+        })
+
+        cpc_uri = self.faked_cpc.uri
+
+        # Add a faked CTC partition link (no 'adapter-uri' property)
+        faked_console.partition_links.add({
+            'object-id': 'ctc-pl-oid',
+            'cpc-uri': cpc_uri,
+            'name': 'ctc-link-1',
+            'state': 'complete',
+            'type': 'ctc',
+        })
+
+        # Add a faked HS partition link for this adapter
+        faked_console.partition_links.add({
+            'object-id': 'hs-pl-oid',
+            'cpc-uri': cpc_uri,
+            'name': 'hs-link-1',
+            'state': 'complete',
+            'type': 'hipersockets',
+            'adapter-uri': faked_hs.uri,
+        })
+
+        adapter_mgr = self.cpc.adapters
+        hs_adapter = adapter_mgr.find(name=faked_hs.name)
+
+        # Execute the code to be tested - must not raise KeyError on the CTC
+        # partition link that has no 'adapter-uri' property
+        hs_adapter.delete()
+
+        with pytest.raises(CeasedExistence):
+            hs_adapter.pull_full_properties()
+
+        with pytest.raises(NotFound):
+            adapter_mgr.find(name=faked_hs.name)
+
     @pytest.mark.parametrize(
         "input_props", [
             {},

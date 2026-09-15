@@ -6116,9 +6116,12 @@ class PartitionLinksHandler:
     Handler class for HTTP methods on set of PartitionLink resources.
     """
 
-    valid_query_parms_get = ['cpc-uri', 'name', 'state']
+    valid_query_parms_get = ['cpc-uri', 'name', 'state',
+                             'additional-properties']
 
-    returned_props = ['object-uri', 'cpc-uri', 'name', 'state', 'type']
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'state', 'type',
+                      # plus additional-properties
+                      ]
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -6127,17 +6130,17 @@ class PartitionLinksHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-
+        add_props = get_additional_properties(query_parms)
         filter_args = query_parms
 
-        result_plinks = []
+        result_partition_links = []
         for pl in hmc.consoles.console.partition_links.list(filter_args):
             result_pl = {}
-            for prop in cls.returned_props:
+            for prop in cls.returned_props + add_props:
                 if prop in pl.properties:
-                    result_pl[prop] = prop_copy(pl.properties.get(prop))
-            result_plinks.append(result_pl)
-        return {'partition-links': result_plinks}
+                    result_pl[prop] = prop_copy(pl.properties[prop])
+            result_partition_links.append(result_pl)
+        return {'partition-links': result_partition_links}
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -6208,17 +6211,25 @@ class PartitionLinkDeleteHandler:
         """Operation: Delete Partition Link."""
         assert wait_for_completion is True  # async not supported yet
 
-        plink_oid = uri_parms[0]
-        plink_uri = '/api/partition-links/' + plink_oid
+        partition_link_oid = uri_parms[0]
+        partition_link_uri = '/api/partition-links/' + partition_link_oid
         try:
-            plink = hmc.lookup_by_uri(plink_uri)
+            partition_link = hmc.lookup_by_uri(partition_link_uri)
         except KeyError:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
 
-        # Reflect deletion
-        plink.manager.remove(plink.oid)
+        # Reflect the result of deleting the partition link.
+        # On a real HMC this also deletes the backing Hipersocket adapter.
+        adapter_uri = partition_link.properties.get('adapter-uri')
+        if adapter_uri:
+            try:
+                adapter = hmc.lookup_by_uri(adapter_uri)
+                adapter.manager.remove(adapter.oid)
+            except KeyError:
+                pass
+        partition_link.manager.remove(partition_link.oid)
 
 
 class PartitionLinkModifyHandler:

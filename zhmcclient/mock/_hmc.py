@@ -1251,8 +1251,8 @@ class FakedConsole(FakedBaseResource):
     @property
     def partition_links(self):
         """
-        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to
-        the faked Partition Link resources of this Console.
+        :class:`~zhmcclient.mock.FakedPartitionLinkManager`: Access to the
+        faked Partition Link resources of this Console.
         """
         return self._partition_links
 
