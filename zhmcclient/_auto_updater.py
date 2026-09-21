@@ -32,11 +32,13 @@ from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME, \
     DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE, DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE, \
     DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK
 from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
-    RC_CHILDREN_CONSOLE, get_stomp_rt_kwargs, get_headers_message
+    RC_CHILDREN_CONSOLE, get_stomp_rt_kwargs, get_headers_message, \
+    parse_version
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._notification import StompRetryTimeoutConfig, validate_cert_hostname
+from ._exceptions import NotificationConnectionError
 
 __all__ = ['AutoUpdater']
 
@@ -148,7 +150,15 @@ class AutoUpdater:
 
         If the session does not yet have an object notification topic set,
         the session is logged on.
+
+        Raises:
+
+            NotificationConnectionError: STOMP connection failed.
         """
+        JMS_LOGGER.info(
+            "Opening JMS session for object notification topic '%s'",
+            self._session.object_topic)
+
         if not self._session.object_topic:
             self._session.logon()  # This sets actual_host
 
@@ -163,22 +173,47 @@ class AutoUpdater:
             ca_cert = self._session.verify_cert
         else:
             ca_cert = None
+        # Before version 9 of stomp.py, the enablement of certificate
+        # validation was derived from the 'ca_certs' parameter.
+        # Starting with version 9 of stomp.py, a new parameter 'verify' with
+        # a default of True has been added to explicitly control the enablement.
         if ca_cert:
             JMS_LOGGER.info(
                 "Enabling certificate validation with CA path: %s", ca_cert)
+            if parse_version(self._stomp.__version__) >= (9, 0):
+                set_kwargs['verify'] = True
             set_kwargs['ca_certs'] = ca_cert
+            # Note: According to https://docs.python.org/3/library/ssl.html#
+            # ssl.SSLSocket.do_handshake, hostname validation is performed by
+            # OpenSSL since Python 3.7. However, this does not work with
+            # stomp.py for some reason. Therefore, we perform hostname
+            # validation ourselves.
             set_kwargs['cert_validator'] = validate_cert_hostname
         else:
             JMS_LOGGER.warning("Certificate validation is disabled")
+            if parse_version(self._stomp.__version__) >= (9, 0):
+                set_kwargs['verify'] = False
         self._conn.set_ssl(
             for_hosts=[(self._session.actual_host, DEFAULT_STOMP_PORT)],
             **set_kwargs)
 
         listener = _UpdateListener(self, self._session)
         self._conn.set_listener('', listener)
-        # pylint: disable=protected-access
-        self._conn.connect(self._session.userid, self._session._password,
-                           wait=True)
+
+        JMS_LOGGER.debug("Connecting via STOMP to the HMC")
+
+        try:
+            # wait=True causes the connection to be retried for some times
+            # and finally raises stomp.ConnectFailedException
+            # pylint: disable=protected-access
+            self._conn.connect(self._session.userid, self._session._password,
+                               wait=True)
+        except (self._stomp.exception.StompException, OSError) as exc:
+            msg = f"STOMP connection failed: {exc.__class__.__name__}: {exc}"
+            JMS_LOGGER.error(msg)
+            raise NotificationConnectionError(msg) from exc
+
+        JMS_LOGGER.debug("STOMP connection successfully established")
 
         dest = "/topic/" + self._session.object_topic
         self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')
@@ -187,7 +222,7 @@ class AutoUpdater:
 
         JMS_LOGGER.info(
             "JMS session for object notification topic '%s' has been "
-            "established", self._session.object_topic)
+            "opened", self._session.object_topic)
 
     def close(self):
         """
@@ -196,12 +231,16 @@ class AutoUpdater:
         This implicitly unsubscribes from the object notification topic this
         auto updater was created for.
         """
+        JMS_LOGGER.info(
+            "Closing JMS session for object notification topic '%s'",
+            self._session.object_topic)
+
         self._conn.disconnect()
         self._conn = None
 
         JMS_LOGGER.info(
             "JMS session for object notification topic '%s' has been "
-            "disconnected", self._session.object_topic)
+            "closed", self._session.object_topic)
 
     def is_open(self):
         """

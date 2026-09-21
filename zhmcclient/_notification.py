@@ -97,7 +97,7 @@ from ._constants import DEFAULT_STOMP_PORT, DEFAULT_STOMP_CONNECT_TIMEOUT, \
 from ._exceptions import NotificationJMSError, NotificationParseError, \
     SubscriptionNotFound, NotificationConnectionError, \
     NotificationSubscriptionError
-from ._utils import get_stomp_rt_kwargs, get_headers_message
+from ._utils import get_stomp_rt_kwargs, get_headers_message, parse_version
 from ._vendor.python.ssl import match_hostname, CertificateError
 
 __all__ = ['NotificationReceiver', 'StompRetryTimeoutConfig']
@@ -425,9 +425,15 @@ class NotificationReceiver:
             ca_cert = self._verify_cert
         else:
             ca_cert = None
+        # Before version 9 of stomp.py, the enablement of certificate
+        # validation was derived from the 'ca_certs' parameter.
+        # Starting with version 9 of stomp.py, a new parameter 'verify' with
+        # a default of True has been added to explicitly control the enablement.
         if ca_cert:
             JMS_LOGGER.info(
                 "Enabling certificate validation with CA path: %s", ca_cert)
+            if parse_version(self._stomp.__version__) >= (9, 0):
+                set_kwargs['verify'] = True
             set_kwargs['ca_certs'] = ca_cert
             # Note: According to https://docs.python.org/3/library/ssl.html#
             # ssl.SSLSocket.do_handshake, hostname validation is performed by
@@ -437,22 +443,25 @@ class NotificationReceiver:
             set_kwargs['cert_validator'] = validate_cert_hostname
         else:
             JMS_LOGGER.warning("Certificate validation is disabled")
+            if parse_version(self._stomp.__version__) >= (9, 0):
+                set_kwargs['verify'] = False
         self._conn.set_ssl(for_hosts=[(self._host, self._port)], **set_kwargs)
         listener = _NotificationListener(self._handover_queue)
         self._conn.set_listener('', listener)
 
         connected = self.is_connected()
-        JMS_LOGGER.info(
+        JMS_LOGGER.debug(
             "Connecting via STOMP to the HMC (currently connected: %s)",
             connected)
         try:
             # wait=True causes the connection to be retried for some times
             # and finally raises stomp.ConnectFailedException
             self._conn.connect(self._userid, self._password, wait=True)
-        except Exception as exc:
+        except (self._stomp.exception.StompException, OSError) as exc:
             msg = f"STOMP connection failed: {exc.__class__.__name__}: {exc}"
-            JMS_LOGGER.warning(msg)
+            JMS_LOGGER.error(msg)
             raise NotificationConnectionError(msg)
+
         JMS_LOGGER.info("STOMP connection successfully established")
 
         for topic_name in self._topic_names:
@@ -505,7 +514,7 @@ class NotificationReceiver:
             self._conn.subscribe(destination=dest, id=id_value, ack='auto')
         except Exception as exc:
             msg = f"STOMP subscription failed: {exc.__class__.__name__}: {exc}"
-            JMS_LOGGER.warning(msg)
+            JMS_LOGGER.error(msg)
             raise NotificationSubscriptionError(msg)
         return id_value
 
@@ -543,7 +552,7 @@ class NotificationReceiver:
             msg = (
                 f"STOMP unsubscription failed: {exc.__class__.__name__}: "
                 f"{exc}")
-            JMS_LOGGER.warning(msg)
+            JMS_LOGGER.error(msg)
             raise NotificationSubscriptionError(msg)
 
     @logged_api_call
@@ -1008,7 +1017,7 @@ class _NotificationListener:
         """
         _, message = get_headers_message(frame_args)
         if message is None and DEBUG_HEARTBEATS:
-            JMS_LOGGER.info("Sending STOMP heartbeat to HMC")
+            JMS_LOGGER.debug("Sending STOMP heartbeat to HMC")
 
     def on_heartbeat(self):
         # pylint: disable=no-self-use
@@ -1016,7 +1025,7 @@ class _NotificationListener:
         Event method that gets called when a STOMP heartbeat has been received.
         """
         if DEBUG_HEARTBEATS:
-            JMS_LOGGER.info("Received STOMP heartbeat from HMC")
+            JMS_LOGGER.debug("Received STOMP heartbeat from HMC")
 
     def on_receiver_loop_completed(self, *frame_args):
         """

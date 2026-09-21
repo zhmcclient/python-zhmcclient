@@ -213,7 +213,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for property change notification .*"
                  "resource /api/cpcs/fake-cpc1 .*"
@@ -339,7 +339,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for property change notification .*"
                  "resource /api/cpcs/fake-cpc1 .*"
@@ -407,7 +407,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for property change notification .*"
                  "resource /api/partitions/fake-part1/nics/fake-nic1 .*"
@@ -479,7 +479,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for status change notification"),
                 ('zhmcclient.jms', logging.INFO,
@@ -526,7 +526,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             'exp_resources': [],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for inventory change notification .*"
                  "resource /api/partitions/fake-part1 .*"
@@ -591,7 +591,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for inventory change notification .*"
                  "resource /api/partitions/fake-part2 .*"
@@ -640,7 +640,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             'exp_resources': [],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for inventory change notification .*"
                  "resource /api/cpcs/fake-cpc1 .*"
@@ -705,7 +705,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for inventory change notification .*"
                  "resource /api/cpcs/fake-cpc2 .*"
@@ -752,7 +752,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             'exp_resources': [],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.DEBUG,
                  "JMS message for inventory change notification .*"
                  "resource /api/partitions/fake-part1 .*"
@@ -814,7 +814,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             ],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.ERROR,
                  "JMS message for object notification .*"
                  "no 'element-uri' .*no 'object-uri'"),
@@ -846,7 +846,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
             'exp_resources': [],
             'exp_log_entries': [
                 ('zhmcclient.jms', logging.INFO,
-                 "JMS session .* established"),
+                 "JMS session .* opened"),
                 ('zhmcclient.jms', logging.WARNING,
                  "JMS message for notification of type job-completion .*"
                  "is ignored"),

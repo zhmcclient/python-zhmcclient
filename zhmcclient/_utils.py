@@ -886,3 +886,31 @@ def get_headers_message(frame_args):
     if message == '':
         message = None
     return headers, message
+
+
+def parse_version(version_str):
+    """
+    Parse a version string into its dot-separated parts and return a tuple of
+    the parts.
+
+    The version string may contain integer and non-integer parts. Any integer
+    parts are returned as int-typed values.
+
+    This function has been added because Python has no built-in support for
+    version parsing and to avoid a dependency on an additional package
+    such as "packaging".
+
+    Parameters:
+      version_str (str): Version string.
+
+    Returns:
+      tuple: Version parts.
+    """
+    ret = []
+    for part in version_str.split("."):
+        try:
+            part = int(part)
+        except ValueError:
+            pass
+        ret.append(part)
+    return tuple(ret)
