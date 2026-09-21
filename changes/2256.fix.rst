@@ -1,0 +1,2 @@
+Fixed that the :meth:`zhmcclient.NotificationReceiver.notifications` method
+fails when receiving a message body with an empty string.
