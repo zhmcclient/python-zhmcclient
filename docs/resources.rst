@@ -518,6 +518,46 @@ Storage Switches
    :special-members: __str__
 
 
+.. _`Storage Control Units`:
+
+Storage Control Units
+---------------------
+
+.. automodule:: zhmcclient._storage_control_unit
+
+.. autoclass:: zhmcclient.StorageControlUnitManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageControlUnit
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
+.. _`Storage Paths`:
+
+Storage Paths
+-------------
+
+.. automodule:: zhmcclient._storage_path
+
+.. autoclass:: zhmcclient.StoragePathManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StoragePath
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Storage Subsystems`:
 
 Storage Subsystems
