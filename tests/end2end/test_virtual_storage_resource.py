@@ -58,7 +58,7 @@ def test_vsr_find_list(zhmc_logger, dpm_mode_cpcs):
         # Pick the VSRs to test with
         grp_vol_tuples = []
         stogrp_list = cpc.list_associated_storage_groups(
-            filter_args={type: 'fcp'})
+            filter_args={'type': 'fcp'})
         for stogrp in stogrp_list:
             vsr_list = stogrp.virtual_storage_resources.list()
             for vsr in vsr_list:
@@ -97,7 +97,7 @@ def test_vsr_property(zhmc_logger, dpm_mode_cpcs):
         # Pick the VSRs to test with
         grp_vol_tuples = []
         stogrp_list = cpc.list_associated_storage_groups(
-            filter_args={type: 'fcp'})
+            filter_args={'type': 'fcp'})
         for stogrp in stogrp_list:
             vsr_list = stogrp.virtual_storage_resources.list()
             for vsr in vsr_list:
