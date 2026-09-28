@@ -537,6 +537,8 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
 
     Raises:
       ~zhmcclient.FilterConversionError: Cannot convert match value
+      ~zhmcclient.FilterConversionError: Filter property does not exist on
+        resource
     """
     if isinstance(prop_match, (list, tuple)):
         # List items are logically ORed, so one matching item suffices.
@@ -544,14 +546,15 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
             if matches_prop(obj, prop_name, pm, case_insensitive):
                 return True
     else:
-        # Some lists of resources do not have all properties, for example
-        # Hipersocket adapters do not have a "card-location" property.
-        # If a filter property does not exist on a resource, the resource
-        # does not match.
         try:
             prop_value = obj.get_property(prop_name)
         except KeyError:
-            return False
+            new_exc = FilterConversionError(
+                f"Filter property {prop_name!r} does not exist on "
+                f"{obj.manager.class_name} resource {obj.uri!r}",
+                prop_name, prop_match)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.FilterConversionError
         if isinstance(prop_value, str):
             # HMC resource property is Enum String or (non-enum) String,
             # and is both matched by regexp matching. Ideally, regexp
