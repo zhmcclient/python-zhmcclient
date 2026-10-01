@@ -505,12 +505,20 @@ TESTCASES_MATCHES_FILTERS = [
     # - exp_exc_pattern: Regex pattern to check exception message,
     #   or None for success.
     (
-        "Filter args with non-existing property",
+        "Filter args with non-existing property (string match value)",
         CPC_FOR_FILTERING,
         {'filter_non_existing': 'x'},
-        False,
         None,
+        FilterConversionError,
+        "Filter property 'filter_non_existing' does not exist on",
+    ),
+    (
+        "Filter args with non-existing property (int match value)",
+        CPC_FOR_FILTERING,
+        {'filter_non_existing': 42},
         None,
+        FilterConversionError,
+        "Filter property 'filter_non_existing' does not exist on",
     ),
     (
         "Filter args None",

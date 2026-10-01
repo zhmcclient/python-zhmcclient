@@ -1,0 +1,3 @@
+Fixed that filtering resources with a non-existing property name silently
+returned an empty result instead of raising a
+:exc:`~zhmcclient.FilterConversionError` exception.
