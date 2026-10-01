@@ -536,7 +536,6 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
         the specified property and the match value.
 
     Raises:
-      ~zhmcclient.FilterConversionError: Cannot convert match value
       ~zhmcclient.FilterConversionError: Filter property does not exist on
         resource
     """
@@ -546,6 +545,10 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
             if matches_prop(obj, prop_name, pm, case_insensitive):
                 return True
     else:
+        # Some lists of resources do not have all properties, for example
+        # Hipersocket adapters do not have a "card-location" property.
+        # If a filter property does not exist on a resource, the resource
+        # does not match.
         try:
             prop_value = obj.get_property(prop_name)
         except KeyError:
