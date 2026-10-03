@@ -448,6 +448,34 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
         raise new_exc  # zhmcclient.mock.BadRequestError
 
 
+def check_duplicate_device_number(partition, devno, exclude_uri=None):
+    """
+    Check if a device number is already in use by any PCI-based resource
+    (NIC, HBA, Virtual Function, or AI Accelerator Function) in the partition.
+    """
+    if not devno:
+        return False
+    devno_upper = devno.upper()
+    for nic in partition.nics.list():
+        if nic.uri != exclude_uri and \
+                nic.properties.get('device-number', '').upper() == devno_upper:
+            return True
+    for hba in partition.hbas.list():
+        if hba.uri != exclude_uri and \
+                hba.properties.get('device-number', '').upper() == devno_upper:
+            return True
+    for vf in partition.virtual_functions.list():
+        if vf.uri != exclude_uri and \
+                vf.properties.get('device-number', '').upper() == devno_upper:
+            return True
+    for ai_func in partition.ai_accelerator_functions.list():
+        if ai_func.uri != exclude_uri and \
+                ai_func.properties.get('device-number', '').upper() \
+                == devno_upper:
+            return True
+    return False
+
+
 def properties_copy(properties):
     """
     Return a deep copy of the properties that is independent of the input.
@@ -3175,9 +3203,9 @@ def get_inventory_for_adapter(hmc):
         adapters = cpc.adapters.list()
         for adapter in adapters:
             result.append(properties_copy(adapter.properties))
-            ports = adapter.ports.list()
-            for port in ports:
-                result.append(properties_copy(port.properties))
+            if adapter.ports:
+                for port in adapter.ports.list():
+                    result.append(properties_copy(port.properties))
     return result
 
 
@@ -3198,6 +3226,9 @@ def get_inventory_for_partition(hmc):
             vfs = partition.virtual_functions.list()
             for vf in vfs:
                 result.append(properties_copy(vf.properties))
+            ai_funcs = partition.ai_accelerator_functions.list()
+            for ai_func in ai_funcs:
+                result.append(properties_copy(ai_func.properties))
     return result
 
 
@@ -3856,12 +3887,20 @@ class AdapterGetAssignedPartitionsHandler:
                     assigned_partitions.append(partition)
 
             elif adapter_family in ('accelerator'):
-                # Check if partition has a virtual function backed by this
+                # Check if partition has a virtual function (zEDC) or
+                # an AI accelerator function (physical/virtual) backed by this
                 # adapter
+                assigned = False
                 for vf in partition.virtual_functions.list():
-                    vf_adapter_uri = vf.properties['adapter-uri']
-                if vf_adapter_uri == adapter_uri:
-                    assigned_partitions.append(partition)
+                    if vf.properties.get('adapter-uri') == adapter_uri:
+                        assigned_partitions.append(partition)
+                        assigned = True
+                        break
+                if not assigned:
+                    for ai_func in partition.ai_accelerator_functions.list():
+                        if ai_func.properties.get('adapter-uri') == adapter_uri:
+                            assigned_partitions.append(partition)
+                            break
             else:
                 pass
                 # TODO: Enable check again when FakedStorageGroup supports VSRs
@@ -4951,6 +4990,395 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
                                invalid_statuses=['starting', 'stopping'])
 
         partition.virtual_functions.remove(vf.oid)
+
+
+# pylint: disable=invalid-name
+class PartitionCreateAiAcceleratorFunctionsHandler:
+    """
+    Handler class for HTTP POST on the Create AI Accelerator Functions
+    operation URI.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create AI Accelerator Functions (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = re.sub(
+            r'/operations/create-ai-accelerator-functions$', '', uri)
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        check_required_fields(method, uri, body, ['adapter-uri'])
+
+        # Validate adapter existence and type
+        adapter_uri = body['adapter-uri']
+        try:
+            adapter = hmc.lookup_by_uri(adapter_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=adapter_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        if adapter.properties.get('type') != 'ai':
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=adapter_uri)
+            new_exc.__cause__ = None
+            raise new_exc
+
+        partition_type = partition.properties.get('type', 'linux')
+        ai_funcs_input = body.get('ai-accelerator-functions', None)
+
+        if partition_type == 'ssc':
+            # management vs consumer partition check based on
+            # is-physical-function
+            if ai_funcs_input is None:
+                raise BadRequestError(
+                    method, uri, reason=23,
+                    message="A required physical function is missing in "
+                    "the request for the SSC management partition.")
+
+            pf_count = sum(
+                1 for f in ai_funcs_input
+                if f.get('is-physical-function', False) is True)
+
+            if pf_count == 0:
+                # The user is attempting to use the SSC partition as a
+                # consumer partition (no PF requested).
+                # Let's verify SSC partition is not already a management
+                # partition.
+                has_pfs = any(
+                    f.properties.get('is-physical-function') is True
+                    for f in partition.ai_accelerator_functions.list())
+                if has_pfs:
+                    raise BadRequestError(
+                        method, uri, reason=18,
+                        message="An SSC partition must not be designated "
+                        "as both management and consumer partition.")
+
+                # Treat as consumer partition role
+                if len(ai_funcs_input) > 1:
+                    raise BadRequestError(
+                        method, uri, reason=7,
+                        message="The ai-accelerator-functions field "
+                        "specified in the request body exceeded the "
+                        "permitted number of AI Accelerator Functions; "
+                        "only 1 allowed for consumer partitions.")
+                ai_funcs_list = list(copy.deepcopy(ai_funcs_input))
+                if not ai_funcs_list:
+                    ai_funcs_list.append({
+                        'name': f"auto_vf_{partition.properties.get('name')}",
+                        'is-physical-function': False,
+                    })
+                is_mgmt_request = False
+            else:
+                # User is attempting to use the SSC partition as a
+                # management partition.
+                # Let's verify SSC partition is not already acting as a
+                # consumer partition.
+                existing_funcs = partition.ai_accelerator_functions.list()
+                has_pfs = any(
+                    f.properties.get('is-physical-function') is True
+                    for f in existing_funcs)
+                has_vfs_only = len(existing_funcs) > 0 and not has_pfs
+                if has_vfs_only:
+                    raise BadRequestError(
+                        method, uri, reason=18,
+                        message="An SSC partition must not be designated "
+                        "as both management and consumer partition.")
+
+                if pf_count > 1:
+                    raise BadRequestError(
+                        method, uri, reason=8,
+                        message="Physical function provided must be unique "
+                        "in the provided ai-accelerator-functions field "
+                        "in the request.")
+
+                if len(ai_funcs_input) > 2:
+                    raise BadRequestError(
+                        method, uri, reason=7,
+                        message="The ai-accelerator-functions field "
+                        "specified in the request body exceeded the "
+                        "permitted number of AI Accelerator Functions; "
+                        "only 2 allowed for management partitions.")
+
+                ai_funcs_list = list(copy.deepcopy(ai_funcs_input))
+                if len(ai_funcs_list) == 1:
+                    # Auto-generate a virtual function
+                    ai_funcs_list.append({
+                        'name': f"auto_vf_{partition.properties.get('name')}",
+                        'is-physical-function': False,
+                    })
+                is_mgmt_request = True
+        else:
+            # Consumer partition (non-SSC)
+            if ai_funcs_input is not None:
+                if len(ai_funcs_input) > 1:
+                    raise BadRequestError(
+                        method, uri, reason=7,
+                        message="The ai-accelerator-functions field "
+                        "specified in the request body exceeded the "
+                        "permitted number of AI Accelerator Functions; "
+                        "only 1 allowed for consumer partitions.")
+                if len(ai_funcs_input) == 1 and \
+                        ai_funcs_input[0].get(
+                            'is-physical-function', False) is True:
+                    raise BadRequestError(
+                        method, uri, reason=24,
+                        message="A value in the is-physical-function field "
+                        "of the ai-acceleration-functions field in the "
+                        "request body points to a physical function, which "
+                        "is not allowed for a consumer partition.")
+                ai_funcs_list = list(copy.deepcopy(ai_funcs_input))
+            else:
+                ai_funcs_list = [{
+                    'name': f"auto_vf_{partition.properties.get('name')}",
+                    'is-physical-function': False,
+                }]
+            is_mgmt_request = False
+
+        # Verify management partition rules (Reason 120, 121)
+        pfs_for_adapter = []
+        for cpc in hmc.cpcs.list():
+            for p in cpc.partitions.list():
+                for f in p.ai_accelerator_functions.list():
+                    if f.properties.get('adapter-uri') == adapter_uri \
+                            and f.properties.get(
+                                'is-physical-function') is True:
+                        pfs_for_adapter.append(p)
+
+        if is_mgmt_request:
+            if len(pfs_for_adapter) >= 1 and \
+                    pfs_for_adapter[0].uri != partition.uri:
+                raise ConflictError(
+                    method, uri, reason=120,
+                    message="The adapter-uri in the request body already "
+                    "has AI Accelerator Functions created for the maximum "
+                    "number of management partitions.")
+        else:
+            if len(pfs_for_adapter) == 0:
+                raise ConflictError(
+                    method, uri, reason=121,
+                    message="There is no management partition defined for "
+                    "the specified adapter-uri field in the request.")
+
+        # Check duplicate names and device numbers in the request and partition
+        names_to_check = []
+        devnos_to_check = []
+        for f in ai_funcs_list:
+            if 'name' in f:
+                names_to_check.append(f['name'])
+            if 'device-number' in f:
+                devnos_to_check.append(f['device-number'])
+
+        if len(names_to_check) != len(set(names_to_check)):
+            raise BadRequestError(
+                method, uri, reason=8,
+                message="Duplicate name property provided in request.")
+        if len(devnos_to_check) != len(set(devnos_to_check)):
+            raise BadRequestError(
+                method, uri, reason=8,
+                message="Duplicate device-number property provided in "
+                "request.")
+
+        for existing_f in partition.ai_accelerator_functions.list():
+            if existing_f.properties.get('name') in names_to_check:
+                raise BadRequestError(
+                    method, uri, reason=8,
+                    message="The value provided for the name property in "
+                    "one of the objects in the ai-accelerator-functions "
+                    "array in the request body is already in use by "
+                    "another AI Accelerator Function in the partition.")
+
+        for devno in devnos_to_check:
+            if check_duplicate_device_number(partition, devno):
+                raise BadRequestError(
+                    method, uri, reason=8,
+                    message=f"The value provided for the device-number "
+                    f"property '{devno}' in one of the objects in the "
+                    "ai-accelerator-functions array in the request body "
+                    "is already in use by a PCI-based device in this "
+                    "partition.")
+
+        # Finally, create the functions
+        created_uris = []
+        for func_props in ai_funcs_list:
+            props = copy.deepcopy(func_props)
+            props['adapter-uri'] = adapter_uri
+            new_func = partition.ai_accelerator_functions.add(props)
+            created_uris.append(new_func.uri)
+
+        return {'ai-accelerator-function-uris': created_uris}
+
+
+# pylint: disable=invalid-name
+class PartitionDeleteAiAcceleratorFunctionsHandler:
+    """
+    Handler class for HTTP POST on the Delete AI Accelerator Functions
+    operation URI.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Delete AI Accelerator Functions (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = re.sub(
+            r'/operations/delete-ai-accelerator-functions$', '', uri)
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        check_required_fields(
+            method, uri, body, ['ai-accelerator-function-uris'])
+
+        uris = body['ai-accelerator-function-uris']
+        if len(uris) < 1 or len(uris) > 2:
+            raise BadRequestError(
+                method, uri, reason=7,
+                message="The ai-accelerator-function-uris field specified "
+                "in the request body exceeded the permitted number of AI "
+                "Accelerator Functions; only 1 allowed for consumer and "
+                "2 for management partitions.")
+
+        adapter_uris = set()
+        is_management = False
+        funcs_to_delete = []
+
+        for func_uri in uris:
+            try:
+                ai_func = hmc.lookup_by_uri(func_uri)
+            except KeyError:
+                new_exc = InvalidResourceError(method, uri, reason=2,
+                                               resource_uri=func_uri)
+                new_exc.__cause__ = None
+                raise new_exc
+            funcs_to_delete.append(ai_func)
+            adapter_uris.add(ai_func.properties.get('adapter-uri'))
+            if ai_func.properties.get('is-physical-function') is True:
+                is_management = True
+
+        if len(adapter_uris) > 1:
+            raise BadRequestError(
+                method, uri, reason=7,
+                message="The ai-accelerator-function-uris array includes "
+                "functions belonging to different adapters.")
+
+        # Check if the partition has a PF for this adapter
+        adapter_uri = next(iter(adapter_uris))
+        partition_has_pf = any(
+            f.properties.get('is-physical-function') is True
+            and f.properties.get('adapter-uri') == adapter_uri
+            for f in partition.ai_accelerator_functions.list()
+        )
+
+        if not partition_has_pf:
+            # Consumer partition role for this adapter
+            if len(uris) > 1:
+                raise BadRequestError(
+                    method, uri, reason=7,
+                    message="The ai-accelerator-function-uris field "
+                    "specified in the request body exceeded the permitted "
+                    "number of AI Accelerator Functions; only 1 allowed "
+                    "for consumer partitions.")
+
+        # Verify management partition deletion restriction (Reason 118)
+        if is_management:
+            for cpc in hmc.cpcs.list():
+                for p in cpc.partitions.list():
+                    if p.uri != partition.uri:
+                        for f in p.ai_accelerator_functions.list():
+                            if f.properties.get('adapter-uri') == \
+                                    adapter_uri:
+                                raise ConflictError(
+                                    method, uri, reason=118,
+                                    message="The operation cannot be "
+                                    "performed on a management partition "
+                                    "if there are AI Accelerator Functions"
+                                    " on one or more consumer partitions "
+                                    "for the same adapter.")
+
+        # Finally, perform deletion
+        for ai_func in funcs_to_delete:
+            partition.ai_accelerator_functions.remove(ai_func.oid)
+
+
+class AiAcceleratorFunctionHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on a single AI Accelerator Function
+    resource.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update AI Accelerator Function Properties."""
+        try:
+            ai_func = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        partition = ai_func.manager.parent
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'name',
+                'device-number',
+            ])
+
+        # Validate name uniqueness in partition (Reason 8)
+        if 'name' in body:
+            new_name = body['name']
+            for f in partition.ai_accelerator_functions.list():
+                if f.uri != uri and f.properties.get('name') == new_name:
+                    raise BadRequestError(
+                        method, uri, reason=8,
+                        message="The value provided for the name property "
+                        "in the request body is already in use by another "
+                        "AI Accelerator Function of the partition.")
+
+        # Validate device-number uniqueness in partition (Reason 8)
+        if 'device-number' in body:
+            new_devno = body['device-number']
+            if check_duplicate_device_number(
+                    partition, new_devno, exclude_uri=uri):
+                raise BadRequestError(
+                    method, uri, reason=8,
+                    message="The value provided for the device-number "
+                    "property in the request body is already in use by "
+                    "instance of one of the objects listed in "
+                    "'PCI-based device numbers'.")
+
+        ai_func.update(body)
 
 
 class VirtualSwitchesHandler:
@@ -8190,6 +8618,13 @@ URIS = (
      VirtualFunctionsHandler),
     (r'/api/partitions/([^/]+)/virtual-functions/([^?/]+)(?:\?(.*))?',
      VirtualFunctionHandler),
+
+    (r'/api/partitions/([^/]+)/operations/create-ai-accelerator-functions',
+     PartitionCreateAiAcceleratorFunctionsHandler),
+    (r'/api/partitions/([^/]+)/operations/delete-ai-accelerator-functions',
+     PartitionDeleteAiAcceleratorFunctionsHandler),
+    (r'/api/partitions/([^/]+)/ai-accelerator-functions/([^?/]+)(?:\?(.*))?',
+     AiAcceleratorFunctionHandler),
 
     (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
     (r'/api/virtual-switches/([^?/]+)(?:\?(.*))?', VirtualSwitchHandler),
