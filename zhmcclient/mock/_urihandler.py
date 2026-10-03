@@ -3175,9 +3175,9 @@ def get_inventory_for_adapter(hmc):
         adapters = cpc.adapters.list()
         for adapter in adapters:
             result.append(properties_copy(adapter.properties))
-            ports = adapter.ports.list()
-            for port in ports:
-                result.append(properties_copy(port.properties))
+            if adapter.ports:
+                for port in adapter.ports.list():
+                    result.append(properties_copy(port.properties))
     return result
 
 
@@ -3198,6 +3198,9 @@ def get_inventory_for_partition(hmc):
             vfs = partition.virtual_functions.list()
             for vf in vfs:
                 result.append(properties_copy(vf.properties))
+            ai_funcs = partition.ai_accelerator_functions.list()
+            for ai_func in ai_funcs:
+                result.append(properties_copy(ai_func.properties))
     return result
 
 
@@ -3856,12 +3859,20 @@ class AdapterGetAssignedPartitionsHandler:
                     assigned_partitions.append(partition)
 
             elif adapter_family in ('accelerator'):
-                # Check if partition has a virtual function backed by this
+                # Check if partition has a virtual function (zEDC) or
+                # an AI accelerator function (physical/virtual) backed by this
                 # adapter
+                assigned = False
                 for vf in partition.virtual_functions.list():
-                    vf_adapter_uri = vf.properties['adapter-uri']
-                if vf_adapter_uri == adapter_uri:
-                    assigned_partitions.append(partition)
+                    if vf.properties.get('adapter-uri') == adapter_uri:
+                        assigned_partitions.append(partition)
+                        assigned = True
+                        break
+                if not assigned:
+                    for ai_func in partition.ai_accelerator_functions.list():
+                        if ai_func.properties.get('adapter-uri') == adapter_uri:
+                            assigned_partitions.append(partition)
+                            break
             else:
                 pass
                 # TODO: Enable check again when FakedStorageGroup supports VSRs
@@ -4951,6 +4962,95 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
                                invalid_statuses=['starting', 'stopping'])
 
         partition.virtual_functions.remove(vf.oid)
+
+
+# pylint: disable=invalid-name
+class PartitionCreateAiAcceleratorFunctionsHandler:
+    """
+    Handler class for HTTP POST on the Create AI Accelerator Functions
+    operation URI.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create AI Accelerator Functions (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = re.sub(
+            r'/operations/create-ai-accelerator-functions$', '', uri)
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        check_required_fields(method, uri, body, ['adapter-uri'])
+
+        ai_funcs_input = body.get('ai-accelerator-functions', [{}])
+        created_uris = []
+        for func_props in ai_funcs_input:
+            props = copy.copy(func_props)
+            props['adapter-uri'] = body['adapter-uri']
+            new_func = partition.ai_accelerator_functions.add(props)
+            created_uris.append(new_func.uri)
+
+        return {'ai-accelerator-function-uris': created_uris}
+
+
+# pylint: disable=invalid-name
+class PartitionDeleteAiAcceleratorFunctionsHandler:
+    """
+    Handler class for HTTP POST on the Delete AI Accelerator Functions
+    operation URI.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Delete AI Accelerator Functions (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = re.sub(
+            r'/operations/delete-ai-accelerator-functions$', '', uri)
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        check_required_fields(
+            method, uri, body, ['ai-accelerator-function-uris'])
+
+        for func_uri in body['ai-accelerator-function-uris']:
+            try:
+                ai_func = hmc.lookup_by_uri(func_uri)
+            except KeyError:
+                new_exc = InvalidResourceError(method, uri, reason=2,
+                                               resource_uri=func_uri)
+                new_exc.__cause__ = None
+                raise new_exc
+            partition.ai_accelerator_functions.remove(ai_func.oid)
+
+
+class AiAcceleratorFunctionHandler(GenericGetPropertiesHandler,
+                                   GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on a single AI Accelerator Function
+    resource.
+    """
 
 
 class VirtualSwitchesHandler:
@@ -8190,6 +8290,13 @@ URIS = (
      VirtualFunctionsHandler),
     (r'/api/partitions/([^/]+)/virtual-functions/([^?/]+)(?:\?(.*))?',
      VirtualFunctionHandler),
+
+    (r'/api/partitions/([^/]+)/operations/create-ai-accelerator-functions',
+     PartitionCreateAiAcceleratorFunctionsHandler),
+    (r'/api/partitions/([^/]+)/operations/delete-ai-accelerator-functions',
+     PartitionDeleteAiAcceleratorFunctionsHandler),
+    (r'/api/partitions/([^/]+)/ai-accelerator-functions/([^?/]+)(?:\?(.*))?',
+     AiAcceleratorFunctionHandler),
 
     (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
     (r'/api/virtual-switches/([^?/]+)(?:\?(.*))?', VirtualSwitchHandler),
