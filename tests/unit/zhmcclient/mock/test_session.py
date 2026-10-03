@@ -190,9 +190,27 @@ HMC1_RESOURCES = {
                             },
                         },
                     ],
+                    'ai_accelerator_functions': [
+                        {
+                            'properties': {
+                                'element-id': 'ai1',
+                                'name': 'AI Accelerator Function 1',
+                                'device-number': '0030',
+                                'adapter-uri': '/api/adapters/ai-ad1',
+                                'is-physical-function': False,
+                            },
+                        },
+                    ],
                 },
             ],
             'adapters': [
+                {
+                    'properties': {
+                        'object-id': 'ai-ad1',
+                        'name': 'AI Adapter 1',
+                        'type': 'ai',
+                    },
+                },
                 {
                     'properties': {
                         'object-id': 'ad1',

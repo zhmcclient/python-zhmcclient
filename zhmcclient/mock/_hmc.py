@@ -49,6 +49,7 @@ __all__ = ['InputError',
            'FakedPartitionManager', 'FakedPartition',
            'FakedPortManager', 'FakedPort',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
+           'FakedAiAcceleratorFunctionManager', 'FakedAiAcceleratorFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
            'FakedStorageGroupManager', 'FakedStorageGroup',
            'FakedStorageVolumeManager', 'FakedStorageVolume',
@@ -2130,6 +2131,9 @@ class FakedAdapter(FakedBaseResource):
             elif type_ == 'zedc':
                 self._properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
+            elif type_ == 'ai':
+                self._properties['adapter-family'] = 'accelerator'
+                self._adapter_kind = 'other'
             else:
                 raise InputError(
                     f"FakedAdapter with object-id={self.oid} has an unknown "
@@ -2955,6 +2959,8 @@ class FakedPartition(FakedBaseResource):
             self._properties['nic-uris'] = []
         if 'virtual-function-uris' not in self._properties:
             self._properties['virtual-function-uris'] = []
+        if 'ai-accelerator-function-uris' not in self._properties:
+            self._properties['ai-accelerator-function-uris'] = []
         if 'storage-group-uris' not in self._properties:
             self._properties['storage-group-uris'] = []
         if 'tape-link-uris' not in self._properties:
@@ -2966,6 +2972,8 @@ class FakedPartition(FakedBaseResource):
         self._nics = FakedNicManager(hmc=manager.hmc, partition=self)
         self._hbas = FakedHbaManager(hmc=manager.hmc, partition=self)
         self._virtual_functions = FakedVirtualFunctionManager(
+            hmc=manager.hmc, partition=self)
+        self._ai_accelerator_functions = FakedAiAcceleratorFunctionManager(
             hmc=manager.hmc, partition=self)
         self._devno_pool = IdPool(0x8000, 0xFFFF)
         self._wwpn_pool = IdPool(0x8000, 0xFFFF)
@@ -3011,6 +3019,14 @@ class FakedPartition(FakedBaseResource):
         faked Virtual Function resources of this Partition.
         """
         return self._virtual_functions
+
+    @property
+    def ai_accelerator_functions(self):
+        """
+        :class:`~zhmcclient.mock.FakedAiAcceleratorFunctionManager`: Access to
+        the faked AI Accelerator Function resources of this Partition.
+        """
+        return self._ai_accelerator_functions
 
     def devno_alloc(self):
         """
@@ -3301,6 +3317,105 @@ class FakedVirtualFunctionManager(FakedBaseManager):
 class FakedVirtualFunction(FakedBaseResource):
     """
     A faked Virtual Function resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedAiAcceleratorFunctionManager(FakedBaseManager):
+    """
+    A manager for faked AI Accelerator Function resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, partition):
+        super().__init__(
+            hmc=hmc,
+            parent=partition,
+            resource_class=FakedAiAcceleratorFunction,
+            base_uri=partition.uri + '/ai-accelerator-functions',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='ai-accelerator-function',
+            name_prop='name')
+
+    def add(self, properties):
+        """
+        Add a faked AI Accelerator Function resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'ai-accelerator-function',
+              if not specified.
+            * 'device-number' will be auto-generated with a unique value
+              within the partition in the range 0x8000 to 0xFFFF, if not
+              specified.
+
+            This method also updates the 'ai-accelerator-function-uris'
+            property in the parent Partition resource by appending the URI.
+
+        Returns:
+
+          :class:`zhmcclient.mock.FakedAiAcceleratorFunction`: The faked
+            AI Accelerator Function resource.
+        """
+        new_func = super().add(properties)
+        partition = self.parent
+        assert 'ai-accelerator-function-uris' in partition.properties
+        partition.properties['ai-accelerator-function-uris'].append(
+            new_func.uri)
+        if 'device-number' not in new_func.properties:
+            devno = partition.devno_alloc()
+            new_func.properties['device-number'] = devno
+        if 'is-physical-function' not in new_func.properties:
+            new_func.properties['is-physical-function'] = False
+        return new_func
+
+    def remove(self, oid):
+        """
+        Remove a faked AI Accelerator Function resource.
+
+        This method also updates the 'ai-accelerator-function-uris' property
+        in the parent Partition resource by removing the URI.
+
+        Parameters:
+
+          oid (string):
+            The object ID of the faked AI Accelerator Function resource.
+        """
+        ai_func = self.lookup_by_oid(oid)
+        partition = self.parent
+        devno = ai_func.properties.get('device-number', None)
+        if devno:
+            partition.devno_free_if_allocated(devno)
+        assert 'ai-accelerator-function-uris' in partition.properties
+        ai_func_uris = partition.properties['ai-accelerator-function-uris']
+        ai_func_uris.remove(ai_func.uri)
+        super().remove(oid)
+
+
+class FakedAiAcceleratorFunction(FakedBaseResource):
+    """
+    A faked AI Accelerator Function resource within a faked HMC (see
     :class:`zhmcclient.mock.FakedHmc`).
 
     Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for

@@ -690,6 +690,14 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/VirtualFunction"
                     },
                 },
+                "ai_accelerator_functions": {
+                    "description": "The AI Accelerator Functions of this "
+                                   "partition",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AiAcceleratorFunction"
+                    },
+                },
             },
         },
         "Nic": {
@@ -720,6 +728,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "VirtualFunction": {
             "description": "A virtual function of a partition",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "AiAcceleratorFunction": {
+            "description": "An AI Accelerator Function of a partition",
             "type": "object",
             "additionalProperties": False,
             "required": [
