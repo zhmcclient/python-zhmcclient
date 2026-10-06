@@ -1824,7 +1824,7 @@ class FilterPropertyNotFound(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, msg, property_name, match_value):
+    def __init__(self, msg, property_name):
         """
         Parameters:
 
@@ -1834,14 +1834,10 @@ class FilterPropertyNotFound(Error):
           property_name (:term:`string`):
             The name of the property that does not exist on the resource.
 
-          match_value:
-            The match value for the filtering.
-
         ``args[0]`` will be set to the ``msg`` parameter.
         """
         super().__init__(msg)
         self._property_name = property_name
-        self._match_value = match_value
 
     @property
     def property_name(self):
@@ -1850,13 +1846,6 @@ class FilterPropertyNotFound(Error):
         """
         return self._property_name
 
-    @property
-    def match_value(self):
-        """
-        The match value for the filtering.
-        """
-        return self._match_value
-
     def __repr__(self):
         """
         Return a string with the state of this exception object, for debug
@@ -1864,8 +1853,7 @@ class FilterPropertyNotFound(Error):
         """
         return (
             f"{self.__class__.__name__}(message={self.args[0]!r}, "
-            f"property_name={self.property_name}, "
-            f"match_value={self.match_value})")
+            f"property_name={self.property_name})")
 
     def str_def(self):
         """
@@ -1874,13 +1862,12 @@ class FilterPropertyNotFound(Error):
 
         .. code-block:: text
 
-            classname={}; message={}; property_name={}; match_value={}
+            classname={}; message={}; property_name={}
         """
         return (
             f"classname={self.__class__.__name__!r}; "
             f"message={self.args[0]!r}; "
-            f"property_name={self.property_name}; "
-            f"match_value={self.match_value})")
+            f"property_name={self.property_name})")
 
 
 class PasswordCommandFailure(Error):

@@ -559,7 +559,7 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
             new_exc = FilterPropertyNotFound(
                 f"Filter property {prop_name!r} does not exist on "
                 f"{obj.manager.class_name} resource {obj.uri!r}",
-                prop_name, prop_match)
+                prop_name)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.FilterPropertyNotFound
         if isinstance(prop_value, str):
