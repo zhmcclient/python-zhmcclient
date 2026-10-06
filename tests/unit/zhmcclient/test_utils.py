@@ -28,7 +28,7 @@ import time
 import re
 import pytest
 from zhmcclient.mock import FakedSession
-from zhmcclient import Client, FilterConversionError
+from zhmcclient import Client, FilterConversionError, FilterPropertyNotFound
 from zhmcclient._utils import datetime_from_timestamp, \
     timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat, \
     matches_filters, divide_filter_args, tzlocal
@@ -509,7 +509,7 @@ TESTCASES_MATCHES_FILTERS = [
         CPC_FOR_FILTERING,
         {'filter_non_existing': 'x'},
         None,
-        FilterConversionError,
+        FilterPropertyNotFound,
         "Filter property 'filter_non_existing' does not exist on",
     ),
     (
@@ -517,7 +517,7 @@ TESTCASES_MATCHES_FILTERS = [
         CPC_FOR_FILTERING,
         {'filter_non_existing': 42},
         None,
-        FilterConversionError,
+        FilterPropertyNotFound,
         "Filter property 'filter_non_existing' does not exist on",
     ),
     (

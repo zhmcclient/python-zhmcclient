@@ -175,6 +175,7 @@ class VirtualStorageResourceManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         result_prop = 'virtual-storage-resources'
         list_uri = f'{self.storage_group.uri}/virtual-storage-resources'

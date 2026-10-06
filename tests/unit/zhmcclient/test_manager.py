@@ -26,7 +26,7 @@ import warnings
 import pytest
 
 from zhmcclient import BaseResource, BaseManager, Session, NotFound, \
-    NoUniqueMatch, FilterConversionError
+    NoUniqueMatch, FilterPropertyNotFound
 from zhmcclient._manager import _NameUriCache
 from zhmcclient._utils import matches_filters
 
@@ -460,20 +460,20 @@ class TestManager2:
             self.manager.find(int_same=42)
 
     def test_findall_nonexisting_property(self):
-        """Test that matches_filters() raises FilterConversionError when
+        """Test that matches_filters() raises FilterPropertyNotFound when
         filtering on a non-existing property (issue #1852)."""
         self.resource1._full_properties = True
-        with pytest.raises(FilterConversionError) as exc_info:
+        with pytest.raises(FilterPropertyNotFound) as exc_info:
             matches_filters(self.resource1, {'non-existing-prop': 'value'})
 
         assert 'non-existing-prop' in str(exc_info.value)
 
     def test_find_nonexisting_property(self):
-        """Test that matches_filters() raises FilterConversionError when
+        """Test that matches_filters() raises FilterPropertyNotFound when
         filtering on a non-existing property with int match value (issue
         #1852)."""
         self.resource1._full_properties = True
-        with pytest.raises(FilterConversionError) as exc_info:
+        with pytest.raises(FilterPropertyNotFound) as exc_info:
             matches_filters(self.resource1, {'non-existing-prop': 42})
 
         assert 'non-existing-prop' in str(exc_info.value)

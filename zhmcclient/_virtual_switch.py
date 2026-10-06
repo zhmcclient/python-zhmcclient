@@ -164,6 +164,7 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         result_prop = 'virtual-switches'
         list_uri = f'{self.cpc.uri}/virtual-switches'
