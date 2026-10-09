@@ -30,7 +30,7 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'OSConsoleError', 'OSConsoleConnectedError',
            'OSConsoleNotConnectedError', 'OSConsoleWebSocketError',
            'OSConsoleAuthError', 'PartitionLinkError', 'FilterConversionError',
-           'PasswordCommandFailure']
+           'FilterPropertyNotFound', 'PasswordCommandFailure']
 
 
 class Error(Exception):
@@ -1814,6 +1814,60 @@ class FilterConversionError(Error):
             f"message={self.args[0]!r}; "
             f"property_name={self.property_name}; "
             f"match_value={self.match_value})")
+
+
+class FilterPropertyNotFound(Error):
+    """
+    This exception indicates that a filter argument specifies a property name
+    that does not exist on the resource being filtered.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, msg, property_name):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          property_name (:term:`string`):
+            The name of the property that does not exist on the resource.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super().__init__(msg)
+        self._property_name = property_name
+
+    @property
+    def property_name(self):
+        """
+        The name of the property that does not exist on the resource.
+        """
+        return self._property_name
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"property_name={self.property_name})")
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}; property_name={}
+        """
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r}; "
+            f"property_name={self.property_name})")
 
 
 class PasswordCommandFailure(Error):

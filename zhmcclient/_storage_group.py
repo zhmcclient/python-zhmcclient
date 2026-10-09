@@ -212,6 +212,7 @@ class StorageGroupManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         result_prop = 'storage-groups'
         list_uri = self._base_uri

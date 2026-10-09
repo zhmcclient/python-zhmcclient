@@ -150,6 +150,7 @@ class UserRoleManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         result_prop = 'user-roles'
         list_uri = f'{self.console.uri}/user-roles'

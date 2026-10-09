@@ -40,6 +40,7 @@ from zhmcclient import (
     OSConsoleNotConnectedError, OSConsoleWebSocketError,
     OSConsoleAuthError,
     FilterConversionError,
+    FilterPropertyNotFound,
     PasswordCommandFailure,
 )
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
@@ -2307,3 +2308,120 @@ def test_fce_str_def():
     assert str_def.find(' message=') >= 0
     assert str_def.find(' property_name=') >= 0
     assert str_def.find(' match_value=') >= 0
+
+
+TESTCASES_FPNF_INITIAL_ATTRS = [
+    # Testcases for test_fpnf_initial_attrs().
+    #
+    # Each list item is a testcase with the following tuple items:
+    # * desc (str) - Testcase description.
+    # * input_args (list) - Positional arguments for FilterPropertyNotFound()
+    # * input_kwargs (dict) - Keyword arguments for FilterPropertyNotFound()
+    # * exp_attrs (dict) - Expected attributes of FilterPropertyNotFound()
+    # * exp_message_pattern (str) - Regexp pattern to match expected exception
+    #   message, or None to not perform a match.
+    #
+    # FilterPropertyNotFound init args: msg, property_name
+
+    (
+        "Positional args - just msg",
+        ["foo", None],
+        {},
+        {
+            'property_name': None,
+        },
+        r"^foo$"
+    ),
+    (
+        "Positional args - all args",
+        ["foo", "prop1"],
+        {},
+        {
+            'property_name': "prop1",
+        },
+        r"^foo$"
+    ),
+    (
+        "Keyword args - all args",
+        [],
+        {
+            'msg': "foo",
+            'property_name': "prop1",
+        },
+        {
+            'property_name': "prop1",
+        },
+        r"^foo$"
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_args, input_kwargs, exp_attrs, exp_message_pattern",
+    TESTCASES_FPNF_INITIAL_ATTRS)
+def test_fpnf_initial_attrs(
+        desc, input_args, input_kwargs, exp_attrs, exp_message_pattern):
+    # pylint: disable=unused-argument
+    """Test initial attributes of FilterPropertyNotFound."""
+
+    # Execute the code to be tested
+    exc = FilterPropertyNotFound(*input_args, **input_kwargs)
+
+    assert isinstance(exc, Error)
+
+    # Validate exception message
+    assert len(exc.args) == 1
+    message = exc.args[0]
+    assert isinstance(message, str)
+    if exp_message_pattern:
+        assert re.match(exp_message_pattern, message)
+
+    # Validate other exception attributes
+    for name, exp_value in exp_attrs.items():
+        assert hasattr(exc, name)
+        value = getattr(exc, name)
+        assert value == exp_value
+
+
+def test_fpnf_repr():
+    """All tests for FilterPropertyNotFound.__repr__()."""
+
+    exc = FilterPropertyNotFound("foo", "prop1")
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    repr_str = repr(exc)
+
+    # We check the one-lined string just roughly
+    repr_str = repr_str.replace('\n', '\\n')
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
+
+
+def test_fpnf_str():
+    """All tests for FilterPropertyNotFound.__str__()."""
+
+    exc = FilterPropertyNotFound("foo", "prop1")
+
+    exp_str = str(exc.args[0])
+
+    # Execute the code to be tested
+    str_str = str(exc)
+
+    assert str_str == exp_str
+
+
+def test_fpnf_str_def():
+    """All tests for FilterPropertyNotFound.str_def()."""
+
+    exc = FilterPropertyNotFound("foo", "prop1")
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    str_def = exc.str_def()
+
+    str_def = ' ' + str_def
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(' message=') >= 0
+    assert str_def.find(' property_name=') >= 0
