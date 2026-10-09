@@ -994,6 +994,9 @@ hmc_definition:
             description: The DPM storage management approach in which FCP and FICON storage
               resources are defined in Storage Groups, which are attached to Partitions.
             state: true
+          - name: ai-adapter
+            description: Support for AI Accelerator adapters of type ai.
+            state: true
         ec-mcl-description:
           action:
             - pending: false
@@ -1138,6 +1141,17 @@ hmc_definition:
                 name: "Port 0"
                 description: "Mocked port 0 of FCP adapter FCP1 in CPC_DPM"
                 index: 0
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: ai-adapter1
+            name: "AI-ADAPTER1"
+            description: "Mocked AI adapter AI-ADAPTER1 in CPC_DPM"
+            adapter-id: "128"
+            status: active
+            state: online
+            type: ai
       virtual_switches:
         - properties:
             object-id: vs-osa1
@@ -1232,6 +1246,9 @@ hmc_definition:
                   storage resources are defined in Storage Groups, which are attached to
                   Partitions.
                 state: true
+              - name: ai-adapter
+                description: Support for AI Accelerator adapters of type ai.
+                state: true
           nics:
             - properties:
                 element-id: nic1
@@ -1247,6 +1264,7 @@ hmc_definition:
             # nic-uris: created automatically
             # hba-uris: created automatically
             # virtual-function-uris: created automatically
+            # ai-accelerator-function-uris: created automatically
             # storage-group-uris: created automatically
             object-id: part2
             name: "PART2"
@@ -1332,6 +1350,9 @@ hmc_definition:
                   storage resources are defined in Storage Groups, which are attached to
                   Partitions.
                 state: true
+              - name: ai-adapter
+                description: Support for AI Accelerator adapters of type ai.
+                state: true
           nics:
             - properties:
                 element-id: nic1
@@ -1340,6 +1361,21 @@ hmc_definition:
                 type: osd
                 device-number: '0010'
                 virtual-switch-uri: /api/virtual-switches/vs-osa1
+          ai_accelerator_functions:
+            - properties:
+                element-id: ai-pf1
+                name: "AI-PF1"
+                description: "Physical AI Accelerator Function for SSC management partition PART2"
+                adapter-uri: /api/adapters/ai-adapter1
+                is-physical-function: true
+                device-number: '0100'
+            - properties:
+                element-id: ai-vf1
+                name: "AI-VF1"
+                description: "Virtual AI Accelerator Function for SSC management partition PART2"
+                adapter-uri: /api/adapters/ai-adapter1
+                is-physical-function: false
+                device-number: '0101'
       hw_messages:
         - properties:
             # class: created automatically

@@ -67,6 +67,9 @@ from zhmcclient.mock._urihandler import FakedHTTPError, InvalidResourceError, \
     HbasHandler, HbaHandler, HbaReassignPortHandler, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
+    PartitionCreateAiAcceleratorFunctionsHandler, \
+    PartitionDeleteAiAcceleratorFunctionsHandler, \
+    AiAcceleratorFunctionHandler, \
     AdaptersHandler, AdapterHandler, AdapterChangeCryptoTypeHandler, \
     AdapterChangeAdapterTypeHandler, AdapterGetAssignedPartitionsHandler, \
     NetworkPortHandler, \
@@ -987,6 +990,18 @@ def standard_test_hmc():
                                 },
                             },
                         ],
+                        'ai_accelerator_functions': [
+                            {
+                                'properties': {
+                                    'element-id': '1',
+                                    'name': 'ai_func_1',
+                                    'description': 'AI Func #1 in Partition #1',
+                                    'device-number': '4001',
+                                    'adapter-uri': '/api/adapters/6',
+                                    'is-physical-function': False,
+                                },
+                            },
+                        ],
                     },
                 ],
                 'adapters': [
@@ -1093,6 +1108,17 @@ def standard_test_hmc():
                             'adapter-id': 'FEF',
                             'type': 'zedc',
                             'detected-card-type': 'zedc-express',
+                        },
+                    },
+                    {
+                        'properties': {
+                            'object-id': '6',
+                            'name': 'ai_6',
+                            'description': 'AI adapter #6 in CPC #2',
+                            'adapter-id': 'A01',
+                            'type': 'ai',
+                            'status': 'active',
+                            'state': 'online',
                         },
                     },
                 ],
@@ -4546,6 +4572,14 @@ class TestAdapterHandlers:
                     'adapter-id': 'FEF',
                     'type': 'zedc',
                 },
+                {
+                    'object-uri': '/api/adapters/6',
+                    'name': 'ai_6',
+                    'status': 'active',
+                    'adapter-family': 'accelerator',
+                    'adapter-id': 'A01',
+                    'type': 'ai',
+                },
             ]
         }
         assert adapters == exp_adapters
@@ -4919,6 +4953,30 @@ class TestAdapterGetAssignedPartitionsHandler:
         assert part1_info['name'] == exp_partition_name
         assert part1_info['status'] == exp_partition_status
 
+    def test_adapter_part_ai_accel_nofilter(self):
+        """
+        Test accelerator adapter (AI adapter with AI accelerator functions)
+        without filters, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested (adapter 6 is an AI adapter):
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/6/operations/get-partitions-assigned-to-adapter',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
 
 class TestNetworkPortHandlers:
     """
@@ -5092,6 +5150,8 @@ class TestPartitionHandlers:
             'hba-uris': ['/api/partitions/1/hbas/1'],
             'nic-uris': ['/api/partitions/1/nics/1'],
             'virtual-function-uris': ['/api/partitions/1/virtual-functions/1'],
+            'ai-accelerator-function-uris': [
+                '/api/partitions/1/ai-accelerator-functions/1'],
             'partition-link-uris': [],
             'storage-group-uris': [],
             'tape-link-uris': [],
@@ -6512,6 +6572,221 @@ class TestVirtualFunctionHandler:
         with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc,
                                 '/api/partitions/1/virtual-functions/1', True)
+
+
+class TestAiAcceleratorFunctionHandler:
+    """
+    All tests for PartitionCreateAiAcceleratorFunctionsHandler,
+    PartitionDeleteAiAcceleratorFunctionsHandler, and
+    AiAcceleratorFunctionHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with the AI
+        Accelerator Function handlers and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        # Dynamically add Partition 2 (SSC management partition) to CPC 2
+        cpc2 = self.hmc.lookup_by_uri('/api/cpcs/2')
+        part2 = cpc2.partitions.add({
+            'object-id': '2',
+            'name': 'partition_2',
+            'type': 'ssc',
+            'status': 'stopped',
+        })
+        part2.ai_accelerator_functions.add({
+            'element-id': '3',
+            'name': 'ai_func_3',
+            'description': 'AI Func #3 (PF) in Partition #2',
+            'device-number': '4003',
+            'adapter-uri': '/api/adapters/6',
+            'is-physical-function': True,
+        })
+        self.uris = (
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/'
+             r'create-ai-accelerator-functions',
+             PartitionCreateAiAcceleratorFunctionsHandler),
+            (r'/api/partitions/([^/]+)/operations/'
+             r'delete-ai-accelerator-functions',
+             PartitionDeleteAiAcceleratorFunctionsHandler),
+            (r'/api/partitions/([^/]+)/ai-accelerator-functions/'
+             r'([^?/]+)(?:\?(.*))?',
+             AiAcceleratorFunctionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_ai_func_list(self):
+        """
+        Test that partition properties contain the AI function URI.
+        """
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+
+        ai_func_uris = partition1.get('ai-accelerator-function-uris', [])
+
+        exp_ai_func_uris = [
+            '/api/partitions/1/ai-accelerator-functions/1',
+        ]
+        assert ai_func_uris == exp_ai_func_uris
+
+    def test_ai_func_get(self):
+        """
+        Test GET ai-accelerator-function (get properties).
+        """
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        ai_func1_uri = partition1.get('ai-accelerator-function-uris', [])[0]
+
+        # the function to be tested:
+        ai_func1 = self.urihandler.get(self.hmc, ai_func1_uri, True)
+
+        exp_ai_func1 = {
+            'element-id': '1',
+            'element-uri': '/api/partitions/1/ai-accelerator-functions/1',
+            'class': 'ai-accelerator-function',
+            'parent': '/api/partitions/1',
+            'name': 'ai_func_1',
+            'description': 'AI Func #1 in Partition #1',
+            'device-number': '4001',
+            'adapter-uri': '/api/adapters/6',
+            'is-physical-function': False,
+        }
+        assert ai_func1 == exp_ai_func1
+
+    def test_ai_func_create_verify(self):
+        """
+        Test POST create-ai-accelerator-functions (create).
+        """
+        create_body = {
+            'adapter-uri': '/api/adapters/6',
+            'ai-accelerator-functions': [
+                {
+                    'element-id': '2',
+                    'name': 'ai_func_2',
+                    'description': 'AI Func #2 in Partition #1',
+                    'device-number': '4002',
+                    'is-physical-function': False,
+                },
+            ],
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc,
+            '/api/partitions/1/operations/create-ai-accelerator-functions',
+            create_body, True, True)
+
+        assert 'ai-accelerator-function-uris' in resp
+        new_uris = resp['ai-accelerator-function-uris']
+        assert len(new_uris) == 1
+        new_uri = new_uris[0]
+        assert new_uri == '/api/partitions/1/ai-accelerator-functions/2'
+
+        # Verify the created resource is retrievable
+        ai_func2 = self.urihandler.get(self.hmc, new_uri, True)
+
+        exp_ai_func2 = {
+            'element-id': '2',
+            'element-uri': '/api/partitions/1/ai-accelerator-functions/2',
+            'class': 'ai-accelerator-function',
+            'parent': '/api/partitions/1',
+            'name': 'ai_func_2',
+            'description': 'AI Func #2 in Partition #1',
+            'device-number': '4002',
+            'adapter-uri': '/api/adapters/6',
+            'is-physical-function': False,
+        }
+        assert ai_func2 == exp_ai_func2
+
+        # Verify partition's ai-accelerator-function-uris is updated
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        assert new_uri in partition1['ai-accelerator-function-uris']
+
+    def test_ai_func_create_missing_adapter_uri(self):
+        """
+        Test POST create-ai-accelerator-functions fails when adapter-uri is
+        missing (required field).
+        """
+        with pytest.raises(BadRequestError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/create-ai-accelerator-functions',
+                {}, True, True)
+
+    def test_ai_func_update_verify(self):
+        """
+        Test POST ai-accelerator-function (update properties).
+        """
+        update_body = {
+            'description': 'Updated AI Func #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc,
+            '/api/partitions/1/ai-accelerator-functions/1',
+            update_body, True, True)
+
+        ai_func1 = self.urihandler.get(
+            self.hmc,
+            '/api/partitions/1/ai-accelerator-functions/1',
+            True)
+        assert ai_func1['description'] == 'Updated AI Func #1'
+
+    def test_ai_func_delete_verify(self):
+        """
+        Test POST delete-ai-accelerator-functions (delete).
+        """
+        # Verify it exists first
+        self.urihandler.get(
+            self.hmc,
+            '/api/partitions/1/ai-accelerator-functions/1',
+            True)
+
+        ai_func1_uri = '/api/partitions/1/ai-accelerator-functions/1'
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc,
+            '/api/partitions/1/operations/delete-ai-accelerator-functions',
+            {'ai-accelerator-function-uris': [ai_func1_uri]},
+            True, True)
+
+        with pytest.raises(InvalidResourceError):
+            self.urihandler.get(
+                self.hmc,
+                '/api/partitions/1/ai-accelerator-functions/1',
+                True)
+
+        # Verify partition's ai-accelerator-function-uris is updated
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        assert ai_func1_uri not in partition1['ai-accelerator-function-uris']
+
+    def test_ai_func_delete_missing_uris_field(self):
+        """
+        Test POST delete-ai-accelerator-functions fails when
+        ai-accelerator-function-uris is missing (required field).
+        """
+        with pytest.raises(BadRequestError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/delete-ai-accelerator-functions',
+                {}, True, True)
+
+    def test_ai_func_delete_nonexistent_uri(self):
+        """
+        Test POST delete-ai-accelerator-functions with a non-existent URI
+        returns InvalidResourceError.
+        """
+        with pytest.raises(InvalidResourceError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/delete-ai-accelerator-functions',
+                {'ai-accelerator-function-uris': [
+                    '/api/partitions/1/ai-accelerator-functions/nonexistent']},
+                True, True)
 
 
 class TestVirtualSwitchHandlers:
