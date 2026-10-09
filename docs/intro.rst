@@ -341,67 +341,100 @@ on the Appveyor CI on native Windows, with CygWin and with MSYS2.
 Setting up the HMC
 ------------------
 
-Usage of the zhmcclient package requires that the HMC in question is prepared
-accordingly:
+Usage of the zhmcclient package requires that the targeted HMC is set up as
+described in this section.
+
+The GUI descriptions below are for z16 HMCs; it may be different on older HMCs.
+
+If you cannot find a particular panel in the GUI, your userid does not have
+permission for the respective task on the HMC. In that case, there should be
+some other HMC admin who can either give you that permission or perform the
+configuration described below for you.
+
+The task permissions needed to perform the following setup are:
+"Customize API Settings", "Manage Users", "Manage User Roles" and for the
+optional step 6: "Certificate Management".
 
 1. The Web Services API must be enabled on the HMC.
 
-   You can do that in the HMC GUI by selecting "HMC Management" in the left pane,
-   then opening the "Configure API Settings" icon on the pain pane,
-   then selecting the "Web Services" tab on the page that comes up, and
-   finally enabling the Web Services API on that page.
+   You can configure that in the HMC GUI in the "Customize API Settings" panel
+   ("HMC Management" -> "Customize API Settings") by selecting the
+   "WEB Services" tab and enabling the Web Services API via the "Enable"
+   checkbox.
 
-   The above is on a z16 HMC, it may be different on older HMCs.
+2. The HMC user ID that will be used by the zhmcclient must be allowed for
+   accessing the Web Services API.
 
-   If you cannot find this icon, then your userid does not have permission
-   for the respective task on the HMC. In that case, there should be some
-   other HMC admin you can go to to get the Web Services API enabled.
+   You can configure that in the "WEB services" panel described in the previous
+   step, in section "Access Control".
 
-2. To use all functionality provided in the zhmcclient package, the HMC user ID
-   that will be used by the zhmcclient must be authorized for the following
-   tasks. The description of each method of the zhmcclient package will mention
-   its specific authorization requirements.
+   Alternatively, you can configure that in the "User Management" panel
+   ("HMC Management" -> "User Management") by enabling the "Allow access to
+   Web Services management interfaces" flag of the user.
+
+3. To use all functionality provided in the zhmcclient package, the HMC user ID
+   that will be used by the zhmcclient must be authorized for certain tasks.
+   The description of each method of the zhmcclient package will mention its
+   specific authorization requirements.
+
+   You can configure that in the HMC GUI in the "User Management" panel
+   ("HMC Management" -> "User Management"). The concept is that users have
+   roles, and roles include tasks. Both can be managed in that panel.
+
+   You can authorize the user ID for the necessary tasks by assigning it the
+   following predefined user roles:
+
+   * hmc-system-programmer-tasks
+   * hmc-access-administrator-tasks
+   * hmc-defined-system-managed-objects
+
+   For completeness, here is the list of necessary tasks:
+
+   * Tasks needed regardless of the CPC mode:
+
+     - Use of the Web Services API
+     - Shutdown/Restart
+     - Manage Alternate HMC
+     - Audit and Log Management
+     - View Security Logs
+     - Manage LDAP Server Definitions
+     - Manage Password Rules
+     - Manage Users
+     - Manage User Patterns
+     - Manage User Roles
+     - Manage User Templates
+
+   * Tasks needed for CPCs in DPM mode:
+
+     - Start (a CPC in DPM mode)
+     - Stop (a CPC in DPM mode)
+     - New Partition
+     - Delete Partition
+     - Partition Details
+     - Start Partition
+     - Stop Partition
+     - Dump Partition
+     - PSW Restart (a Partition)
+     - Create HiperSockets Adapter
+     - Delete HiperSockets Adapter
+     - Adapter Details
+     - Manage Adapters
+     - Export WWPNs
+
+   * Tasks needed for CPCs in classic mode:
+
+     - Activate (an LPAR)
+     - Deactivate (an LPAR)
+     - Load (an LPAR)
+     - Customize/Delete Activation Profiles
+     - CIM Actions ExportSettingsData
+
+4. To use all functionality provided in the zhmcclient package, the following
+   additional HMC configuration must be in place:
 
    * "Remote Restart" must be enabled on the HMC
 
-   * Use of the Web Services API
-   * Shutdown/Restart
-   * Manage Alternate HMC
-   * Audit and Log Management
-   * View Security Logs
-   * Manage LDAP Server Definitions
-   * Manage Password Rules
-   * Manage Users
-   * Manage User Patterns
-   * Manage User Roles
-   * Manage User Templates
-
-   When using CPCs in DPM mode:
-
-   * Start (a CPC in DPM mode)
-   * Stop (a CPC in DPM mode)
-   * New Partition
-   * Delete Partition
-   * Partition Details
-   * Start Partition
-   * Stop Partition
-   * Dump Partition
-   * PSW Restart (a Partition)
-   * Create HiperSockets Adapter
-   * Delete HiperSockets Adapter
-   * Adapter Details
-   * Manage Adapters
-   * Export WWPNs
-
-   When using CPCs in classic mode (or ensemble mode):
-
-   * Activate (an LPAR)
-   * Deactivate (an LPAR)
-   * Load (an LPAR)
-   * Customize/Delete Activation Profiles
-   * CIM Actions ExportSettingsData
-
-3. (Optional) If desired, the HMC user ID that will be used by the zhmcclient
+5. (Optional) If desired, the HMC user ID that will be used by the zhmcclient
    can be restricted to accessing only certain resources managed by the HMC.
    To establish such a restriction, create a custom HMC user role, limit
    resource access for that role accordingly, and associate the HMC user ID
@@ -419,6 +452,14 @@ accordingly:
    For CPCs in classic mode (or ensemble mode):
 
    * LPARs to be accessed
+
+6. (Optional) The HMC should be configured to use a CA-verifiable certificate.
+   This can be done in the HMC panel "Certificate Management"
+   ("HMC Management" -> "Certificate Management").
+
+   For more information, see :ref:`Security`. For further reading, see the
+   :term:`HMC Security` book and Chapter 3 "Invoking API operations" in the
+   :term:`HMC API` book.
 
 
 .. _`Setting up firewalls or proxies`:
