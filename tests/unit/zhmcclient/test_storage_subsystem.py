@@ -1105,3 +1105,30 @@ class TestStorageSubsystem:
             )
         assert exc_info.value.http_status == 409
         assert exc_info.value.reason == 443
+
+    # ── Inventory ──────────────────────────────────────────────────────────
+
+    def test_inventory_storage_subsystem_empty(self):
+        """get_inventory(['storage-subsystem']) returns empty when none
+        exist."""
+        result = self.client.get_inventory(['storage-subsystem'])
+        names = [r['name'] for r in result
+                 if r.get('class') == 'storage-subsystem']
+        assert names == []
+
+    def test_inventory_storage_subsystem_two(self):
+        """get_inventory(['storage-subsystem']) returns both subsystems."""
+        self.add_subsystem1()
+        self.add_subsystem2()
+        result = self.client.get_inventory(['storage-subsystem'])
+        names = {r['name'] for r in result
+                 if r.get('class') == 'storage-subsystem'}
+        assert names == {SUBSYS1_NAME, SUBSYS2_NAME}
+
+    def test_inventory_dpm_resources_includes_subsystem(self):  # pylint: disable=invalid-name  # noqa: E501
+        """get_inventory(['dpm-resources']) includes storage-subsystem
+        entries."""
+        self.add_subsystem1()
+        result = self.client.get_inventory(['dpm-resources'])
+        classes = {r.get('class') for r in result}
+        assert 'storage-subsystem' in classes

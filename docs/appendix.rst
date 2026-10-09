@@ -544,6 +544,22 @@ Resources scoped to CPCs in DPM mode
 
      For details, see section :ref:`Storage Fabrics`.
 
+  Storage Control Unit
+     A logical entity within a :term:`Storage Subsystem` that manages a set
+     of storage volumes. A storage control unit is identified within its
+     parent subsystem by a two-character hexadecimal ``logical-address``. It
+     can have up to 8 :term:`storage paths <Storage Path>` and a set of
+     volume ranges that describe the volumes it manages.
+
+     For details, see section :ref:`Storage Control Units`.
+
+  Storage Path
+     An element object nested inside a :term:`Storage Control Unit` that
+     defines a communication path from the control unit to a storage adapter,
+     optionally through one or two storage switches.
+
+     For details, see section :ref:`Storage Paths`.
+
   Storage Subsystem
      A physical storage device (e.g. an IBM DS8000 series system) in the FICON
      storage configuration of a DPM-enabled :term:`CPC`. A storage subsystem
