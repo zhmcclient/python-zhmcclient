@@ -147,6 +147,7 @@ class UnmanagedCpcManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         result_prop = 'cpcs'
         list_uri = f'{self.parent.uri}/operations/list-unmanaged-cpcs'
