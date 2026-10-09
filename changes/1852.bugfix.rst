@@ -1,0 +1,9 @@
+Fixed that filtering resources with a non-existing property name silently
+returned an empty result. A new exception
+:exc:`~zhmcclient.FilterPropertyNotFound` is now raised instead.
+This is an incompatible change: previously, passing a non-existing property
+name in a filter argument (e.g. in ``list()``, ``find()``, or ``findall()``)
+would silently return an empty result; now it raises
+:exc:`~zhmcclient.FilterPropertyNotFound`. This is always a user error
+(wrong property name in the filter), and the user code needs to be fixed by
+correcting the property name.

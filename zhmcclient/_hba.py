@@ -143,6 +143,7 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
+          :exc:`~zhmcclient.FilterPropertyNotFound`
         """
         return self._list_with_parent_array(
             self.partition, 'hba-uris', full_properties, filter_args)

@@ -24,7 +24,8 @@ import warnings
 
 from requests.utils import quote
 
-from ._exceptions import HTTPError, FilterConversionError
+from ._exceptions import HTTPError, FilterConversionError, \
+    FilterPropertyNotFound
 
 __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
@@ -484,6 +485,8 @@ def matches_filters(obj, filter_args):
 
     Raises:
       ~zhmcclient.FilterConversionError: Cannot convert match value
+      ~zhmcclient.FilterPropertyNotFound: Filter property does not exist on
+        resource
     """
     if filter_args is not None:
         for prop_name in filter_args:
@@ -541,6 +544,8 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
 
     Raises:
       ~zhmcclient.FilterConversionError: Cannot convert match value
+      ~zhmcclient.FilterPropertyNotFound: Filter property does not exist on
+        resource
     """
     if isinstance(prop_match, (list, tuple)):
         # List items are logically ORed, so one matching item suffices.
@@ -555,7 +560,12 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
         try:
             prop_value = obj.get_property(prop_name)
         except KeyError:
-            return False
+            new_exc = FilterPropertyNotFound(
+                f"Filter property {prop_name!r} does not exist on "
+                f"{obj.manager.class_name} resource {obj.uri!r}",
+                prop_name)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.FilterPropertyNotFound
         if isinstance(prop_value, str):
             # HMC resource property is Enum String or (non-enum) String,
             # and is both matched by regexp matching. Ideally, regexp
