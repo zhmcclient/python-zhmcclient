@@ -693,6 +693,7 @@ class BaseResource:
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.CeasedExistence`
+          :exc:`~zhmcclient.NotificationConnectionError`
         """
         if not self._auto_update:
             session = self.manager.session
