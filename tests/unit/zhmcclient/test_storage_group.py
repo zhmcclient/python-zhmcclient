@@ -580,3 +580,106 @@ class TestStorageGroup:
     # TODO: Test for StorageGroup.remove_candidate_adapter_ports()
 
     # TODO: Test for StorageGroup.list_candidate_adapter_ports()
+
+    def test_sg_fulfill_ficon_no_email(self):
+        """Test StorageGroup.fulfill_ficon_storage_volumes() without email."""
+
+        # Add a faked storage group (type ficon)
+        faked_storage_group = self.faked_console.storage_groups.add({
+            'object-id': 'sg-ficon-oid',
+            'cpc-uri': CPC_URI,
+            'name': 'sg-ficon',
+            'description': 'FICON Storage Group',
+            'type': 'ficon',
+            'shared': False,
+            'fulfillment-state': 'pending',
+            'connectivity': 2,
+        })
+
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # Execute the code to be tested (no email)
+        storage_group.fulfill_ficon_storage_volumes()
+
+    def test_sg_fulfill_ficon_with_email(self):
+        """Test StorageGroup.fulfill_ficon_storage_volumes() with email."""
+
+        faked_storage_group = self.faked_console.storage_groups.add({
+            'object-id': 'sg-ficon2-oid',
+            'cpc-uri': CPC_URI,
+            'name': 'sg-ficon2',
+            'description': 'FICON Storage Group 2',
+            'type': 'ficon',
+            'shared': False,
+            'fulfillment-state': 'pending',
+            'connectivity': 2,
+        })
+
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # Execute the code to be tested (with email)
+        storage_group.fulfill_ficon_storage_volumes(
+            email_to_addresses=['admin@example.com'],
+            email_cc_addresses=['cc@example.com'],
+            email_insert='Please fulfill the FICON volumes.')
+
+    def test_sg_fulfill_ficon_invalid_email(self):
+        """Test StorageGroup.fulfill_ficon_storage_volumes() with invalid
+        args."""
+
+        faked_storage_group = self.add_storage_group1()
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # cc without to should raise ValueError
+        with pytest.raises(ValueError):
+            storage_group.fulfill_ficon_storage_volumes(
+                email_cc_addresses=['cc@example.com'])
+
+        # insert without to should raise ValueError
+        with pytest.raises(ValueError):
+            storage_group.fulfill_ficon_storage_volumes(
+                email_insert='Some text')
+
+    def test_sg_accept_mismatched_fcp(self):
+        """Test StorageGroup.accept_mismatched_fcp_storage_volumes()."""
+
+        # Add a faked FCP storage group
+        faked_storage_group = self.add_storage_group1()
+
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # Execute the code to be tested
+        storage_group.accept_mismatched_fcp_storage_volumes()
+
+    def test_sg_reject_mismatched_fcp(self):
+        """Test StorageGroup.reject_mismatched_fcp_storage_volumes()."""
+
+        # Add a faked FCP storage group
+        faked_storage_group = self.add_storage_group1()
+
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # Execute the code to be tested
+        storage_group.reject_mismatched_fcp_storage_volumes()
+
+    def test_sg_get_storage_group_histories(self):
+        """Test StorageGroup.get_storage_group_histories()."""
+
+        # Add a faked storage group
+        faked_storage_group = self.add_storage_group1()
+
+        storage_group_mgr = self.console.storage_groups
+        storage_group = storage_group_mgr.find(name=faked_storage_group.name)
+
+        # Execute the code to be tested
+        histories = storage_group.get_storage_group_histories()
+
+        # Verify the result
+        assert isinstance(histories, dict)
+        assert 'storage-group-histories' in histories
+        assert isinstance(histories['storage-group-histories'], list)

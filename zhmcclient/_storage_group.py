@@ -861,13 +861,185 @@ class StorageGroup(BaseResource):
             self.uri + '/operations/get-connection-report', resource=self)
         return result
 
-    # TODO: Add support for "Fulfill FICON Storage Volumes" operation
+    @logged_api_call
+    def fulfill_ficon_storage_volumes(self, email_to_addresses=None,
+                                      email_cc_addresses=None,
+                                      email_insert=None):
+        """
+        Request fulfillment of FICON (ECKD) storage volumes in this storage
+        group by sending emails to storage administrators.
 
-    # TODO: Add support for "Accept Mismatched FCP Storage Volumes" operation
+        This operation only applies to storage groups of type "ficon".
 
-    # TODO: Add support for "Reject Mismatched FCP Storage Volumes" operation
+        The corresponding HMC operation is "Fulfill FICON Storage Volumes".
 
-    # TODO: Add support for "Get Storage Group Histories" operation
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - Storage Administrator"
+          task.
+
+        Parameters:
+
+          email_to_addresses (:term:`iterable` of :term:`string`): Email
+            addresses of one or more storage administrators to be notified.
+            If `None` or empty, no email will be sent.
+
+          email_cc_addresses (:term:`iterable` of :term:`string`): Email
+            addresses of one or more storage administrators to be copied
+            on the notification email.
+            If `None` or empty, nobody will be copied on the email.
+            Must be `None` or empty if `email_to_addresses` is `None` or empty.
+
+          email_insert (:term:`string`): Additional text to be inserted in the
+            notification email.
+            The text can include HTML formatting tags.
+            If `None`, no additional text will be inserted.
+            Must be `None` if `email_to_addresses` is `None` or empty.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`ValueError`: Incorrect input arguments
+        """
+        body = {}
+
+        if email_to_addresses:
+            body['email-to-addresses'] = email_to_addresses
+            if email_cc_addresses:
+                body['email-cc-addresses'] = email_cc_addresses
+            if email_insert:
+                body['email-insert'] = email_insert
+        else:
+            if email_cc_addresses:
+                raise ValueError(
+                    "email_cc_addresses must not be specified if there is no "
+                    f"email_to_addresses: {email_cc_addresses!r}")
+            if email_insert:
+                raise ValueError(
+                    "email_insert must not be specified if there is no "
+                    f"email_to_addresses: {email_insert!r}")
+
+        self.manager.session.post(
+            self.uri + '/operations/fulfill-ficon-storage-volumes',
+            resource=self, body=body)
+
+    @logged_api_call
+    def accept_mismatched_fcp_storage_volumes(self):
+        """
+        Accept mismatched FCP storage volumes in this storage group.
+
+        This operation only applies to storage groups of type "fcp".
+
+        The corresponding HMC operation is
+        "Accept Mismatched FCP Storage Volumes".
+
+        Accepting mismatched volumes causes the volumes to be re-assessed and
+        accepted as matching even if their properties differ from what was
+        expected.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - System Programmer" task
+          or to the "Configure Storage - Storage Administrator" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.manager.session.post(
+            self.uri + '/operations/accept-mismatched-fcp-storage-volumes',
+            resource=self, body={})
+
+    @logged_api_call
+    def reject_mismatched_fcp_storage_volumes(self):
+        """
+        Reject mismatched FCP storage volumes in this storage group.
+
+        This operation only applies to storage groups of type "fcp".
+
+        The corresponding HMC operation is
+        "Reject Mismatched FCP Storage Volumes".
+
+        Rejecting mismatched volumes causes DPM to un-fulfill those volumes so
+        that the storage administrator can re-fulfill them with the correct
+        volumes.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - System Programmer" task
+          or to the "Configure Storage - Storage Administrator" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.manager.session.post(
+            self.uri + '/operations/reject-mismatched-fcp-storage-volumes',
+            resource=self, body={})
+
+    @logged_api_call
+    def get_storage_group_histories(self):
+        """
+        Get the historical records for this storage group.
+
+        The corresponding HMC operation is "Get Storage Group Histories".
+
+        This operation retrieves historical information about the storage group,
+        such as changes to fulfillment states or configuration changes.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - System Programmer" task
+          or to the "Configure Storage - Storage Administrator" task.
+
+        Returns:
+
+          :term:`json object`:
+            A JSON object with the storage group histories. For details about
+            the items in the JSON object, see section 'Response body contents'
+            in section 'Get Storage Group Histories' in the
+            :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        result = self.manager.session.get(
+            self.uri + '/operations/get-storage-group-histories',
+            resource=self)
+        return result
 
     def dump(self):
         """
