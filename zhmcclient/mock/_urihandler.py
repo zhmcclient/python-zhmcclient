@@ -5312,6 +5312,102 @@ class StorageGroupRemoveCandidatePortsHandler:
             candidate_adapter_port_uris.remove(ap_uri)
 
 
+class StorageGroupFulfillFiconHandler:
+    """
+    Handler class for operation: Fulfill FICON Storage Volumes.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Fulfill FICON Storage Volumes."""
+        assert wait_for_completion is True  # async not supported yet
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Reflect the result of requesting fulfillment for FICON volumes
+        pass
+
+
+class StorageGroupAcceptMismatchedFcpHandler:
+    """
+    Handler class for operation: Accept Mismatched FCP Storage Volumes.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Accept Mismatched FCP Storage Volumes."""
+        assert wait_for_completion is True  # async not supported yet
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Reflect the result of accepting mismatched FCP volumes
+        pass
+
+
+class StorageGroupRejectMismatchedFcpHandler:
+    """
+    Handler class for operation: Reject Mismatched FCP Storage Volumes.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Reject Mismatched FCP Storage Volumes."""
+        assert wait_for_completion is True  # async not supported yet
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Reflect the result of rejecting mismatched FCP volumes
+        pass
+
+
+class StorageGroupGetHistoriesHandler:
+    """
+    Handler class for operation: Get Storage Group Histories.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Storage Group Histories."""
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+
+        # Return mock history data
+        return {
+            'storage-group-histories': []
+        }
+
+
 class StorageVolumesHandler:
     """
     Handler class for HTTP methods on set of StorageVolume resources.
@@ -8580,6 +8676,17 @@ URIS = (
      StorageGroupAddCandidatePortsHandler),
     (r'/api/storage-groups/([^/]+)/operations/remove-candidate-adapter-ports',
      StorageGroupRemoveCandidatePortsHandler),
+    (r'/api/storage-groups/([^/]+)/operations/fulfill-ficon-storage-volumes',
+     StorageGroupFulfillFiconHandler),
+    (r'/api/storage-groups/([^/]+)/operations/'
+     r'accept-mismatched-fcp-storage-volumes',
+     StorageGroupAcceptMismatchedFcpHandler),
+    (r'/api/storage-groups/([^/]+)/operations/'
+     r'reject-mismatched-fcp-storage-volumes',
+     StorageGroupRejectMismatchedFcpHandler),
+    (r'/api/storage-groups/([^/]+)/operations/'
+     r'get-storage-group-histories(?:\?(.*))?',
+     StorageGroupGetHistoriesHandler),
 
     (r'/api/storage-groups/([^/]+)/storage-volumes(?:\?(.*))?',
      StorageVolumesHandler),

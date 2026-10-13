@@ -208,3 +208,181 @@ def test_stogrp_crud(zhmc_logger, dpm_mode_cpcs):
 
         with pytest.raises(zhmcclient.NotFound):
             console.storage_groups.find(name=stogrp_name_new)
+
+
+def test_stogrp_get_storage_group_histories(zhmc_logger, dpm_mode_cpcs):
+    """
+    Test StorageGroup.get_storage_group_histories().
+    """
+    if not dpm_mode_cpcs:
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the storage groups to test with
+        stogrp_list = cpc.list_associated_storage_groups()
+        if not stogrp_list:
+            skip_log(zhmc_logger,
+                     f"No storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
+        stogrp_list = pick_test_resources(stogrp_list)
+
+        for stogrp in stogrp_list:
+            print(f"Testing on CPC {cpc.name} with storage group "
+                  f"{stogrp.name!r}")
+
+            # The code to be tested
+            histories = stogrp.get_storage_group_histories()
+
+            assert isinstance(histories, dict)
+            print(f"Retrieved histories for storage group {stogrp.name!r}")
+
+            if 'storage-group-histories' in histories:
+                history_list = histories['storage-group-histories']
+                print(f"  Found {len(history_list)} history record(s)")
+
+
+def test_stogrp_accept_mismatched_fcp(zhmc_logger, dpm_mode_cpcs):
+    """
+    Test StorageGroup.accept_mismatched_fcp_storage_volumes() on FCP groups.
+
+    This test only runs on FCP-type storage groups and verifies the operation
+    completes without error. On a real HMC the operation may have no effect if
+    there are no mismatched volumes.
+    """
+    if not dpm_mode_cpcs:
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick FCP-type storage groups to test with
+        stogrp_list = cpc.list_associated_storage_groups()
+        fcp_stogrp_list = [sg for sg in stogrp_list
+                           if sg.get_property('type') == 'fcp']
+        if not fcp_stogrp_list:
+            skip_log(zhmc_logger,
+                     f"No FCP storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
+        fcp_stogrp_list = pick_test_resources(fcp_stogrp_list)
+
+        for stogrp in fcp_stogrp_list:
+            print(f"Testing on CPC {cpc.name} with FCP storage group "
+                  f"{stogrp.name!r}")
+
+            # The code to be tested
+            try:
+                stogrp.accept_mismatched_fcp_storage_volumes()
+                print(f"Accepted mismatched FCP volumes for storage group "
+                      f"{stogrp.name!r}")
+            except zhmcclient.HTTPError as exc:
+                # Some HMC versions may return 400 if there are no mismatched
+                # volumes to accept, which is acceptable
+                if exc.http_status == 400:
+                    print(f"No mismatched volumes to accept (expected): {exc}")
+                else:
+                    raise
+
+
+def test_stogrp_reject_mismatched_fcp(zhmc_logger, dpm_mode_cpcs):
+    """
+    Test StorageGroup.reject_mismatched_fcp_storage_volumes() on FCP groups.
+
+    This test only runs on FCP-type storage groups and verifies the operation
+    completes without error. On a real HMC the operation may have no effect if
+    there are no mismatched volumes.
+    """
+    if not dpm_mode_cpcs:
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick FCP-type storage groups to test with
+        stogrp_list = cpc.list_associated_storage_groups()
+        fcp_stogrp_list = [sg for sg in stogrp_list
+                           if sg.get_property('type') == 'fcp']
+        if not fcp_stogrp_list:
+            skip_log(zhmc_logger,
+                     f"No FCP storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
+        fcp_stogrp_list = pick_test_resources(fcp_stogrp_list)
+
+        for stogrp in fcp_stogrp_list:
+            print(f"Testing on CPC {cpc.name} with FCP storage group "
+                  f"{stogrp.name!r}")
+
+            # The code to be tested
+            try:
+                stogrp.reject_mismatched_fcp_storage_volumes()
+                print(f"Rejected mismatched FCP volumes for storage group "
+                      f"{stogrp.name!r}")
+            except zhmcclient.HTTPError as exc:
+                # Some HMC versions may return 400 if there are no mismatched
+                # volumes to reject, which is acceptable
+                if exc.http_status == 400:
+                    print(f"No mismatched volumes to reject (expected): {exc}")
+                else:
+                    raise
+
+
+def test_stogrp_fulfill_ficon(zhmc_logger, dpm_mode_cpcs):
+    """
+    Test StorageGroup.fulfill_ficon_storage_volumes() on FICON groups.
+
+    This test only runs on FICON-type storage groups and verifies that the
+    operation can be invoked. Emails are not sent (no to-addresses provided).
+    """
+    if not dpm_mode_cpcs:
+        skip_log(zhmc_logger,
+                 "HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick FICON-type storage groups to test with
+        stogrp_list = cpc.list_associated_storage_groups()
+        ficon_stogrp_list = [sg for sg in stogrp_list
+                             if sg.get_property('type') == 'ficon']
+        if not ficon_stogrp_list:
+            skip_log(zhmc_logger,
+                     f"No FICON storage groups associated to CPC {cpc.name} "
+                     f"managed by HMC {hd.host}")
+        ficon_stogrp_list = pick_test_resources(ficon_stogrp_list)
+
+        for stogrp in ficon_stogrp_list:
+            print(f"Testing on CPC {cpc.name} with FICON storage group "
+                  f"{stogrp.name!r}")
+
+            # The code to be tested (without email)
+            try:
+                stogrp.fulfill_ficon_storage_volumes()
+                print(f"Requested FICON fulfillment for storage group "
+                      f"{stogrp.name!r}")
+            except zhmcclient.HTTPError as exc:
+                # Some HMC versions may return 400 if there are no volumes
+                # to fulfill, which is acceptable
+                if exc.http_status == 400:
+                    print(f"No FICON volumes to fulfill (expected): {exc}")
+                else:
+                    raise
