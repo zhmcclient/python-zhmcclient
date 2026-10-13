@@ -75,6 +75,6 @@ referencing==0.36.2
 rpds-py==0.27.1
 six==1.16.0
 tomli==2.0.1
-typing-extensions==4.14.1
+typing-extensions==4.16.0
 userpath==1.9.2
 vcs-versioning==1.1.1
