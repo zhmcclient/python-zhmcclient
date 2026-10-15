@@ -1,0 +1,6 @@
+Getting or setting the password in a 'zhmcclient.Session' object via its
+protected '_password' attribute is deprecated. Doing that will cause an
+according Python 'DeprecationWarning' to be issued. Use the new public
+'password' attribute instead. Note that there are legitimate reasons to get
+the session password in a Python program, including the zhmcclient package
+itself.

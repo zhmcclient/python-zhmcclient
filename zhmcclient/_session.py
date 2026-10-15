@@ -21,6 +21,7 @@ import json
 import time
 import re
 import logging
+import warnings
 from copy import copy
 from collections.abc import Iterable
 import requests
@@ -429,7 +430,7 @@ class Session:
             assert len(self._hosts) >= 1
         self._port = port
         self._userid = userid
-        self._password = password
+        self.__password = password
         self._verify_cert = verify_cert
         self._get_password = get_password
         self._retry_timeout_config = self.default_rt_config.override_with(
@@ -466,7 +467,7 @@ class Session:
         """
         headers = _headers_for_logging(self.headers)
         blanked_session_id = BLANKED_OUT_STRING if self._session_id else None
-        blanked_password = BLANKED_OUT_STRING if self._password else None
+        blanked_password = BLANKED_OUT_STRING if self.__password else None
         ret = (
             f"{repr_obj_id(self)} (\n"
             f"  _hosts={self._hosts!r},\n"
@@ -543,6 +544,46 @@ class Session:
         performed.
         """
         return self._userid
+
+    @property
+    def password(self):
+        """
+        :term:`string`: HMC password that is used for this session.
+
+        If `None`, only operations that do not require authentication, can be
+        performed.
+
+        This property is gettable and settable.
+        """
+        return self.__password
+
+    @password.setter
+    def password(self, value):
+        # We do not want documentation generated for the setter, since it is
+        # described in the getter method.
+        self.__password = value
+
+    @property
+    def _password(self):
+        # For backwards compatibility, we still support access via the
+        # protected attribute '_password', but don't want to have that show up
+        # in the documentation.
+        warnings.warn(
+            "Accessing the zhmcclient.Session password via the protected "
+            "'_password' attribute is deprecated; Use the public 'password' "
+            "attribute instead", DeprecationWarning, stacklevel=2)
+        return self.__password
+
+    @_password.setter
+    def _password(self, value):
+        # For backwards compatibility, we still support modification via the
+        # protected attribute '_password', but don't want to have that show up
+        # in the documentation.
+        warnings.warn(
+            "Setting the zhmcclient.Session  password via the protected "
+            "'_password' attribute is deprecated; Use the public 'password' "
+            "attribute instead", DeprecationWarning, stacklevel=2)
+        self.__password = value
 
     @property
     def verify_cert(self):
@@ -828,9 +869,9 @@ class Session:
         if self._userid is None:
             raise ClientAuthError("Userid is not provided.")
 
-        if self._password is None:
+        if self.__password is None:
             if self._get_password:
-                self._password = \
+                self.__password = \
                     self._get_password(self._actual_host, self._userid)
             elif self._session_id:
                 raise ClientAuthError(
@@ -843,7 +884,7 @@ class Session:
         logon_uri = '/api/sessions'
         logon_body = {
             'userid': self._userid,
-            'password': self._password
+            'password': self.__password
         }
         self._headers.pop('X-API-Session', None)  # Just in case
         self._session = self._new_session(self.retry_timeout_config)

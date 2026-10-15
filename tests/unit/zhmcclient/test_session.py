@@ -21,6 +21,7 @@ import time
 import json
 import re
 from unittest import mock
+import warnings
 import requests
 import requests_mock
 import pytest
@@ -90,8 +91,7 @@ def test_session_init(
 
     assert session.host == host
     assert session.userid == userid
-    # pylint: disable=protected-access
-    assert session._password == password
+    assert session.password == password
     assert session.session_id == session_id
     assert session.get_password == get_password
     assert session.port == kwargs.get('port', DEFAULT_HMC_PORT)
@@ -128,6 +128,98 @@ def test_session_repr():
         rf'^{session.__class__.__name__}\s+at\s+'
         rf'0x{id(session):08x}\s+\(\\n.*',
         repr_str)
+
+
+def test_password_get_no_deprecation():
+    """
+    Verify that accessing the session password via the new 'password'
+    attribute issues no deprecation warning.
+    """
+    pw1 = "mypw1"
+    session = Session("myhost", "myuser", pw1)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+
+        # The code to be tested
+        pw = session.password
+
+    # Verify that the access works
+    assert pw == pw1
+
+
+def test_password_set_no_deprecation():
+    """
+    Verify that setting the session password via the new 'password'
+    attribute issues no deprecation warning.
+    """
+    pw1 = "mypw1"
+    pw2 = "mypw2"
+    session = Session("myhost", "myuser", pw1)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+
+        # The code to be tested
+        session.password = pw2
+
+    # Verify that the setting works
+    assert session.password == pw2
+
+
+def test_password_get_deprecation():
+    """
+    Verify that accessing the session password via the deprecated '_password'
+    attribute issues a deprecation warning.
+    """
+    pw1 = "mypw1"
+    session = Session("myhost", "myuser", pw1)
+
+    with pytest.warns(DeprecationWarning) as record:
+
+        # The code to be tested
+        pw = session._password  # pylint: disable=protected-access
+
+    # Verify that the access works
+    assert pw == pw1
+
+    # Verify that one DeprecationWarning was issued
+    assert len(record) == 1
+
+    # Verify the message in the DeprecationWarning
+    msg = str(record[0].message)
+    assert re.search(r"protected '_password' attribute is deprecated", msg)
+
+    # Verify that stacklevel points at the caller
+    assert record[0].filename == __file__
+
+
+def test_password_set_deprecation():
+    """
+    Verify that setting the session password via the deprecated '_password'
+    attribute issues a deprecation warning.
+    """
+    pw1 = "mypw1"
+    pw2 = "mypw2"
+    session = Session("myhost", "myuser", pw1)
+
+    with pytest.warns(DeprecationWarning) as record:
+
+        # The code to be tested
+        session._password = pw2  # pylint: disable=protected-access
+
+    # Verify that the setting works
+    assert session.password == pw2
+
+    # Verify that one DeprecationWarning was issued
+    assert len(record) == 1
+
+    # Verify the message in the DeprecationWarning
+    msg = str(record[0].message)
+    assert re.search(r"protected '_password' attribute is deprecated", msg)
+
+    # Verify that stacklevel points at the caller
+    assert record[0].filename == __file__
 
 
 @pytest.mark.parametrize(
@@ -187,8 +279,7 @@ def test_session_logon(
             if get_password:
                 if password is None:
                     get_password.assert_called_with(host, userid)
-                    # pylint: disable=protected-access
-                    assert session._password == get_password.return_value
+                    assert session.password == get_password.return_value
                 else:
                     get_password.assert_not_called()
 
