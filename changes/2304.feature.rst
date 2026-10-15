@@ -1,0 +1,6 @@
+Changed the protected '_password' attribute in the 'zhmcclient.Session' class
+to be available via a new public 'password' attribute, which is gettable and
+settable.
+Access via the protected attribute '_password' is still possible, but that
+attribute has been deprecated and getting or setting it now causes an according
+Python DeprecationWarning to be issued.

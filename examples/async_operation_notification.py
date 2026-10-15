@@ -94,9 +94,8 @@ def main():
             print("Creating a notification receiver for topic "
                   f"{job_topic_name} ...")
             try:
-                # pylint: disable=protected-access
                 receiver = zhmcclient.NotificationReceiver(
-                    job_topic_name, host, session.userid, session._password,
+                    job_topic_name, host, session.userid, session.password,
                     verify_cert=session.verify_cert)
             except zhmcclient.Error as exc:
                 print(f"Error: Cannot create notification receiver: {exc}")

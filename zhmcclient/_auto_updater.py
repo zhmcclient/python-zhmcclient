@@ -205,8 +205,7 @@ class AutoUpdater:
         try:
             # wait=True causes the connection to be retried for some times
             # and finally raises stomp.ConnectFailedException
-            # pylint: disable=protected-access
-            self._conn.connect(self._session.userid, self._session._password,
+            self._conn.connect(self._session.userid, self._session.password,
                                wait=True)
         except (self._stomp.exception.StompException, OSError) as exc:
             msg = f"STOMP connection failed: {exc.__class__.__name__}: {exc}"
