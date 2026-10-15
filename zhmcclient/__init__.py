@@ -39,6 +39,7 @@ from ._adapter import *       # noqa: F401
 from ._nic import *           # noqa: F401
 from ._hba import *           # noqa: F401
 from ._virtual_function import *       # noqa: F401
+from ._ai_accelerator_function import *  # noqa: F401
 from ._virtual_switch import *         # noqa: F401
 from ._port import *          # noqa: F401
 from ._notification import *  # noqa: F401

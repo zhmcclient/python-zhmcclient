@@ -450,13 +450,28 @@ def test_adapter_list_assigned_part(zhmc_logger, dpm_mode_cpcs, test_family):
                     # The method to be tested
                     before_parts = test_adapter.list_assigned_partitions()
 
-                    # Create a VF in the temporary partition
-                    vf_name = f"{family}_{uuid.uuid4().hex}"
-                    vf_props = {
-                        'name': vf_name,
-                        'adapter-uri': test_adapter.uri,
-                    }
-                    tmp_part.virtual_functions.create(vf_props)
+                    adapter_type = test_adapter.get_property('type')
+                    if adapter_type == 'ai':
+                        # AI accelerator adapter uses AI accelerator functions
+                        # (virtual or physical)
+                        func_name = f"{family}_{uuid.uuid4().hex}"
+                        tmp_part.ai_accelerator_functions.create(
+                            adapter_uri=test_adapter.uri,
+                            ai_accelerator_functions=[
+                                {
+                                    'name': func_name,
+                                    'is-physical-function': False,
+                                }
+                            ])
+                    else:
+                        # Other accelerator adapters (e.g. zEDC) use virtual
+                        # functions
+                        vf_name = f"{family}_{uuid.uuid4().hex}"
+                        vf_props = {
+                            'name': vf_name,
+                            'adapter-uri': test_adapter.uri,
+                        }
+                        tmp_part.virtual_functions.create(vf_props)
 
                     # The method to be tested
                     after_parts = test_adapter.list_assigned_partitions()

@@ -620,6 +620,18 @@ Resources scoped to CPCs in DPM mode
      the tape drive.
      For details, see section :ref:`Virtual Tape Resources`.
 
+  AI Accelerator Function
+     A logical entity that provides a :term:`Partition` with access to an
+     AI accelerator adapter of type ``"ai"``. An AI Accelerator Function
+     is either a physical function (PF) assigned to a management partition,
+     or a virtual function (VF) assigned to a management or consumer
+     partition.
+
+     AI Accelerator Function resources require the ``"ai-adapter"`` firmware
+     feature to be enabled on the CPC.
+
+     For details, see section :ref:`AI Accelerator Functions`.
+
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always
      virtualized because they belong to a :term:`Partition`. Therefore, the

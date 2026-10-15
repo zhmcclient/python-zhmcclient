@@ -365,6 +365,13 @@ def assert_equal_hmc(hmc1, hmc2):
                 vf2 = vfs2[k]
                 assert_equal_resource(vf1, vf2)
 
+            ai_funcs1 = partition1.ai_accelerator_functions.list()
+            ai_funcs2 = partition2.ai_accelerator_functions.list()
+            assert len(ai_funcs1) == len(ai_funcs2)
+            for k, af1 in enumerate(ai_funcs1):
+                af2 = ai_funcs2[k]
+                assert_equal_resource(af1, af2)
+
         adapters1 = cpc1.adapters.list()
         adapters2 = cpc2.adapters.list()
         assert len(adapters1) == len(adapters2)
@@ -372,8 +379,11 @@ def assert_equal_hmc(hmc1, hmc2):
             adapter2 = adapters2[j]
             assert_equal_resource(adapter1, adapter2)
 
-            if adapter1.properties.get('type', None) != 'not-configured':
-                # Unconfigured FICON adapters cannot retrieve port properties
+            if (adapter1.properties.get('type', None) != 'not-configured'
+                    and adapter1.ports is not None
+                    and adapter2.ports is not None):
+                # Unconfigured FICON adapters and portless adapters (e.g. AI,
+                # zEDC, crypto) have no ports to compare
                 ports1 = adapter1.ports.list()
                 ports2 = adapter2.ports.list()
                 assert len(ports1) == len(ports2)
