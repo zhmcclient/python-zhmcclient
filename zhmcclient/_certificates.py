@@ -80,7 +80,9 @@ class CertificateManager(BaseManager):
             oid_prop='object-id',
             uri_prop='object-uri',
             name_prop='name',
-            query_props=query_props)
+            query_props=query_props,
+            supports_properties=True,
+            supports_additional_properties=True)
 
     @property
     def console(self):
@@ -96,6 +98,20 @@ class CertificateManager(BaseManager):
         """
         List the certificates defined in the HMC.
 
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Certificates"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
+
         HMC/SE version requirements:
 
         * :ref:`API feature <API features>` "secure-boot-with-certificates"
@@ -108,9 +124,11 @@ class CertificateManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Certificate objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -121,8 +139,10 @@ class CertificateManager(BaseManager):
             returned.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 

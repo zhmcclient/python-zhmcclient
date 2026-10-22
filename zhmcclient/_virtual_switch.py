@@ -81,7 +81,8 @@ class VirtualSwitchManager(BaseManager):
             oid_prop='object-id',
             uri_prop='object-uri',
             name_prop='name',
-            query_props=query_props)
+            query_props=query_props,
+            supports_additional_properties=True)
 
     @property
     def cpc(self):
@@ -102,25 +103,19 @@ class VirtualSwitchManager(BaseManager):
         CPCs, support for virtual switches has been removed. This method will
         succeed but return no objects on such systems.
 
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Virtual Switches of a CPC"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
-
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
-
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
-
-        * Otherwise, the HMC List operation is performed with the subset of the
-          provided filter arguments that can be handled on the HMC side and the
-          remaining filter arguments are applied on the client side on the list
-          result.
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         HMC/SE version requirements:
 
@@ -135,9 +130,11 @@ class VirtualSwitchManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Virtual Switch objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -148,10 +145,10 @@ class VirtualSwitchManager(BaseManager):
             returned.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
-
-            This parameter requires HMC 2.16.0 or higher.
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 

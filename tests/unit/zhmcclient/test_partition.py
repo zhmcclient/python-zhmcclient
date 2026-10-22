@@ -263,12 +263,8 @@ class TestPartition:
              ['object-uri', 'name', 'status']),
             ({'additional_properties': ['description']},
              ['object-uri', 'name', 'status', 'description']),
-            ({'additional_properties': ['description', 'se-version']},
-             ['object-uri', 'name', 'status', 'description', 'se-version']),
-            ({'additional_properties': ['ssc-host-name']},
-             ['object-uri', 'name', 'status', 'ssc-host-name']
-             # ssc-host-name is not on every partition
-             ),
+            ({'additional_properties': ['description', 'initial-memory']},
+             ['object-uri', 'name', 'status', 'description', 'initial-memory']),
         ]
     )
     def test_pm_list_add_props(

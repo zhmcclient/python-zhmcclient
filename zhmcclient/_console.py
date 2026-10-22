@@ -129,16 +129,20 @@ class ConsoleManager(BaseManager):
         return self._console
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the (one) :term:`Console` representing the HMC this client is
         connected to.
 
-        Any provided filter argument will be ignored; the `filter_args`
-        parameter exists only for consistency with other list() methods.
+        The properties in the returned resource objects are by default only
+        the "object-uri" and "object-id" properties and can be expanded with
+        the "full_properties" and "additional_properties" parameters of this
+        method.
 
-        The listing of resources is handled by constructing a singleton
-        object that represents the HMC of the current session.
+        The listing of resources is handled by constructing a singleton object
+        that represents the HMC of the current session, in an optimized way.
+        For details, see :ref:`Listing resources`.
 
         HMC/SE version requirements: None
 
@@ -149,12 +153,21 @@ class ConsoleManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only a short set consisting of 'object-uri'.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Console objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             This parameter exists for consistency with other list() methods
             and will be ignored.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -169,20 +182,8 @@ class ConsoleManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
         """
-        uri = self._base_uri  # There is only one console object.
-        if full_properties:
-            props = self.session.get(uri)
-        else:
-            # Note: The Console resource's Object ID is not part of its URI.
-            props = {
-                self._uri_prop: uri,
-            }
-        resource_obj = self.resource_class(
-            manager=self,
-            uri=props[self._uri_prop],
-            name=props.get(self._name_prop, None),
-            properties=props)
-        return [resource_obj]
+        return self._list_singleton(
+            self._base_uri, full_properties, additional_properties)
 
 
 class Console(BaseResource):  # pylint: disable=too-many-instance-attributes

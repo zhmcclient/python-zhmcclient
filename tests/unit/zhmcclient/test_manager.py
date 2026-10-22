@@ -67,7 +67,8 @@ class MyManager(BaseManager):
         self._list_resources = []  # resources to return in list()
         self._list_called = 0  # number of calls to list()
 
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         # This mocked implementation does its work based upon the
         # _list_resources instance variable, and then applies client-side
         # filtering on top of it.

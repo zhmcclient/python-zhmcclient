@@ -28,18 +28,19 @@ CPC.
 
 import re
 from datetime import datetime, timedelta
-import time
 import warnings
 import threading
 from nocasedict import NocaseDict
 
-from ._logging import logged_api_call
+from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch, HTTPError
 from ._utils import repr_list, matches_filters, divide_filter_args, \
     make_query_str, RC_LOGICAL_PARTITION, repr_obj_id
+from ._constants import HMC_LOGGER_NAME
 
 __all__ = ['BaseManager']
 
+HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 REGEXP_SPECIAL_CHAR = re.compile(r'[\^\$\.\+\*\?\(\)\[\]\{\}\|\\]')
 
@@ -380,7 +381,8 @@ class BaseManager:
     def __init__(self, resource_class, class_name, session, parent, base_uri,
                  oid_prop, uri_prop, name_prop, query_props,
                  list_has_name=True, case_insensitive_names=False,
-                 supports_properties=False):
+                 supports_properties=False,
+                 supports_additional_properties=False):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
@@ -439,7 +441,15 @@ class BaseManager:
         #   supports_properties (bool):
         #     Indicates whether the Get Properties operation for this type of
         #     resource supports the 'properties' query parameter in the latest
-        #     released version of the HMC.
+        #     released version of the HMC. If earlier HMC versions do not
+        #     support it, the zhmcclient reacts on the corresponding error in
+        #     the HMC response by retrying without using it.
+        #   supports_additional_properties (bool):
+        #     Indicates whether the List operation for this type of resource
+        #     supports the 'additional-properties' query parameter in the
+        #     latest released version of the HMC. If earlier HMC versions do not
+        #     support it, the zhmcclient reacts on the corresponding error in
+        #     the HMC response by retrying without using it.
 
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
@@ -465,6 +475,7 @@ class BaseManager:
         self._list_has_name = list_has_name
         self._case_insensitive_names = case_insensitive_names
         self._supports_properties = supports_properties
+        self._supports_additional_properties = supports_additional_properties
 
         self._resource_list = _ResourceList(self)
         self._name_uri_cache = _NameUriCache(
@@ -491,6 +502,8 @@ class BaseManager:
             f"  _list_has_name={self._list_has_name!r},\n"
             f"  _case_insensitive_names={self._case_insensitive_names!r},\n"
             f"  _supports_properties={self._supports_properties!r},\n"
+            "  _supports_additional_properties="
+            f"{self._supports_additional_properties!r},\n"
             f"  _resource_list={self._resource_list!r},\n"
             f"  _name_uri_cache={self._name_uri_cache!r}\n"
             ")")
@@ -687,25 +700,68 @@ class BaseManager:
         return self._supports_properties
 
     def _list_with_operation(
-            self, list_uri, result_prop, full_properties, filter_args=None,
-            additional_properties=None, query_parms=None):
+            self, list_uri, result_prop, full_properties, filter_args,
+            additional_properties, query_parms=None):
         """
         List resource objects by using a List operation.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
+        The listing of resources is handled in an optimized way, as follows:
 
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
+        * If the manager object on which the ``list()`` method is called is
+          enabled for :ref:`auto-updating`, a locally maintained resource list
+          is used (which is automatically updated via inventory notifications
+          from the HMC) and the provided filter arguments are applied to that
+          list.
 
-        * Otherwise, the HMC List operation is performed with the subset of the
-          provided filter arguments that can be handled on the HMC side and the
-          remaining filter arguments are applied on the client side on the list
-          result.
+          In this case, the returned objects will have all readable properties
+          defined in the data model, regardless of what is specified in the
+          "full_properties" and "additional_properties" parameters, and no HMC
+          operation needs to be performed.
+
+        * Otherwise, the HMC "List <resource_type>" operation is performed with
+          the subset of the provided filter arguments that can be handled on the
+          HMC side and the remaining filter arguments are applied on the client
+          side on the list result.
+
+          The actual processing depends on whether the "full_properties" and
+          "additional_properties" parameters are specified, as follows:
+
+          * If "full_properties" is True, the List operation is performed
+            without any "additional-properties" query parameter, followed by a
+            bulk operation with the "Get <resource_type> Properties" operations
+            for the returned resource objects.
+
+          * Otherwise, if "additional_properties" is specified, the following is
+            performed:
+
+            - For resource types with a List operation that supports the
+              "additional-properties" query parameter in the latest HMC version,
+              that query parameter is set accordingly, and no bulk operation of
+              "Get <resource_type> Properties" operations is performed.
+
+              If the "additional-properties" query parameter turns out to be
+              unsupported in the actual HMC version, the next item in this list
+              is performed.
+
+            - Otherwise, for resource types with a "Get <resource_type>
+              Properties" operation that supports the "properties" query
+              parameter in the latest HMC version, that query parameter is set
+              accordingly in the bulk operation of "Get <resource_type>
+              Properties" operations.
+
+              If the "properties" query parameter turns out to be unsupported
+              in the actual HMC version, the next item in this list is
+              performed.
+
+            - Otherwise, the bulk operation of "Get <resource_type> Properties"
+              operations is performed.
+
+          * Otherwise, the List operation is performed without any
+            "additional-properties" query parameter, and the result is used
+            without retrieving any additional properties.
 
         Parameters:
 
@@ -717,9 +773,10 @@ class BaseManager:
             the resource list.
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for the resource type in the :term:`HMC API` book.
+            The "additional_properties" parameter is ignored in that case.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -730,15 +787,15 @@ class BaseManager:
             returned.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
-            Must be `None` for resource types whose List operation does not
-            support the 'additional-properties' query parameter.
-
-          query_parms (list of str): Additional query parameters. Each list
-            item must be a string (e.g. "key=value") ready to be appended to
-            the URI as a query parameter.
+          query_parms (list of str): Additional query parameters for the
+            List operation. Each list item must be a string (e.g. "key=value")
+            that is URI-encoded and ready to be appended to the URI as a query
+            parameter.
 
         Returns:
 
@@ -752,188 +809,147 @@ class BaseManager:
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
         """
-        resource_obj_list = []
         if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            resource_obj_list = []
             for resource_obj in self.list_resources_local():
                 if matches_filters(resource_obj, filter_args):
                     resource_obj_list.append(resource_obj)
         else:
             _query_parms, client_filters = divide_filter_args(
                 self._query_props, filter_args, self._query_props_names)
-            if additional_properties:
-                ap_parm = \
-                    f"additional-properties={','.join(additional_properties)}"
-                _query_parms.append(ap_parm)
             if query_parms:
                 _query_parms.extend(query_parms)
-            query_parms_str = make_query_str(_query_parms)
-            uri = f'{list_uri}{query_parms_str}'
 
-            try:
-                result = self.session.get(uri)
-            except HTTPError as exc:
-                if self.class_name == RC_LOGICAL_PARTITION and \
-                        exc.http_status == 404 and exc.reason == 1:
-                    # Unlike other list operations, "List Logical Partitions
-                    # of CPC" fails with 404.1 "ERROR: found no Images" if
-                    # no LPAR matches the filters in the query parms.
-                    result = []
+            has_full_properties = False
+
+            if full_properties:
+
+                resource_obj_list, _ = self._list_operation(
+                    list_uri, result_prop, client_filters, _query_parms)
+
+                self._get_properties_bulk(resource_obj_list)
+
+                has_full_properties = True
+
+            elif additional_properties:
+
+                if self._supports_additional_properties:
+
+                    HMC_LOGGER.debug(
+                        "Performing HMC List %s with additional-properties "
+                        "because the latest HMC version supports it and "
+                        "additional_properties is requested", self.class_name)
+                    resource_obj_list, ap_unsupported = self._list_operation(
+                        list_uri, result_prop, client_filters, _query_parms,
+                        additional_properties)
+
                 else:
-                    raise
+                    resource_obj_list = []
+                    ap_unsupported = True
 
-            if result:
-                props_list = result[result_prop]
-                if full_properties:
-                    resource_obj_list.extend(
-                        self._get_properties_bulk(
-                            props_list, client_filters))
-                else:
-                    for props in props_list:
-                        resource_obj = self.resource_class(
-                            manager=self,
-                            uri=props[self._uri_prop],
-                            name=props.get(self._name_prop, None),
-                            properties=props)
-                        if matches_filters(resource_obj, client_filters):
-                            resource_obj_list.append(resource_obj)
+                if ap_unsupported:
+                    # Either the latest HMC version does not support it, or
+                    # we are on an older HMC that does not support it.
 
-            self.add_resources_local(resource_obj_list)
+                    HMC_LOGGER.debug(
+                        "Performing HMC List %s without additional-properties "
+                        "because the actual HMC version does not support it "
+                        "but additional_properties is requested",
+                        self.class_name)
+                    resource_obj_list, _ = self._list_operation(
+                        list_uri, result_prop, client_filters, _query_parms)
+
+                    if self._supports_properties:
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s with properties "
+                            "because the latest HMC version supports it and "
+                            "additional_properties is requested",
+                            self.class_name)
+                        p_unsupported = self._get_properties_bulk(
+                            resource_obj_list,
+                            properties=additional_properties)
+
+                    else:
+                        p_unsupported = True
+
+                    if p_unsupported:
+                        # Either the latest HMC version does not support it, or
+                        # we are on an older HMC that does not support it.
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s without properties "
+                            "because the actual HMC version does not support "
+                            "it but additional_properties is requested",
+                            self.class_name)
+                        self._get_properties_bulk(resource_obj_list)
+
+                        has_full_properties = True
+
+            else:
+                # Neither full_properties nor additional_properties
+
+                resource_obj_list, _ = self._list_operation(
+                    list_uri, result_prop, client_filters, _query_parms)
+
+            if has_full_properties:
+                for resource_obj in resource_obj_list:
+                    # pylint: disable=protected-access
+                    resource_obj._full_properties = True
+
+            if resource_obj_list:
+                self.add_resources_local(resource_obj_list)
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
-    def _get_properties_bulk(self, props_list, client_filters):
-        """
-        Get resource properties using the bulk operation "Submit Requests"
-
-        The maximum for the request content is checked and exceeding it results
-        in multiple bulk operations that are performed one after another. This
-        happens when the number of resources in the list exceeds around
-        1500..3000, dependent on the length of the resource URI. This can
-        happen only for a small fraction of the resource types (e.g. for
-        hardware messages).
-
-        Parameters:
-
-          props_list (list of dict):
-            List of resource properties from List operation.
-            Must contain the resource URIs.
-
-            These properties will appear in the returned zhmcclient resource
-            objects, updated by the actual property values from the HMC.
-            This allows adding properties to those returned by the HMC.
-
-          client_filters (dict):
-            Filter arguments to be applied on the client side after the
-            resource properties have been retrieved.
-            `None` causes no client filtering to happen.
-
-        Returns:
-
-          : A list of zhmcclient resource objects.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.FilterConversionError`
-        """
-
-        if not props_list:
-            return []
-
-        # Max number of requests for a single "Submit Requests" operation
-        req_len = BULK_OVHD_PER_REQ + len(props_list[0][self._uri_prop])
-        max_req_id = int((BULK_MAX_SIZE - BULK_OVHD) / req_len) - 1
-
-        # Prepare the bulk operation request and split if needed
-
-        bulk_ops = []  # item: tuple(bulk_reqs, bulk_reqs_by_id)
-        bulk_reqs = []  # requests for one "Submit Requests" operation
-        bulk_props_by_id = {}  # key: req_id; value: list result props
-        req_id = 0
-        for props in props_list:
-            req_id += 1
-            req_id_str = str(req_id)
-            req = {
-                'method': 'GET',
-                'uri': props[self._uri_prop],
-                'id': req_id_str,
-            }
-            bulk_reqs.append(req)
-            bulk_props_by_id[req_id_str] = props
-            if req_id > max_req_id:
-                bulk_ops.append((bulk_reqs, bulk_props_by_id))
-                bulk_reqs = []
-                bulk_props_by_id = {}
-                req_id = 0
-        if bulk_reqs:
-            bulk_ops.append((bulk_reqs, bulk_props_by_id))
-
-        # Run the bulk operations and collect the result
-
-        uri = '/api/services/aggregation/submit'
-        threads = min(BULK_MAX_THREADS, round(len(props_list) / 2 + 0.51))
-        resource_obj_list = []
-        for bulk_reqs, bulk_props_by_id in bulk_ops:
-            body = {
-                'requests': bulk_reqs,
-                'threads': threads,
-            }
-            result = self.session.post(uri, body=body)
-            for res in result:
-                req_id = res['id']
-                props = bulk_props_by_id[req_id]
-
-                # We first use the properties from the props_list parameter,
-                # and then update that with the properties returned from the
-                # HMC:
-                resource_props = dict(props)
-                resource_props.update(res['body'])
-
-                if res['status'] != 200:
-                    # Similar to the non-full case: The first
-                    # error raises an exception.
-                    raise HTTPError(resource_props)
-
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=props[self._uri_prop],
-                    name=resource_props.get(self._name_prop, None),
-                    properties=resource_props)
-
-                # pylint: disable=protected-access
-                with resource_obj._property_lock:
-                    resource_obj._properties = dict(resource_props)
-                    resource_obj._properties_timestamp = int(time.time())
-                    resource_obj._full_properties = True
-                # pylint: enable=protected-access
-
-                if matches_filters(resource_obj, client_filters):
-                    resource_obj_list.append(resource_obj)
-
-        return resource_obj_list
-
     def _list_with_parent_array(
-            self, parent_obj, uris_prop, full_properties, filter_args):
+            self, parent_obj, uris_prop, full_properties, filter_args,
+            additional_properties):
         """
         List resource objects by using an array of URIs in the parent object.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
+        The listing of resources is handled in an optimized way, as follows:
 
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
+        * If the manager object on which the ``list()`` method is called is
+          enabled for :ref:`auto-updating`, a locally maintained resource list
+          is used (which is automatically updated via inventory notifications
+          from the HMC) and the provided filter arguments are applied to that
+          list.
+
+          In this case, the returned objects will have all readable properties
+          defined in the data model, regardless of what is specified in the
+          "full_properties" and "additional_properties" parameters, and no HMC
+          operation needs to be performed.
 
         * Otherwise, the corresponding array property for this resource in the
           parent object is used to list the resources, and the provided filter
           arguments are applied.
+
+          The actual processing depends on whether the "full_properties" and
+          "additional_properties" parameters are specified, as follows:
+
+          * If "full_properties" is True, a bulk operation with the
+            "Get <resource_type> Properties" operations is performed on the
+            resource objects.
+
+          * Otherwise, if "additional_properties" is specified, the following is
+            performed:
+
+            - For resource types with a "Get <resource_type> Properties"
+              operation that supports the "properties" query parameter in the
+              latest HMC version, that query parameter is set accordingly in
+              a bulk operation of "Get <resource_type> Properties" operations.
+
+              If the "properties" query parameter turns out to be unsupported
+              in the actual HMC version, the next item in this list is
+              performed.
+
+            - Otherwise, a bulk operation with the "Get <resource_type>
+              Properties" operations is performed on the resource objects.
 
         Parameters:
 
@@ -944,9 +960,10 @@ class BaseManager:
             Name of the array property with URIs in the parent object.
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for the resource type in the :term:`HMC API` book.
+            The "additional_properties" parameter is ignored in that case.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -955,6 +972,12 @@ class BaseManager:
 
             `None` causes no filtering to happen, i.e. all resources are
             returned.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -986,13 +1009,453 @@ class BaseManager:
 
                     if matches_filters(resource_obj, filter_args):
                         resource_obj_list.append(resource_obj)
-                        if full_properties:
-                            resource_obj.pull_full_properties()
 
+                has_full_properties = False
+
+                if full_properties:
+
+                    self._get_properties_bulk(resource_obj_list)
+
+                    has_full_properties = True
+
+                elif additional_properties:
+                    if self._supports_properties:
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s with properties "
+                            "because the latest HMC version supports it and "
+                            "additional_properties is requested",
+                            self.class_name)
+                        p_unsupported = self._get_properties_bulk(
+                            resource_obj_list,
+                            properties=additional_properties)
+
+                    else:
+                        p_unsupported = True
+
+                    if p_unsupported:
+                        # Either the latest HMC version does not support it, or
+                        # we are on an older HMC that does not support it.
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s without properties "
+                            "because the actual HMC version does not support "
+                            "it but additional_properties is requested",
+                            self.class_name)
+                        self._get_properties_bulk(resource_obj_list)
+
+                        has_full_properties = True
+
+                if has_full_properties:
+                    for resource_obj in resource_obj_list:
+                        # pylint: disable=protected-access
+                        resource_obj._full_properties = True
+
+                self.add_resources_local(resource_obj_list)
+
+        self._name_uri_cache.update_from(resource_obj_list)
+        return resource_obj_list
+
+    def _list_singleton(self, uri, full_properties, additional_properties):
+        """
+        List a singleton resource object.
+
+        The listing of resources is handled in an optimized way, as follows:
+
+        * If the manager object on which the ``list()`` method is called is
+          enabled for :ref:`auto-updating`, a locally maintained resource list
+          is used (which is automatically updated via inventory notifications
+          from the HMC) and the provided filter arguments are applied to that
+          list.
+
+          In this case, the returned objects will have all readable properties
+          defined in the data model, regardless of what is specified in the
+          "full_properties" and "additional_properties" parameters, and no HMC
+          operation needs to be performed.
+
+        * Otherwise, the specified URI is used to construct a local resource
+          object that has only its URI property.
+
+          The further processing depends on whether the "full_properties" and
+          "additional_properties" parameters are specified, as follows:
+
+          * If "full_properties" is True, a "Get <resource_type> Properties"
+            operation is performed on the resource object.
+
+          * Otherwise, if "additional_properties" is specified, the following is
+            performed:
+
+            - For resource types with a "Get <resource_type> Properties"
+              operation that supports the "properties" query parameter in the
+              latest HMC version, that query parameter is set accordingly in
+              the "Get <resource_type> Properties" operation.
+
+              If the "properties" query parameter turns out to be unsupported
+              in the actual HMC version, the next item in this list is
+              performed.
+
+            - Otherwise, the "Get <resource_type> Properties" operation is
+              performed on the resource object.
+
+        Parameters:
+
+          uri (string):
+            Canonical URI of the singleton object.
+
+          full_properties (bool):
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for the resource type in the :term:`HMC API` book.
+            The "additional_properties" parameter is ignored in that case.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
+
+        Returns:
+
+          : A list of zhmcclient resource objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+        resource_obj_list = []
+        if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            for resource_obj in self.list_resources_local():
+                resource_obj_list.append(resource_obj)  # noqa: PERF402
+        else:
+            resource_obj = self.resource_class(
+                manager=self,
+                uri=uri,
+                name=None,
+                properties=None)
+
+            if full_properties:
+
+                self._get_properties(resource_obj)
+
+            elif additional_properties:
+                if self._supports_properties:
+
+                    HMC_LOGGER.debug(
+                        "Performing HMC Get %s with properties because the "
+                        "latest HMC version supports it and "
+                        "additional_properties is requested", self.class_name)
+                    p_unsupported = self._get_properties(
+                        resource_obj, properties=additional_properties)
+
+                else:
+                    p_unsupported = True
+
+                if p_unsupported:
+                    # Either the latest HMC version does not support it, or
+                    # we are on an older HMC that does not support it.
+
+                    HMC_LOGGER.debug(
+                        "Performing HMC Get %s without properties because the "
+                        "actual HMC version does not support it but "
+                        "additional_properties is requested", self.class_name)
+                    self._get_properties(resource_obj)
+
+            resource_obj_list.append(resource_obj)
             self.add_resources_local(resource_obj_list)
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
+
+    def _list_operation(
+            self, list_uri, result_prop, client_filters, query_parms,
+            additional_properties=None):
+        """
+        Perform an HMC List operation and optionally perform client side
+        filtering on the result.
+
+        Parameters:
+
+          list_uri (string):
+            Canonical URI for the list operation.
+
+          result_prop (string):
+            Name of property in result of list operation that contains
+            the resource list.
+
+          client_filters (dict):
+            Filters that need to be processed on the list result by the client.
+            `None` causes no client filtering to happen, i.e. all resources are
+            returned.
+
+          query_parms (list of str): Additional query parameters for the
+            List operation. Each list item must be a string (e.g. "key=value")
+            that is URI-encoded and ready to be appended to the URI as a query
+            parameter.
+
+          additional_properties (list of string):
+            A list of property names for use in the "additional-properties"
+            query parameter of the List operation.
+            If `None` or the empty list, the "additional-properties" query
+            parameter will not be used.
+
+        Returns:
+
+          tuple(objs, unsupported): A tuple with:
+            * objs (list): List of zhmcclient resource objects.
+            * unsupported (bool): Indicates whether the "additional-properties"
+              query parameter is unsupported by this version of the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+
+        _query_parms = list(query_parms)
+        if additional_properties:
+            ap_parm = f"additional-properties={','.join(additional_properties)}"
+            _query_parms.append(ap_parm)
+        query_parms_str = make_query_str(_query_parms)
+        uri = f'{list_uri}{query_parms_str}'
+
+        try:
+            result = self.session.get(uri)
+        except HTTPError as exc:
+            if additional_properties and \
+                    exc.http_status == 400 and exc.reason == 1:
+                # The "additional-properties" query parameter is not
+                # supported in this older version of the HMC.
+                return [], True
+
+            if self.class_name == RC_LOGICAL_PARTITION and \
+                    exc.http_status == 404 and exc.reason == 1:
+                # Unlike other list operations, "List Logical Partitions
+                # of CPC" fails with 404.1 "ERROR: found no Images" if
+                # no LPAR matches the filters in the query parms.
+                return [], False
+
+            raise
+
+        resource_obj_list = []
+        if result:
+            for props in result[result_prop]:
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+                if matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+
+        return resource_obj_list, False
+
+    def _get_properties_bulk(
+            self, resource_obj_list, properties=None):
+        """
+        Get additional resource properties for a list of resources of this
+        manager and update these resources by adding the retrieved properties.
+
+        If "properties" is specified, the "properties" query parameter on the
+        HMC GET operations is set accordingly. The return value of the method
+        indicates whether that query parameter was supported.
+
+        This method performs the "Get <resource-type> Properties" HMC operation
+        for the specified resources. That set of GET operations is bundled
+        together into one or more "Submit Requests" HMC operations that are
+        performed one after another.
+
+        The number of "Submit Requests" operations that are needed depends on
+        the number of resources and the length of their URIs. Typically,
+        between 1500..3000 resources can be handled in a single operation, so
+        more than one operation is needed only for a small fraction of the
+        resource types (e.g. for hardware messages).
+
+        Parameters:
+
+          resource_obj_list (list of zhmcclient.BaseResource):
+            List of resources of this manager for which the additional
+            properties should be retrieved.
+
+            Upon return, the properties of these resource objects will have
+            been updated with the additional properties.
+
+            None is treated like an empty list.
+
+          properties (list of str):
+            Names of the properties to be retrieved by using the "properties"
+            query parameter of the HTTP GET method.
+
+            If None or an empty list, all properties are retrieved.
+
+        Returns:
+
+          bool: Indicates whether the "properties" query parameter on the
+          HMC Get operation was unsupported, as follows:
+
+            * True: The "properties" query parameter was attempted and is
+              unsupported.
+            * False: The "properties" query parameter was attempted and is
+              supported.
+            * None: The "properties" query parameter was not attempted (empty
+              list).
+
+      Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+
+        if not resource_obj_list:
+            return None
+
+        # Max number of requests for a single "Submit Requests" operation
+        first_res = resource_obj_list[0]  # We know there must be at least one
+        req_len = BULK_OVHD_PER_REQ + len(first_res.uri)
+        max_req_id = int((BULK_MAX_SIZE - BULK_OVHD) / req_len) - 1
+
+        # Prepare the bulk operation request and split if needed
+
+        resource_by_uri = {}  # zhmcclient resource objects by URI
+        bulk_ops = []  # item: tuple(bulk_reqs, bulk_reqs_by_id)
+        bulk_reqs = []  # requests for one "Submit Requests" operation
+        bulk_uris_by_id = {}  # key: req_id_str; value: list of URIs
+        req_id = 0
+        for res_obj in resource_obj_list:
+            resource_by_uri[res_obj.uri] = res_obj
+            req_id += 1
+            req_id_str = str(req_id)
+            query_parms = []
+            if properties:
+                p_parm = f"properties={','.join(properties)}"
+                query_parms.append(p_parm)
+            query_parms_str = make_query_str(query_parms)
+            req = {
+                'method': 'GET',
+                'uri': f"{res_obj.uri}{query_parms_str}",
+                'id': req_id_str,
+            }
+            bulk_reqs.append(req)
+            bulk_uris_by_id[req_id_str] = res_obj.uri
+            if req_id > max_req_id:
+                bulk_ops.append((bulk_reqs, bulk_uris_by_id))
+                bulk_reqs = []
+                bulk_uris_by_id = {}
+                req_id = 0
+        if bulk_reqs:
+            bulk_ops.append((bulk_reqs, bulk_uris_by_id))
+
+        # Run the bulk operations and collect the result
+
+        uri = '/api/services/aggregation/submit'
+        threads = min(BULK_MAX_THREADS,
+                      round(len(resource_obj_list) / 2 + 0.51))
+        for bulk_reqs, bulk_uris_by_id in bulk_ops:
+            body = {
+                'requests': bulk_reqs,
+                'threads': threads,
+            }
+            result = self.session.post(uri, body=body)
+            for res_item in result:
+                req_id = res_item['id']
+                res_uri = bulk_uris_by_id[req_id]
+                res_body = res_item['body']
+                status = res_item['status']
+
+                if status != 200:
+                    reason = res_body.get('reason', None)
+
+                    if properties and status == 400 and reason == 1:
+                        # Query parameter "properties" is unsupported. It is
+                        # sufficient to test this only on the first result.
+                        return True
+
+                    # The first error raises an exception.
+                    raise HTTPError(res_body)
+
+                res_obj = resource_by_uri[res_uri]
+                res_obj.update_properties_local(res_body)
+
+        return False
+
+    def _get_properties(self, resource_obj, properties=None):
+        """
+        Get additional resource properties for a resource of this
+        manager and update the resource by adding the retrieved properties.
+
+        If "properties" is specified, the "properties" query parameter on the
+        HMC GET operation is set accordingly. The return value of the method
+        indicates whether that query parameter was supported.
+
+        This method performs the "Get <resource-type> Properties" HMC operation
+        for the specified resource.
+
+        Parameters:
+
+          resource_obj (zhmcclient.BaseResource):
+            The resource of this manager for which the additional properties
+            should be retrieved.
+
+            Upon return, the properties of that resource object will have
+            been updated with the additional properties.
+
+            None is treated like an empty list.
+
+          properties (list of str):
+            Names of the properties to be retrieved by using the "properties"
+            query parameter of the HTTP GET method.
+
+            If None or an empty list, all properties are retrieved.
+
+        Returns:
+
+          bool: Indicates whether the "properties" query parameter on the
+          HMC Get operation was unsupported, as follows:
+
+            * True: The "properties" query parameter was attempted and is
+              unsupported.
+            * False: The "properties" query parameter was not attempted or was
+              attempted and is supported.
+
+      Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+
+        query_parms = []
+        if properties:
+            p_parm = f"properties={','.join(properties)}"
+            query_parms.append(p_parm)
+        query_parms_str = make_query_str(query_parms)
+        uri = f'{resource_obj.uri}{query_parms_str}'
+
+        try:
+            props = self.session.get(uri)
+        except HTTPError as exc:
+
+            if properties and exc.http_status == 400 and exc.reason == 1:
+                # The "properties" query parameter is not supported in this
+                # older version of the HMC.
+                return True
+
+            raise
+
+        resource_obj.update_properties_local(props)
+
+        return False
 
     def auto_update_enabled(self):
         """
@@ -1160,8 +1623,8 @@ class BaseManager:
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way, as described
-        in :meth:`~zhmcclient.BaseManager.list`.
+        The listing of resources is handled in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         Authorization requirements:
 
@@ -1224,8 +1687,8 @@ class BaseManager:
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way, as described
-        in :meth:`~zhmcclient.BaseManager.list`.
+        The listing of resources is handled in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         Authorization requirements:
 
@@ -1297,31 +1760,24 @@ class BaseManager:
             raise NoUniqueMatch(filter_args, self, obj_list)
         return obj_list[0]
 
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         Find zero or more resources in scope of this manager, by matching
         resource properties against the specified filter arguments, and return
         a list of their Python resource objects (e.g. for CPCs, a list of
         :class:`~zhmcclient.Cpc` objects is returned).
 
+        The properties in the returned resource objects are by default those
+        returned by the underlying HMC list operation and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
-
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
-
-        * Otherwise, for resources that have a List operation, the List
-          operation is performed with the subset of the provided filter
-          arguments that can be handled on the HMC side (this varies by
-          resource type) and the remaining filter arguments are applied on the
-          client side on the list result. For resources that are element objects
-          without a List operation, the corresponding array property of the
-          parent object is used to list the resources, and the provided filter
-          arguments are applied.
+        The listing of resources is handled in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         At the level of the :class:`~zhmcclient.BaseManager` class, this method
         defines the interface for the `list()` methods implemented in the
@@ -1334,13 +1790,20 @@ class BaseManager:
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only a minimal set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for the resource type in the :term:`HMC API` book.
+            The "additional_properties" parameter is ignored in that case.
 
           filter_args (dict):
             Filter arguments. `None` causes no filtering to happen. See the
             examples for usage details.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 

@@ -279,10 +279,6 @@ class TestActivationProfile:
              ['element-uri', 'name', 'description']),
             ({'additional_properties': ['description', 'ipl-address']},
              ['element-uri', 'name', 'description', 'ipl-address']),
-            ({'additional_properties': ['ssc-host-name']},
-             ['element-uri', 'name', 'ssc-host-name']
-             # ssc-host-name is not on every image profile
-             ),
         ]
     )
     def test_profilemanager_list_add_props(

@@ -79,28 +79,22 @@ class VirtualFunctionManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the Virtual Functions of this Partition.
+
+        The properties in the returned resource objects are by default only
+        "element-uri" and "element-id" and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
-
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
-
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
-
-        * Otherwise, the corresponding array property for this resource in the
-          parent object is used to list the resources, and the provided filter
-          arguments are applied.
+        The listing of resources is handled by using the URIs in the parent
+        resource, in an optimized way. For details, see
+        :ref:`Listing resources`.
 
         HMC/SE version requirements:
 
@@ -113,9 +107,11 @@ class VirtualFunctionManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Virtual Function element objects within Partition objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -124,6 +120,12 @@ class VirtualFunctionManager(BaseManager):
 
             `None` causes no filtering to happen, i.e. all resources are
             returned.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -140,7 +142,7 @@ class VirtualFunctionManager(BaseManager):
         """
         return self._list_with_parent_array(
             self.partition, 'virtual-function-uris', full_properties,
-            filter_args)
+            filter_args, additional_properties)
 
     @logged_api_call
     def create(self, properties):
