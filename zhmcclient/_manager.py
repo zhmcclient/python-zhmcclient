@@ -636,6 +636,13 @@ class BaseManager:
         return self._name_prop
 
     @property
+    def uri_prop(self):
+        """
+        The name of the resource property indicating the resource URI
+        """
+        return self._uri_prop
+
+    @property
     def session(self):
         """
         :class:`~zhmcclient.Session`:
@@ -1259,8 +1266,11 @@ class BaseManager:
     def _get_properties_bulk(
             self, resource_obj_list, properties=None):
         """
-        Get additional resource properties for a list of resources of this
-        manager and update these resources by adding the retrieved properties.
+        Get additional resource properties for a list of resources and update
+        these resources by adding the retrieved properties.
+
+        The type of resources does not need to match the manager this method
+        is invoked on.
 
         If "properties" is specified, the "properties" query parameter on the
         HMC GET operations is set accordingly. The return value of the method
@@ -1280,8 +1290,8 @@ class BaseManager:
         Parameters:
 
           resource_obj_list (list of zhmcclient.BaseResource):
-            List of resources of this manager for which the additional
-            properties should be retrieved.
+            List of resources for which the additional properties should be
+            retrieved.
 
             Upon return, the properties of these resource objects will have
             been updated with the additional properties.

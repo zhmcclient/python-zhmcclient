@@ -1,5 +1,6 @@
 Added support for the "additional_properties" parameter in the "list()"
-methods of all resource types. So far, only some of the resource types
+methods of all resource types, and in the "list_permitted_<resource_type>()"
+methods of the console. So far, only some of the resource types
 supported that parameter, and in several cases, it required the use of a
 particular minimum version of the HMC and the user had to know that that
 version was present.

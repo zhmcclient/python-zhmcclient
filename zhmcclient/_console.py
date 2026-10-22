@@ -23,11 +23,13 @@ a separate :term:`Console` resource.
 import warnings
 import time
 
+from ._constants import HMC_LOGGER_NAME
+from ._exceptions import HTTPError
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import logged_api_call
+from ._logging import get_logger, logged_api_call
 from ._utils import timestamp_from_datetime, divide_filter_args, \
-    make_query_str, matches_filters, RC_CONSOLE
+    matches_filters, make_query_str, RC_CONSOLE
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._tape_library import TapeLibraryManager
@@ -53,6 +55,8 @@ from ._partition_link import PartitionLinkManager
 from ._hw_message import HwMessageManager
 
 __all__ = ['ConsoleManager', 'Console']
+
+HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 
 class ConsoleManager(BaseManager):
@@ -477,6 +481,299 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             self._hw_messages = HwMessageManager(self)
         return self._hw_messages
 
+    def _list_with_permitted(
+            self, manager_attr, list_uri, result_prop, full_properties,
+            additional_properties, client_filters, query_parms):
+        """
+        List resource objects by using the "List Permitted <resource_type>"
+        operation.
+
+        That operation does not require object access permission to the parent
+        CPCs of the returned resource objects. That is also the reason why this
+        method does not fall back to using "List <resource_type> of CPC", which
+        would require object access permission to the CPC.
+
+        The "List Permitted <resource_type>" operation is supported as follows:
+        - "List Permitted Partitions": Requires HMC version 2.14.0
+          (initial GA, API version 2.20).
+        - "List Permitted Logical Partitions": Requires HMC version 2.14.0
+          (initial GA, API version 2.20).
+        - "List Permitted Adapters": Requires HMC version 2.16.0
+          (initial GA, API version 4.1).
+
+        The "additional-properties" query parameter of the
+        "List Permitted <resource_type>" operation is always attempted to be
+        used because the latest HMC version supports it for all resource types.
+        If an older HMC version is used that does not support it yet, this
+        method falls back to retrieving all properties using a bulk operation.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        Parameters:
+
+          manager_attr (str): Name of the manager attribute on the parent
+            zhmcclient.Cpc object.
+            This must match the desired resource type to be listed
+            (Adapter, Partition, Logical Partition).
+
+          list_uri (string):
+            Canonical URI for the "List Permitted" operation.
+            This must match the desired resource type to be listed
+            (Adapter, Partition, Logical Partition).
+
+          result_prop (string):
+            Name of property in result of "List Permitted" operation that
+            contains the resource list.
+
+          full_properties (bool):
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for the resource type in the :term:`HMC API` book.
+            The "additional_properties" parameter is ignored in that case.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
+
+          query_parms (list of str): Additional query parameters for the
+            List operation. Each list item must be a string (e.g. "key=value")
+            that is URI-encoded and ready to be appended to the URI as a query
+            parameter.
+
+        Returns:
+
+          : A list of zhmcclient resource objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+        has_full_properties = False
+
+        if full_properties:
+
+            resource_obj_list, _ = self._list_permitted_operation(
+                manager_attr, list_uri, result_prop, client_filters,
+                query_parms)
+
+            if resource_obj_list:
+                manager = resource_obj_list[0].manager
+                # pylint: disable=protected-access
+                manager._get_properties_bulk(resource_obj_list)
+
+                has_full_properties = True
+
+        elif additional_properties:
+
+            # The "additional-properties" query parameter of the
+            # "List Permitted <resource_type>" operation is always attempted
+            # to be used because the latest HMC version supports it for all
+            # resource types.
+
+            HMC_LOGGER.debug(
+                "Performing HMC List Permitted %s with "
+                "additional-properties because the latest HMC version "
+                "supports it and additional_properties is requested",
+                manager_attr)
+            resource_obj_list, ap_unsupported = self._list_permitted_operation(
+                manager_attr, list_uri, result_prop, client_filters,
+                query_parms, additional_properties)
+
+            if ap_unsupported:
+                # We are on an older HMC that does not support it.
+
+                HMC_LOGGER.debug(
+                    "Performing HMC List Permitted %s without "
+                    "additional-properties because the actual HMC version does "
+                    "not support it but additional_properties is requested",
+                    manager_attr)
+                resource_obj_list, _ = self._list_permitted_operation(
+                    manager_attr, list_uri, result_prop, client_filters,
+                    query_parms)
+
+                if resource_obj_list:
+                    manager = resource_obj_list[0].manager
+
+                    # pylint: disable=protected-access
+                    if manager._supports_properties:
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s with properties "
+                            "because the latest HMC version supports it and "
+                            "additional_properties is requested",
+                            manager.class_name)
+                        # pylint: disable=protected-access
+                        p_unsupported = manager._get_properties_bulk(
+                            resource_obj_list,
+                            properties=additional_properties)
+
+                    else:
+                        p_unsupported = True
+
+                    if p_unsupported:
+                        # Either the latest HMC version does not support it, or
+                        # we are on an older HMC that does not support it.
+
+                        HMC_LOGGER.debug(
+                            "Performing HMC Bulk Get %s without properties "
+                            "because the actual HMC version does not support "
+                            "it but additional_properties is requested",
+                            manager.class_name)
+                        # pylint: disable=protected-access
+                        manager._get_properties_bulk(resource_obj_list)
+
+                        has_full_properties = True
+
+        else:
+            # Neither full_properties nor additional_properties
+
+            resource_obj_list, _ = self._list_permitted_operation(
+                manager_attr, list_uri, result_prop, client_filters,
+                query_parms)
+
+        if has_full_properties:
+            for resource_obj in resource_obj_list:
+                # pylint: disable=protected-access
+                resource_obj._full_properties = True
+
+        # The local resources and the name-URI-cache are not updated by
+        # this method.
+
+        return resource_obj_list
+
+    def _list_permitted_operation(
+            self, manager_attr, list_uri, result_prop, client_filters,
+            query_parms, additional_properties=None):
+        """
+        Perform an HMC "List Permitted <resource_type>" operation and
+        optionally perform client side filtering on the result.
+
+        This method can only be called on the Console manager object.
+
+        Parameters:
+
+          manager_attr (str): Name of the manager attribute on the parent
+            zhmcclient.Cpc object.
+            This must match the desired resource type to be listed
+            (Adapter, Partition, Logical Partition).
+
+          list_uri (string):
+            Canonical URI for the "List Permitted" operation.
+            This must match the desired resource type to be listed
+            (Adapter, Partition, Logical Partition).
+
+          result_prop (string):
+            Name of property in result of "List Permitted" operation that
+            contains the resource list.
+
+          client_filters (dict):
+            Filters that need to be processed on the list result by the client.
+            `None` causes no client filtering to happen, i.e. all resources are
+            returned.
+
+          query_parms (list of str): Additional query parameters for the
+            "List Permitted" operation. Each list item must be a string (e.g.
+            "key=value") that is URI-encoded and ready to be appended to the
+            URI as a query parameter.
+
+          additional_properties (list of string):
+            A list of property names for use in the "additional-properties"
+            query parameter of the "List Permitted" operation.
+            If `None` or the empty list, the "additional-properties" query
+            parameter will not be used.
+
+        Returns:
+
+          tuple(objs, unsupported): A tuple with:
+            * objs (list): List of zhmcclient resource objects.
+            * unsupported (bool): Indicates whether the "additional-properties"
+              query parameter is unsupported by this version of the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
+        """
+        _query_parms = list(query_parms)
+        if additional_properties:
+            ap_parm = f"additional-properties={','.join(additional_properties)}"
+            _query_parms.append(ap_parm)
+        query_parms_str = make_query_str(_query_parms)
+        uri = f'{list_uri}{query_parms_str}'
+
+        try:
+            result = self.manager.session.get(uri)
+        except HTTPError as exc:
+
+            # If the entire "List Permitted" operation is not supported by
+            # the actual HMC version, we do not fall back to an alternative
+            # because we want to avoid introducing the requirement for object
+            # access permission to the parent CPC.
+
+            if additional_properties and \
+                    exc.http_status == 400 and exc.reason == 1:
+                # The "additional-properties" query parameter is not
+                # supported in this older version of the HMC.
+                return [], True
+
+            raise
+
+        cpc_manager = self.manager.client.cpcs
+        cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
+        resource_obj_list = []
+        if result:
+
+            for props in result[result_prop]:
+
+                # Determine the CPC of the resource. That will provide
+                # the manager object for the resource.
+
+                # We assume that all "List Permitted" operations have the
+                # following CPC-related properties in their response:
+                # * 'cpc-object-uri' (required)
+                # * 'cpc-name' (required)
+                # * 'se-version' (optional)
+                # * 'dpm-enabled' (optional)
+                cpc_uri = props['cpc-object-uri']
+                try:
+                    cpc = cpcs_by_uri[cpc_uri]
+                except KeyError:
+                    # Create a 'skeleton' local Cpc object we can hang the
+                    # resource objects off of, even if the user does not have
+                    # access permissions to these CPCs. Note that different
+                    # resource objects can have different parent CPCs.
+                    cpc_props = {}
+                    cpc_props['name'] = props['cpc-name']
+                    if 'se-version' in props:
+                        cpc_props['se-version'] = props['se-version']
+                    if 'dpm-enabled' in props:
+                        cpc_props['dpm-enabled'] = props['dpm-enabled']
+                    cpc = cpc_manager.resource_object(cpc_uri, cpc_props)
+                    cpcs_by_uri[cpc_uri] = cpc
+
+                manager = getattr(cpc, manager_attr)
+
+                resource_obj = manager.resource_class(
+                    manager=manager,
+                    uri=props[manager.uri_prop],
+                    name=props.get(manager.name_prop, None),
+                    properties=props)
+
+                if matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+
+        return resource_obj_list, False
+
     @logged_api_call
     def restart(self, force=False, wait_for_available=True,
                 operation_timeout=None):
@@ -778,34 +1075,15 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         Any CPCs in classic mode managed by the HMC will be ignored for this
         operation.
 
-        The partitions in the result can be additionally limited by specifying
-        filter arguments.
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Permitted Partitions"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
 
-        The partitions in the result will have the following partition
-        properties:
-
-        * name (string): Name of the partition.
-
-        * object-uri (string): Object URI of the partition.
-
-        * type (string): Type of the partition (i.e. "linux", "ssc", "zvm").
-
-        * status (string): Status of the partition. See the data model of
-          the Partition object in the :term:`HMC API` book for values.
-
-        * has-unacceptable-status (bool): Whether the status is unacceptable,
-          according to the values in the 'acceptable-status' property.
-
-        and the following properties from their parent CPC:
-
-        * cpc-name (string): Name of the parent CPC of the partition.
-
-        * cpc-object-uri (string): Object URI of the parent CPC of the
-          partition.
-
-        * se-version (string): SE version of the parent CPC of the partition,
-          as M.N.U string. Note that this property is returned only on newer
-          HMC 2.16 versions (HMC API version 4.10 or higher).
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
 
         HMC/SE version requirements:
 
@@ -818,9 +1096,9 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties for the
-            returned Partition objects should be retrieved, vs. only a short
-            set.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for Partition objects in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments for limiting the partitions in the result.
@@ -850,12 +1128,10 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             * <property-name>: Any other property of partitions.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
-
-            Using this parameter requires :ref:`API features`
-            "dpm-hipersockets-partition-link-management" or
-            "dpm-ctc-partition-link-management" on the HMC.
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -871,57 +1147,16 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
-        if additional_properties:
-            ap_parm = f"additional-properties={','.join(additional_properties)}"
-            query_parms.append(ap_parm)
-        query_parms_str = make_query_str(query_parms)
 
-        # Perform the operation with the HMC, including any server-side
-        # filtering.
-        # Note: "List Permitted Partitions" was introduced in HMC/SE 2.14.0.
-        uri = (f'{self.uri}/operations/list-permitted-partitions'
-               f'{query_parms_str}')
-        result = self.manager.session.get(uri, resource=self)
+        manager_attr = "partitions"
+        list_uri = f"{self.uri}/operations/list-permitted-partitions"
+        result_prop = "partitions"
 
-        cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
-        partition_objs = []
-        if result:
-            cpc_manager = self.manager.client.cpcs
-            partition_items = result['partitions']
-            for partition_item in partition_items:
+        partition_obj_list = self._list_with_permitted(
+            manager_attr, list_uri, result_prop, full_properties,
+            additional_properties, client_filters, query_parms)
 
-                # The partition_item dicts have the following properties:
-                # * name, object-uri, type, status, has-unacceptable-status,
-                #   cpc-name, cpc-object-uri
-                # * se-version (if HMC>=2.14.1)
-
-                cpc_uri = partition_item['cpc-object-uri']
-                try:
-                    cpc = cpcs_by_uri[cpc_uri]
-                except KeyError:
-                    # Create a 'skeleton' local Cpc object we can hang the
-                    # Partition objects off of, even if the user does not have
-                    # access permissions to these CPCs. Note that different
-                    # partitions can have different parent CPCs.
-                    cpc_props = {}
-                    cpc_props['name'] = partition_item['cpc-name']
-                    if 'se-version' in partition_item:
-                        cpc_props['se-version'] = partition_item['se-version']
-                    cpc = cpc_manager.resource_object(cpc_uri, cpc_props)
-
-                    cpcs_by_uri[cpc_uri] = cpc
-
-                partition_props = dict(partition_item)
-                partition_obj = cpc.partitions.resource_object(
-                    partition_item['object-uri'], partition_props)
-
-                # Apply client-side filtering
-                if matches_filters(partition_obj, client_filters):
-                    partition_objs.append(partition_obj)
-                    if full_properties:
-                        partition_obj.pull_full_properties()
-
-        return partition_objs
+        return partition_obj_list
 
     @logged_api_call
     def list_permitted_lpars(
@@ -935,34 +1170,15 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         Any CPCs in DPM mode managed by the HMC will be ignored for this
         operation.
 
-        The LPARs in the result can be additionally limited by specifying
-        filter arguments.
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Permitted Logical Partitions"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
 
-        The LPARs in the result will have the following LPAR properties:
-
-        * name (string): Name of the LPAR.
-
-        * object-uri (string): Object URI of the LPAR.
-
-        * activation-mode (string): Activation mode of the LPAR. See the data
-          model of the Logical Partition object in the :term:`HMC API` book for
-          values.
-
-        * status (string): Status of the LPAR. See the data model of
-          the Logical Partition object in the :term:`HMC API` book for values.
-
-        * has-unacceptable-status (bool): Whether the status is unacceptable,
-          according to the values in the 'acceptable-status' property.
-
-        and the following properties from their parent CPC:
-
-        * cpc-name (string): Name of the parent CPC of the LPAR.
-
-        * cpc-object-uri (string): Object URI of the parent CPC of the LPAR.
-
-        * se-version (string): SE version of the parent CPC of the LPAR, as
-          M.N.U string. Note that this property is returned only on newer HMC
-          2.16 versions (HMC API version 4.10 or higher).
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
 
         HMC/SE version requirements:
 
@@ -975,8 +1191,10 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties for the
-            returned LPAR objects should be retrieved, vs. only a short set.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for Logical Partition objects in the
+            :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments for limiting the LPARs in the result.
@@ -1006,12 +1224,10 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             * <property-name>: Any other property of LPARs.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
-
-            Note: This parameter is handled by the HMC starting with HMC API
-            version 4.10 (HMC 2.16 GA 1.5); with older HMC API versions it is
-            handled by zhmcclient.
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -1028,73 +1244,15 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
 
-        api_version_info = self.manager.client.version_info()
-        hmc_supports_additional_properties = api_version_info >= (4, 10)
+        manager_attr = "lpars"
+        list_uri = f"{self.uri}/operations/list-permitted-logical-partitions"
+        result_prop = "logical-partitions"
 
-        if additional_properties and hmc_supports_additional_properties:
-            ap_parm = f"additional-properties={','.join(additional_properties)}"
-            query_parms.append(ap_parm)
-        query_parms_str = make_query_str(query_parms)
+        lpar_obj_list = self._list_with_permitted(
+            manager_attr, list_uri, result_prop, full_properties,
+            additional_properties, client_filters, query_parms)
 
-        # Perform the operation with the HMC, including any server-side
-        # filtering.
-        uri = (f'{self.uri}/operations/list-permitted-logical-partitions'
-               f'{query_parms_str}')
-        result = self.manager.session.get(uri, resource=self)
-
-        cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
-        lpar_objs = []
-        if result:
-            cpc_manager = self.manager.client.cpcs
-            lpar_items = result['logical-partitions']
-            for lpar_item in lpar_items:
-
-                # The partition items have the following partition properties:
-                # * name, object-uri, activation-mode, status,
-                #   has-unacceptable-status
-                # And the following properties for their parent CPC:
-                # * cpc-name (CPC property 'name')
-                # * cpc-object-uri (CPC property 'object-uri')
-                # * se-version (CPC property 'se-version') (if >=2.14.1)
-
-                cpc_uri = lpar_item['cpc-object-uri']
-                try:
-                    cpc = cpcs_by_uri[cpc_uri]
-                except KeyError:
-                    # Create a 'skeleton' local Cpc object we can hang the
-                    # Partition objects off of, even if the user does not have
-                    # access permissions to these CPCs. Note that different
-                    # partitions can have different parent CPCs.
-                    cpc_props = {}
-                    cpc_props['name'] = lpar_item['cpc-name']
-                    if 'se-version' in lpar_item:
-                        cpc_props['se-version'] = lpar_item['se-version']
-                    cpc = cpc_manager.resource_object(cpc_uri, cpc_props)
-
-                    cpcs_by_uri[cpc_uri] = cpc
-
-                lpar_props = dict(lpar_item)
-                pull_props = []
-                if additional_properties:
-                    for prop in additional_properties:
-                        try:
-                            lpar_props[prop] = lpar_item[prop]
-                        except KeyError:
-                            pull_props.append(prop)
-                lpar_obj = cpc.lpars.resource_object(
-                    lpar_item['object-uri'],
-                    lpar_props,
-                )
-                if pull_props:
-                    lpar_obj.pull_properties(pull_props)
-
-                # Apply client-side filtering
-                if matches_filters(lpar_obj, client_filters):
-                    lpar_objs.append(lpar_obj)
-                    if full_properties:
-                        lpar_obj.pull_full_properties()
-
-        return lpar_objs
+        return lpar_obj_list
 
     @logged_api_call
     def list_permitted_adapters(
@@ -1107,8 +1265,15 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         classic-mode CPCs that are managed by the targeted HMC and to which the
         user has object-access permission.
 
-        The adapters in the result can be additionally limited by specifying
-        filter arguments.
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Permitted Adapters"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
 
         HMC/SE version requirements:
 
@@ -1123,12 +1288,9 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties for the
-            returned Adapter objects should be retrieved, vs. only a short
-            set.
-
-            Using this parameter requires that the managed CPCs do not include
-            any CPCs in classic mode.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for Adapter objects in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments for limiting the adapters in the result.
@@ -1167,12 +1329,10 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             * <property-name>: Any other property of adapters.
 
           additional_properties (list of string):
-            List of property names that are to be returned in addition to the
-            default properties.
-
-            Using this parameter requires :ref:`API feature <API features>`
-            "adapter-network-information" on the HMC and on all managed CPCs.
-            (i.e. SE version must be >= 2.16.0).
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -1203,65 +1363,14 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
             ['name', 'adapter-id', 'adapter-family', 'type', 'status',
              'firmware-update-pending', 'cpc-name', 'dpm-enabled'],
             filter_args)
-        if additional_properties:
-            ap_parm = f"additional-properties={','.join(additional_properties)}"
-            query_parms.append(ap_parm)
-        query_parms_str = make_query_str(query_parms)
 
-        # Perform the operation with the HMC, including any server-side
-        # filtering.
-        # Note: "List Permitted Adapters" was introduced in HMC/SE 2.16.0.
-        uri = (f'{self.uri}/operations/list-permitted-adapters'
-               f'{query_parms_str}')
-        result = self.manager.session.get(uri, resource=self)
+        manager_attr = "adapters"
+        list_uri = f"{self.uri}/operations/list-permitted-adapters"
+        result_prop = "adapters"
 
-        adapter_obj_list = []
-        if result:
-
-            # Group the returned adapters by CPC
-            adapter_items_by_cpc = {}
-            cpcs_by_name = {}
-            for adapter_item in result['adapters']:
-                cpc_name = adapter_item['cpc-name']
-                if cpc_name not in adapter_items_by_cpc:
-                    adapter_items_by_cpc[cpc_name] = []
-                adapter_items_by_cpc[cpc_name].append(adapter_item)
-                if cpc_name not in cpcs_by_name:
-                    # Create a 'skeleton' local Cpc object we can hang the
-                    # Adapter objects off of, even if the user does not have
-                    # access permissions to these CPCs. Note that different
-                    # adapters can have different parent CPCs.
-                    cpc_props = {
-                        'dpm-enabled': adapter_item['dpm-enabled']
-                    }
-                    if 'se-version' in adapter_item:
-                        cpc_props['se-version'] = adapter_item['se-version']
-                    cpc = self.manager.client.cpcs.find_local(
-                        name=adapter_item['cpc-name'],
-                        uri=adapter_item['cpc-object-uri'],
-                        properties=cpc_props,
-                    )
-                    cpcs_by_name[cpc_name] = cpc
-
-            # Process the returned adapters
-            for cpc_name, cpc in cpcs_by_name.items():
-                adapter_items = adapter_items_by_cpc[cpc_name]
-                adapter_manager = cpc.adapters
-                if full_properties:
-                    # pylint: disable=protected-access
-                    adapters = adapter_manager._get_properties_bulk(
-                        adapter_items, client_filters)
-                    adapter_obj_list.extend(adapters)
-                else:
-                    for adapter_item in adapter_items:
-                        # pylint: disable=protected-access
-                        adapter = adapter_manager.resource_class(
-                            manager=adapter_manager,
-                            uri=adapter_item[adapter_manager._uri_prop],
-                            name=adapter_item[adapter_manager._name_prop],
-                            properties=adapter_item)
-                        if matches_filters(adapter, client_filters):
-                            adapter_obj_list.append(adapter)
+        adapter_obj_list = self._list_with_permitted(
+            manager_attr, list_uri, result_prop, full_properties,
+            additional_properties, client_filters, query_parms)
 
         return adapter_obj_list
 

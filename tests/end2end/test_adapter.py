@@ -733,6 +733,14 @@ def test_adapter_list_permitted(
                  "zhmcclient mock does not support 'List Permitted Adapters' "
                  "operation")
 
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 16, 0):
+        skip_log(zhmc_logger,
+                 f"HMC {hd.host} of version {hmc_version} does not yet support "
+                 "'List Permitted Adapters'")
+
     if run == 'pdb':
         # pylint: disable=forgotten-debug-statement
         pdb.set_trace()
@@ -743,30 +751,14 @@ def test_adapter_list_permitted(
 
     # Prepare what the managed CPCs support and from which CPCs adapters
     # are expected.
-    supports_full_properties = True
-    supports_add_properties = True
     expected_cpc_names = set()
     cpc_by_name = {}
-    cpc_list = client.cpcs.list()
-    for cpc in cpc_list:
+    for cpc in client.cpcs.list():
         cpc_version_str = cpc.properties['se-version']
         cpc_version = list(map(int, cpc_version_str.split('.')))
-        if not cpc.dpm_enabled:
-            supports_full_properties = False
         if cpc.dpm_enabled or cpc_version >= [2, 16]:
             expected_cpc_names.add(cpc.name)
-        if not cpc.api_feature_enabled('adapter-network-info'):
-            supports_add_properties = False
         cpc_by_name[cpc.name] = cpc
-
-    if 'full_properties' in input_kwargs and not supports_full_properties:
-        skip_log(zhmc_logger,
-                 "The managed CPCs do not support full_properties=True in "
-                 "list_permitted_adapters()")
-    if 'additional_properties' in input_kwargs and not supports_add_properties:
-        skip_log(zhmc_logger,
-                 "The managed CPCs do not support additional_properties=True "
-                 "in list_permitted_adapters()")
 
     if exp_exc_type:
 
