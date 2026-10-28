@@ -258,6 +258,26 @@ HBAs
    :special-members: __str__
 
 
+.. _`AI Accelerator Functions`:
+
+AI Accelerator Functions
+------------------------
+
+.. automodule:: zhmcclient._ai_accelerator_function
+
+.. autoclass:: zhmcclient.AiAcceleratorFunctionManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.AiAcceleratorFunction
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Virtual Functions`:
 
 Virtual Functions

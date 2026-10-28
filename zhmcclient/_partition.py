@@ -41,6 +41,7 @@ from ._exceptions import StatusTimeout, PartitionLinkError
 from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
+from ._ai_accelerator_function import AiAcceleratorFunctionManager
 from ._logging import logged_api_call
 from ._utils import RC_PARTITION, make_query_str, datetime_from_timestamp, \
     timestamp_from_datetime, get_firmware_features
@@ -261,6 +262,7 @@ class Partition(BaseResource):
         self._nics = None
         self._hbas = None
         self._virtual_functions = None
+        self._ai_accelerator_functions = None
         self._firmware_feature_set = None
 
     @property
@@ -301,6 +303,23 @@ class Partition(BaseResource):
         if not self._virtual_functions:
             self._virtual_functions = VirtualFunctionManager(self)
         return self._virtual_functions
+
+    @property
+    def ai_accelerator_functions(self):
+        """
+        :class:`~zhmcclient.AiAcceleratorFunctionManager`: Access to the
+        :term:`AI Accelerator Functions <AI Accelerator Function>` in this
+        Partition.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        """
+        # We do here some lazy loading.
+        if not self._ai_accelerator_functions:
+            self._ai_accelerator_functions = \
+                AiAcceleratorFunctionManager(self)
+        return self._ai_accelerator_functions
 
     @logged_api_call
     def list_firmware_features(self, force=False):
@@ -2277,6 +2296,7 @@ class Partition(BaseResource):
                 "nics": [...],
                 "hbas": [...],
                 "virtual_functions": [...],
+                "ai_accelerator_functions": [...],
             }
 
         Returns:
@@ -2299,6 +2319,9 @@ class Partition(BaseResource):
         virtual_functions = self.virtual_functions.dump()
         if virtual_functions:
             resource_dict['virtual_functions'] = virtual_functions
+        ai_accelerator_functions = self.ai_accelerator_functions.dump()
+        if ai_accelerator_functions:
+            resource_dict['ai_accelerator_functions'] = ai_accelerator_functions
 
         return resource_dict
 
