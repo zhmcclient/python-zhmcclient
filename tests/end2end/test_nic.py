@@ -49,12 +49,12 @@ def se_version_info(cpc):
     return list(map(int, cpc.prop('se-version').split('.')))
 
 
-def test_nic_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_nic_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -71,25 +71,26 @@ def test_nic_find_list(zhmc_logger, dpm_mode_cpcs):
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with NICs on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
-            print(f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
-                  f"partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
+                f"partition {part.name!r}")
             runtest_find_list(
                 session, part.nics, nic.name, 'name', 'type',
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
 
 
-def test_nic_property(zhmc_logger, dpm_mode_cpcs):
+def test_nic_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -106,14 +107,15 @@ def test_nic_property(zhmc_logger, dpm_mode_cpcs):
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with NICs on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
-            print(f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
-                  f"partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
+                f"partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -121,12 +123,12 @@ def test_nic_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(nic.manager, non_list_prop)
 
 
-def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
+def test_nic_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a NIC (and a partition).
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -135,10 +137,11 @@ def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
         if se_version_info(cpc) >= [2, 17]:
             # TODO: Enable this case again once create_hipersocket() has been
             #       reimplemented using partition links.
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "create_hipersocket() is not supported on z17 CPCs")
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         hs_adapter_name = TEST_PREFIX + ' test_nic_crud adapter1'
         part_name = TEST_PREFIX + ' test_nic_crud part1'
@@ -253,16 +256,16 @@ def test_nic_crud(zhmc_logger, dpm_mode_cpcs):
                 adapter.delete()
 
 
-def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
+def test_nic_backing_port_port_based(test_logger, dpm_mode_cpcs):
     """
     Test Nic.backing_port() for port-based NICs (e.g. RoCE, CNA).
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
-    zhmc_logger.debug("Testing with CPC %s", cpc.name)
+    test_logger.debug("Testing with CPC %s", cpc.name)
     client = cpc.manager.client
 
     port_nics = []
@@ -276,20 +279,20 @@ def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
                 pass
             else:
                 # port-based NIC (e.g. RoCE, CNA before z17, or z17)
-                zhmc_logger.debug("Found port-based NIC %s", nic.name)
+                test_logger.debug("Found port-based NIC %s", nic.name)
                 port_nics.append(nic)
         if len(port_nics) >= 5:
             break
 
     if not port_nics:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"CPC {cpc.name} does not have any partitions with "
                  "port-based NICs")
 
     # Pick the port-based NIC to test with
     nic = random.choice(port_nics)
     partition = nic.manager.parent
-    zhmc_logger.debug(
+    test_logger.debug(
         "Testing with NIC %r in partition %r", nic.name, partition.name)
 
     port_uri = nic.get_property('network-adapter-port-uri')
@@ -298,12 +301,12 @@ def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
     adapter = cpc.adapters.resource_object(adapter_uri)
     port = adapter.ports.resource_object(port_uri)
 
-    zhmc_logger.debug("Calling Nic.backing_port()")
+    test_logger.debug("Calling Nic.backing_port()")
 
     # The code to be tested
     result_port = nic.backing_port()
 
-    zhmc_logger.debug("Returned from Nic.backing_port()")
+    test_logger.debug("Returned from Nic.backing_port()")
 
     assert isinstance(result_port, zhmcclient.Port)
     assert result_port.uri == port.uri
@@ -315,16 +318,16 @@ def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
     assert result_cpc.uri == cpc.uri
 
 
-def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
+def test_nic_backing_port_vswitch_based(test_logger, dpm_mode_cpcs):
     """
     Test Nic.backing_port() for vswitch-based NICs (e.g. OSA, HS).
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
-    zhmc_logger.debug("Testing with CPC %s", cpc.name)
+    test_logger.debug("Testing with CPC %s", cpc.name)
     client = cpc.manager.client
 
     vswitch_nics = []
@@ -338,20 +341,20 @@ def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
                 pass
             else:
                 # vswitch-based NIC (e.g. OSA, HS before z17)
-                zhmc_logger.debug("Found vswitch-based NIC %s", nic.name)
+                test_logger.debug("Found vswitch-based NIC %s", nic.name)
                 vswitch_nics.append(nic)
         if len(vswitch_nics) >= 5:
             break
 
     if not vswitch_nics:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"CPC {cpc.name} does not have any partitions with "
                  "vswitch-based NICs")
 
     # Pick the vswitch-based NIC to test with
     nic = random.choice(vswitch_nics)
     partition = nic.manager.parent
-    zhmc_logger.debug(
+    test_logger.debug(
         "Testing with NIC %r in partition %r", nic.name, partition.name)
 
     vswitch_uri = nic.get_property('virtual-switch-uri')
@@ -368,12 +371,12 @@ def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
     else:
         raise AssertionError  # Would be an HMC inconsistency
 
-    zhmc_logger.debug("Calling Nic.backing_port()")
+    test_logger.debug("Calling Nic.backing_port()")
 
     # The code to be tested
     result_port = nic.backing_port()
 
-    zhmc_logger.debug("Returned from Nic.backing_port()")
+    test_logger.debug("Returned from Nic.backing_port()")
 
     assert isinstance(result_port, zhmcclient.Port)
     assert result_port.uri == port.uri

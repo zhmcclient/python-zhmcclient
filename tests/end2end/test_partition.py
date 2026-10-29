@@ -79,12 +79,12 @@ def assert_ctc_partition_link(partlink, num_paths, num_partitions):
             f"{pformat_as_dict(partlink.properties)}")
 
 
-def test_part_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_part_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -96,25 +96,26 @@ def test_part_find_list(zhmc_logger, dpm_mode_cpcs):
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print(f"Testing on CPC {cpc.name} with partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with partition {part.name!r}")
             runtest_find_list(
                 session, cpc.partitions, part.name, 'name', 'status',
                 PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS,
                 PART_ADDITIONAL_PROPS)
 
 
-def test_part_property(zhmc_logger, dpm_mode_cpcs):
+def test_part_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -126,13 +127,14 @@ def test_part_property(zhmc_logger, dpm_mode_cpcs):
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print(f"Testing on CPC {cpc.name} with partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -140,18 +142,19 @@ def test_part_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(part.manager, non_list_prop)
 
 
-def test_part_crud(zhmc_logger, dpm_mode_cpcs):
+def test_part_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a partition.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_part_crud part1'
         part_name_new = part_name + ' new'
@@ -234,7 +237,7 @@ def test_part_crud(zhmc_logger, dpm_mode_cpcs):
             cpc.partitions.find(name=part_name_new)
 
 
-def test_partition_features(zhmc_logger, dpm_mode_cpcs):
+def test_partition_features(test_logger, dpm_mode_cpcs):
     """
     Test features of the CPC of a partition:
     - For firmware features:
@@ -243,7 +246,7 @@ def test_partition_features(zhmc_logger, dpm_mode_cpcs):
       - list_firmware_features()
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -255,7 +258,7 @@ def test_partition_features(zhmc_logger, dpm_mode_cpcs):
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
         part = random.choice(part_list)
@@ -332,12 +335,12 @@ def test_partition_features(zhmc_logger, dpm_mode_cpcs):
         validate_firmware_features(api_version_info, fw_features)
 
 
-def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
+def test_part_list_os_messages(test_logger, dpm_mode_cpcs):
     """
     Test "List OS Messages" operation on partitions
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -347,14 +350,14 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support 'List OS Messages' "
                      "operation")
 
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
 
@@ -363,7 +366,7 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
 
             # Test: List all messages (without begin or end)
             try:
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Listing OS messages of partition %s with no begin/end",
                     part.name)
                 result = part.list_os_messages()
@@ -371,7 +374,7 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the partition is not
                     # available
-                    zhmc_logger.debug(
+                    test_logger.debug(
                         "Partition %s cannot list OS messages", part.name)
                     continue
                 raise
@@ -381,19 +384,19 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
                 test_part = part
                 break
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Partition %s has only %d OS messages",
                 part.name, len(all_messages))
 
         if test_part is None:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partition on CPC {cpc.name} has the minimum number "
                      "of 3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        zhmc_logger.debug(
+        test_logger.debug(
             "Listing OS messages of partition %s with begin=%s, end=%s",
             test_part.name, all_begin, all_end)
         result = test_part.list_os_messages(begin=all_begin, end=all_end)
@@ -412,7 +415,7 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        zhmc_logger.debug(
+        test_logger.debug(
             "Listing OS messages of partition %s with begin=%s, end=%s",
             test_part.name, begin, end)
         result = test_part.list_os_messages(begin=begin, end=end)
@@ -422,12 +425,12 @@ def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
             assert message in all_messages
 
 
-def test_part_create_os_websocket(zhmc_logger, dpm_mode_cpcs):
+def test_part_create_os_websocket(test_logger, dpm_mode_cpcs):
     """
     Test "Get ASCII Console WebSocket URI" operation on partitions
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -437,14 +440,14 @@ def test_part_create_os_websocket(zhmc_logger, dpm_mode_cpcs):
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support 'Get ASCII Console "
                      "WebSocket URI' operation")
 
         # Pick the partition to test with
         active_part_list = cpc.partitions.list(filter_args={'status': 'active'})
         if not active_part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host} with an active status")
 
@@ -512,13 +515,13 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
     "desc, input_kwargs, exp_props",
     LIST_PERMITTED_PARTITION_TESTCASES)
 def test_console_list_permitted_partitions(
-        zhmc_logger, desc, input_kwargs, exp_props, dpm_mode_cpcs):
+        test_logger, desc, input_kwargs, exp_props, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test list permitted partitions on a cpc
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -532,13 +535,13 @@ def test_console_list_permitted_partitions(
         hmc_version = api_version['hmc-version']
         hmc_version_info = tuple(map(int, hmc_version.split('.')))
         if hmc_version_info < (2, 14, 0):
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC {hd.host} of version {hmc_version} does not yet "
                      "support 'List Permitted Partitions'")
 
         permitted_part_list = console.list_permitted_partitions(**input_kwargs)
         if not permitted_part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host} for the user {session.userid}")
 
@@ -613,13 +616,13 @@ PART_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_PART_GET_SUSTAINABILITY_DATA)
 def test_part_get_sustainability_data(
-        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
+        test_logger, tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Partition.get_sustainability_data(...)
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -629,14 +632,14 @@ def test_part_get_sustainability_data(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support "
                      "Partition.get_sustainability_data()")
 
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
 
@@ -646,7 +649,8 @@ def test_part_get_sustainability_data(
         session = part.manager.session
         hd = session.hmc_definition
 
-        print(f"Testing with partition {part.name}")
+        test_logger.info(
+            f"Testing with partition {part.name}")
 
         try:
 
@@ -655,11 +659,11 @@ def test_part_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"HMC userid {hd.userid!r} is not authorized for task "
                          f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"Partition {part.name} on HMC {hd.host} does not "
                          f"support feature: {exc}")
             else:
@@ -699,12 +703,13 @@ def test_part_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print(f"Warning: Oldest data point of metric "
-                              f"{metric_name!r} is not within 15 minutes of "
-                              "range start: "
-                              f"Oldest data point: {dp_timestamp_dt}, "
-                              f"Range start: {exp_oldest_dt}, "
-                              f"Delta: {delta_sec} sec")
+                        warnings.warn(
+                            f"Warning: Oldest data point of metric "
+                            f"{metric_name!r} is not within 15 minutes of "
+                            "range start: "
+                            f"Oldest data point: {dp_timestamp_dt}, "
+                            f"Range start: {exp_oldest_dt}, "
+                            f"Delta: {delta_sec} sec", UserWarning)
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -715,12 +720,13 @@ def test_part_get_sustainability_data(
                     delta_td = abs(dp_timestamp_dt - previous_dt)
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
-                        print("Warning: Timestamp of a data point of metric "
-                              f"{metric_name!r} is not within expected delta "
-                              "of its previous data point. "
-                              f"Actual delta: {delta_td}, "
-                              f"Expected delta: {exp_delta} "
-                              f"(+/-{tolerance_pct}%)")
+                        warnings.warn(
+                            "Warning: Timestamp of a data point of metric "
+                            f"{metric_name!r} is not within expected delta "
+                            "of its previous data point. "
+                            f"Actual delta: {delta_td}, "
+                            f"Expected delta: {exp_delta} "
+                            f"(+/-{tolerance_pct}%)", UserWarning)
 
                 previous_dt = dp_timestamp_dt
 
@@ -804,14 +810,14 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
     "desc, type, number_of_nics, nic_property_list",
     TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK)
 def test_part_attach_detach_network_link(
-        zhmc_logger, desc, type, number_of_nics, nic_property_list,
+        test_logger, desc, type, number_of_nics, nic_property_list,
         dpm_mode_cpcs):
     # pylint: disable=unused-argument,redefined-builtin
     """
     Test for Partition.attach/detach_network_link()
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -822,7 +828,7 @@ def test_part_attach_detach_network_link(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support "
                      "Partition.attach/detach_network_link()")
 
@@ -892,9 +898,10 @@ def test_part_attach_detach_network_link(
                 # the NIC in the partition.
                 if len(nics) > 0 or len(nic_uris) > 0:
                     # warnings.warn(
-                    print("Debug: Detaching Hipersocket partition link did "
-                          "not delete the NICs in the partition:\n"
-                          f"{nic_uris}\n{nics}")
+                    test_logger.info(
+                        "Debug: Detaching Hipersocket partition link did "
+                        "not delete the NICs in the partition:\n"
+                        f"{nic_uris}\n{nics}")
             else:  # type == "smc-d":
                 assert len(nics) == len(nic_uris) == 0
 
@@ -928,26 +935,26 @@ TESTCASES_PART_ATTACH_DETACH_CTC_LINK = [
     "desc, num_partitions, num_paths",
     TESTCASES_PART_ATTACH_DETACH_CTC_LINK)
 def test_part_attach_detach_ctc_link(
-        zhmc_logger, dpm_mode_cpcs, desc, num_partitions, num_paths):
+        test_logger, dpm_mode_cpcs, desc, num_partitions, num_paths):
     # pylint: disable=unused-argument
     """
     Test for Partition.attach/detach_ctc_link()
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        zhmc_logger.debug("Testing with CPC %s", cpc.name)
+        test_logger.debug("Testing with CPC %s", cpc.name)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support "
                      "Partition.attach/detach_ctc_link()")
 
@@ -964,7 +971,7 @@ def test_part_attach_detach_ctc_link(
             adapters = cpc.adapters.list(
                 filter_args={'type': 'fc', 'status': 'active'})
             if len(adapters) < num_paths:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"CPC {cpc.name} has less than {num_paths} "
                          "online FC adapters for CTC")
             path_adapters = random.sample(adapters, num_paths)
@@ -972,11 +979,11 @@ def test_part_attach_detach_ctc_link(
             # Create the initial partitions for the partition link
             for i in range(0, num_partitions):
                 part_name = f"{TEST_PREFIX}_{i}_{uuid.uuid4().hex}"
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Preparing properties for creation of initial "
                     "PL partition %s", part_name)
                 part_props = standard_partition_props(cpc, part_name)
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Creating initial PL partition %s", part_name)
                 part = cpc.partitions.create(part_props)
                 pl_parts.append(part)
@@ -997,26 +1004,26 @@ def test_part_attach_detach_ctc_link(
                 "partitions": [p.uri for p in pl_parts],
                 "paths": paths,
             }
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Creating partition link %s", partlink_name)
             partlink = console.partition_links.create(partlink_input_props)
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Partition link after creation (default properties):\n%s",
                 pformat_as_dict(partlink.properties))
             partlink.pull_full_properties()
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Partition link after creation (full properties):\n%s",
                 pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
 
             # Create the test partition (to which the PL is attached)
             test_part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Preparing properties for creation of test partition %s",
                 test_part_name)
             test_part_props = standard_partition_props(cpc, test_part_name)
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Creating test partition %s", test_part_name)
             test_part = cpc.partitions.create(test_part_props)
 
@@ -1025,7 +1032,7 @@ def test_part_attach_detach_ctc_link(
             attached_pls = test_part.list_attached_partition_links()
             assert len(attached_pls) == 0
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Attaching partition link to test partition")
 
             # The code to be tested
@@ -1033,7 +1040,7 @@ def test_part_attach_detach_ctc_link(
             num_partitions += 1
 
             partlink.pull_full_properties()
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Partition link after attach (full properties):\n%s",
                 pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
@@ -1045,7 +1052,7 @@ def test_part_attach_detach_ctc_link(
             attached_pl = attached_pls[0]
             assert attached_pl.uri == partlink.uri
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Detaching partition link from test partition")
 
             # The code to be tested
@@ -1053,7 +1060,7 @@ def test_part_attach_detach_ctc_link(
             num_partitions -= 1
 
             partlink.pull_full_properties()
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Partition link after detach (full properties):\n%s",
                 pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
@@ -1065,14 +1072,14 @@ def test_part_attach_detach_ctc_link(
 
         finally:
             if partlink:
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Deleting partition link %s", partlink.name)
                 partlink.delete()
             if test_part:
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Deleting test partition %s", test_part.name)
                 test_part.delete()
             for part in pl_parts:
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Deleting initial PL partition %s", part.name)
                 part.delete()

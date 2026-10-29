@@ -19,6 +19,7 @@ These tests do not change any CPC properties.
 """
 
 
+import warnings
 from datetime import timedelta, datetime, timezone
 import pytest
 from requests.packages import urllib3
@@ -82,7 +83,7 @@ MAX_PARTS_BY_TYPE_MODEL = {
 }
 
 
-def test_cpc_find_list(zhmc_logger, hmc_session):
+def test_cpc_find_list(test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Test find/list methods for CPCs (any mode).
@@ -91,7 +92,8 @@ def test_cpc_find_list(zhmc_logger, hmc_session):
     hd = hmc_session.hmc_definition
 
     for cpc_name in hd.cpcs:
-        print(f"Testing with CPC {cpc_name}")
+        test_logger.info(
+            f"Testing with CPC {cpc_name}")
 
         cpc_list_props = CPC_LIST_PROPS
         se_version = hd.cpcs[cpc_name].get('se_version', None)
@@ -105,16 +107,17 @@ def test_cpc_find_list(zhmc_logger, hmc_session):
             CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, cpc_list_props)
 
 
-def test_cpc_property(zhmc_logger, all_cpcs):
+def test_cpc_property(test_logger, all_cpcs):
     """
     Test property related methods
     """
     if not all_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
-        print(f"Testing with CPC {cpc.name}")
+        test_logger.info(
+            f"Testing with CPC {cpc.name}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -122,7 +125,7 @@ def test_cpc_property(zhmc_logger, all_cpcs):
         runtest_get_properties(cpc.manager, non_list_prop)
 
 
-def test_cpc_features(zhmc_logger, all_cpcs):
+def test_cpc_features(test_logger, all_cpcs):
     """
     Test certain "features" of a CPC (any mode):
     - dpm_enabled property
@@ -137,11 +140,12 @@ def test_cpc_features(zhmc_logger, all_cpcs):
       - list_api_features() with name filter
     """
     if not all_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
-        print(f"Testing with CPC {cpc.name}")
+        test_logger.info(
+            f"Testing with CPC {cpc.name}")
 
         client = cpc.manager.client
 
@@ -251,7 +255,7 @@ def test_cpc_features(zhmc_logger, all_cpcs):
             assert enabled is True
 
 
-def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
+def test_cpc_export_profiles(test_logger, classic_mode_cpcs):
     """
     Test for export_profiles(profile_area, wait_for_completion=True,
                              operation_timeout=None)
@@ -259,7 +263,7 @@ def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
     Only for CPCs in classic mode, skipped in DPM mode.
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -268,7 +272,8 @@ def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print(f"Testing with CPC {cpc.name}")
+        test_logger.info(
+            f"Testing with CPC {cpc.name}")
 
         try:
 
@@ -277,7 +282,7 @@ def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"HMC userid {hd.userid!r} is not authorized for task "
                          "'Export/Import Profile Data (API only)' on HMC "
                          f"{hd.host}")
@@ -287,7 +292,7 @@ def test_cpc_export_profiles(zhmc_logger, classic_mode_cpcs):
         # TODO: Complete this test
 
 
-def test_cpc_export_dpm_config(zhmc_logger, dpm_mode_cpcs):
+def test_cpc_export_dpm_config(test_logger, dpm_mode_cpcs):
     """
     Test for export_dpm_configuration()
 
@@ -298,13 +303,14 @@ def test_cpc_export_dpm_config(zhmc_logger, dpm_mode_cpcs):
     for 5 to 20 minutes!
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         cert, cert_props = (None, None)
         if has_api_feature('secure-boot-with-certificates', cpc):
@@ -382,7 +388,7 @@ CPC_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_CPC_GET_SUSTAINABILITY_DATA)
 def test_cpc_get_sustainability_data(
-        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta, all_cpcs):
+        test_logger, tc, input_kwargs, exp_oldest, exp_delta, all_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Cpc.get_sustainability_data(...)
@@ -392,7 +398,8 @@ def test_cpc_get_sustainability_data(
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print(f"Testing with CPC {cpc.name}")
+        test_logger.info(
+            f"Testing with CPC {cpc.name}")
 
         try:
 
@@ -401,11 +408,11 @@ def test_cpc_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"HMC userid {hd.userid!r} is not authorized for task "
                          f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"CPC {cpc.name} on HMC {hd.host} does not support "
                          f"feature: {exc}")
             else:
@@ -445,11 +452,13 @@ def test_cpc_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print("Warning: Oldest data point of metric "
-                              f"{metric_name!r} is not within 15 minutes of "
-                              "range start: Oldest data point: "
-                              f"{dp_timestamp_dt}, Range start: "
-                              f"{exp_oldest_dt}, Delta: {delta_sec} sec")
+                        warnings.warn(
+                            "Warning: Oldest data point of metric "
+                            f"{metric_name!r} is not within 15 minutes of "
+                            "range start: Oldest data point: "
+                            f"{dp_timestamp_dt}, Range start: "
+                            f"{exp_oldest_dt}, Delta: {delta_sec} sec",
+                            UserWarning)
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -460,11 +469,12 @@ def test_cpc_get_sustainability_data(
                     delta_td = abs(dp_timestamp_dt - previous_dt)
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
-                        print("Warning: Timestamp of a data point of metric "
-                              f"{metric_name!r} is not within expected delta "
-                              "of its previous data point. Actual delta: "
-                              f"{delta_td}, Expected delta: {exp_delta} "
-                              f"(+/-{tolerance_pct}%)")
+                        warnings.warn(
+                            "Warning: Timestamp of a data point of metric "
+                            f"{metric_name!r} is not within expected delta "
+                            "of its previous data point. Actual delta: "
+                            f"{delta_td}, Expected delta: {exp_delta} "
+                            f"(+/-{tolerance_pct}%)", UserWarning)
 
                 previous_dt = dp_timestamp_dt
 

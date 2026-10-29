@@ -41,16 +41,16 @@ CERT_ADDITIONAL_PROPS = ['description', 'assigned']
 CERT_VOLATILE_PROPS = []
 
 
-def test_certificates_find_list(zhmc_logger, all_cpcs):
+def test_certificates_find_list(test_logger, all_cpcs):
     """
     Test list(), find(), findall().
     """
     if not all_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any defined CPCs.")
 
     for cpc in all_cpcs:
-        skipif_no_secure_boot_feature(zhmc_logger, cpc)
+        skipif_no_secure_boot_feature(test_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -59,13 +59,14 @@ def test_certificates_find_list(zhmc_logger, all_cpcs):
         # Pick the certificates to test with
         cert_list = console.certificates.list()
         if not cert_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No certificates on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
         cert_list = pick_test_resources(cert_list)
 
         for cert in cert_list:
-            print(f"Testing on CPC {cpc.name} with cert {cert.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with cert {cert.name!r}")
             # noinspection PyTypeChecker
             runtest_find_list(
                 session, console.certificates, cert.name, 'name', None,
@@ -73,19 +74,20 @@ def test_certificates_find_list(zhmc_logger, all_cpcs):
                 CERT_ADDITIONAL_PROPS)
 
 
-def test_cert_crud(zhmc_logger, all_cpcs):
+def test_cert_crud(test_logger, all_cpcs):
     """
     Test create, read, update and delete a certificate.
     For DPM cpcs, also create a partition and assign/unassign certificates.
     """
     if not all_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any defined CPCs.")
 
     for cpc in all_cpcs:
-        skipif_no_secure_boot_feature(zhmc_logger, cpc)
+        skipif_no_secure_boot_feature(test_logger, cpc)
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.console
         assert console == console.certificates.console
@@ -144,7 +146,8 @@ def test_cert_crud(zhmc_logger, all_cpcs):
 
         # The code to be tested
         if cpc.dpm_enabled:
-            print(f"Testing for DPM on CPC {cpc.name}")
+            test_logger.info(
+                f"Testing for DPM on CPC {cpc.name}")
 
             part_name = cert_name_new + " partition"
             part = cpc.partitions.create(

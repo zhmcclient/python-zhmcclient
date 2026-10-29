@@ -74,7 +74,7 @@ SSOSRVDEF_AUTO_PROPS = {
 }
 
 
-def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
+def test_ssosrvdef_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -86,19 +86,20 @@ def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support SSO server definitions")
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
     if not ssosrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No SSO server definitions defined on HMC {hd.host}")
     ssosrvdef_list = pick_test_resources(ssosrvdef_list)
 
     for ssosrvdef in ssosrvdef_list:
-        print(f"Testing with SSO server definition {ssosrvdef.name!r}")
+        test_logger.info(
+            f"Testing with SSO server definition {ssosrvdef.name!r}")
         runtest_find_list(
             hmc_session,
             console.sso_server_definitions,
@@ -112,7 +113,7 @@ def test_ssosrvdef_find_list(zhmc_logger, hmc_session):
         )
 
 
-def test_ssosrvdef_property(zhmc_logger, hmc_session):
+def test_ssosrvdef_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -124,19 +125,20 @@ def test_ssosrvdef_property(zhmc_logger, hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support SSO server definitions")
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
     if not ssosrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No SSO server definitions defined on HMC {hd.host}")
     ssosrvdef_list = pick_test_resources(ssosrvdef_list)
 
     for ssosrvdef in ssosrvdef_list:
-        print(f"Testing with SSO server definition {ssosrvdef.name!r}")
+        test_logger.info(
+            f"Testing with SSO server definition {ssosrvdef.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = "description"
@@ -144,7 +146,7 @@ def test_ssosrvdef_property(zhmc_logger, hmc_session):
         runtest_get_properties(ssosrvdef.manager, non_list_prop)
 
 
-def test_ssosrvdef_crud(zhmc_logger, hmc_session):
+def test_ssosrvdef_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a SSO server definition.
     """
@@ -156,7 +158,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
     hmc_version = api_version["hmc-version"]
     hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support SSO server definitions")
 
@@ -186,7 +188,7 @@ def test_ssosrvdef_crud(zhmc_logger, hmc_session):
         ssosrvdef = console.sso_server_definitions.create(ssosrvdef_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC userid {hd.userid!r} is not authorized for task "
                      f"'Manage Single Sign-On Servers' on HMC {hd.host}")
         else:

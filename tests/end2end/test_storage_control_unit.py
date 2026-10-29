@@ -41,7 +41,7 @@ SCU_LIST_PROPS = ['object-uri', 'name', 'logical-address']
 SCU_VOLATILE_PROPS = []
 
 
-def test_scu_find_list(hmc_session):
+def test_scu_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Storage Control Units.
     """
@@ -56,14 +56,15 @@ def test_scu_find_list(hmc_session):
     cu_list = pick_test_resources(cu_list)
 
     for cu in cu_list:
-        print(f"Testing with Storage Control Unit {cu.name!r}")
+        test_logger.info(
+            f"Testing with Storage Control Unit {cu.name!r}")
         runtest_find_list(
             hmc_session, console.storage_control_units, cu.name,
             'name', 'object-uri', SCU_VOLATILE_PROPS,
             SCU_MINIMAL_PROPS, SCU_LIST_PROPS)
 
 
-def test_scu_property(hmc_session):
+def test_scu_property(test_logger, hmc_session):
     """
     Test property related methods for Storage Control Units.
     """
@@ -78,14 +79,15 @@ def test_scu_property(hmc_session):
     cu_list = pick_test_resources(cu_list)
 
     for cu in cu_list:
-        print(f"Testing with Storage Control Unit {cu.name!r}")
+        test_logger.info(
+            f"Testing with Storage Control Unit {cu.name!r}")
 
         non_list_prop = 'class'
 
         runtest_get_properties(cu.manager, non_list_prop)
 
 
-def test_scu_full_properties(hmc_session):
+def test_scu_full_properties(test_logger, hmc_session):
     """
     Test that pull_full_properties() fills in all expected properties.
     """
@@ -100,7 +102,8 @@ def test_scu_full_properties(hmc_session):
     cu_list = pick_test_resources(cu_list)
 
     for cu in cu_list:
-        print(f"Testing with Storage Control Unit {cu.name!r}")
+        test_logger.info(
+            f"Testing with Storage Control Unit {cu.name!r}")
 
         cu.pull_full_properties()
 
@@ -116,7 +119,7 @@ def test_scu_full_properties(hmc_session):
         assert isinstance(cu.properties['volume-ranges'], list)
 
 
-def test_scu_list_filter_name(hmc_session):
+def test_scu_list_filter_name(test_logger, hmc_session):
     """
     Test list() with name filter for Storage Control Units.
     """
@@ -137,10 +140,11 @@ def test_scu_list_filter_name(hmc_session):
     assert len(filtered) >= 1
     names = [c.name for c in filtered]
     assert cu_name in names
-    print(f"name filter returned {len(filtered)} CU(s) for name {cu_name!r}")
+    test_logger.info(
+        f"name filter returned {len(filtered)} CU(s) for name {cu_name!r}")
 
 
-def test_scu_list_filter_logical_address(hmc_session):
+def test_scu_list_filter_logical_address(test_logger, hmc_session):
     """
     Test list() with logical-address filter for Storage Control Units.
     """
@@ -166,10 +170,11 @@ def test_scu_list_filter_logical_address(hmc_session):
     for c in filtered:
         c.pull_full_properties()
         assert c.properties['logical-address'] == logical_addr
-    print(f"logical-address filter returned {len(filtered)} CU(s)")
+    test_logger.info(
+        f"logical-address filter returned {len(filtered)} CU(s)")
 
 
-def test_scu_list_by_subsystem(hmc_session):
+def test_scu_list_by_subsystem(test_logger, hmc_session):
     """
     Test listing storage control units via the storage-subsystems sub-resource
     endpoint.
@@ -197,11 +202,12 @@ def test_scu_list_by_subsystem(hmc_session):
     assert 'storage-control-units' in result
     returned_uris = {c['object-uri'] for c in result['storage-control-units']}
     assert cu.uri in returned_uris
-    print(f"Subsystem {parent_uri!r} has "
-          f"{len(result['storage-control-units'])} control unit(s)")
+    test_logger.info(
+        f"Subsystem {parent_uri!r} has "
+        f"{len(result['storage-control-units'])} control unit(s)")
 
 
-def test_scu_update_description(hmc_session):
+def test_scu_update_description(test_logger, hmc_session):
     """
     Test update_properties() – update the description of an existing
     storage control unit and verify the change, then restore.
@@ -226,18 +232,21 @@ def test_scu_update_description(hmc_session):
         assert cu.properties['description'] == new_desc
         cu.pull_full_properties()
         assert cu.properties['description'] == new_desc
-        print(f"Updated description of Storage Control Unit {cu.name!r}")
+        test_logger.info(
+            f"Updated description of Storage Control Unit {cu.name!r}")
 
     finally:
         try:
             cu.update_properties({'description': original_desc})
-            print(f"Restored description of Storage Control Unit "
-                  f"{cu.name!r}")
+            test_logger.info(
+                f"Restored description of Storage Control Unit "
+                f"{cu.name!r}")
         except zhmcclient.HTTPError as exc:
-            print(f"Failed to restore description: {exc}")
+            test_logger.info(
+                f"Failed to restore description: {exc}")
 
 
-def test_scu_storage_paths(hmc_session):
+def test_scu_storage_paths(test_logger, hmc_session):
     """
     Test that storage-path-uris property is accessible and paths can be
     retrieved.
@@ -254,8 +263,9 @@ def test_scu_storage_paths(hmc_session):
         cu.pull_full_properties()
         path_uris = cu.properties.get('storage-path-uris', [])
 
-        print(f"Storage Control Unit {cu.name!r} has "
-              f"{len(path_uris)} storage path(s)")
+        test_logger.info(
+            f"Storage Control Unit {cu.name!r} has "
+            f"{len(path_uris)} storage path(s)")
 
         for path_uri in path_uris:
             props = hmc_session.get(path_uri)
@@ -267,7 +277,7 @@ def test_scu_storage_paths(hmc_session):
                 f"storage path {path_uri!r}")
 
 
-def test_scu_volume_ranges(hmc_session):
+def test_scu_volume_ranges(test_logger, hmc_session):
     """
     Test that volume-ranges property is accessible and has correct structure.
     """
@@ -283,8 +293,9 @@ def test_scu_volume_ranges(hmc_session):
         cu.pull_full_properties()
         volume_ranges = cu.properties.get('volume-ranges', [])
 
-        print(f"Storage Control Unit {cu.name!r} has "
-              f"{len(volume_ranges)} volume range(s)")
+        test_logger.info(
+            f"Storage Control Unit {cu.name!r} has "
+            f"{len(volume_ranges)} volume range(s)")
 
         for vr in volume_ranges:
             assert 'starting-volume' in vr, (

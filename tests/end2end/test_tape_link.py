@@ -38,7 +38,7 @@ TLINK_LIST_PROPS = ['object-uri', 'name']
 TLINK_VOLATILE_PROPS = []
 
 
-def test_tlink_find_list(hmc_session):
+def test_tlink_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Tape Links.
     """
@@ -54,14 +54,15 @@ def test_tlink_find_list(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
         runtest_find_list(
             hmc_session, console.tape_links, tlink.name,
             'name', 'object-uri', TLINK_VOLATILE_PROPS,
             TLINK_MINIMAL_PROPS, TLINK_LIST_PROPS)
 
 
-def test_tlink_property(hmc_session):
+def test_tlink_property(test_logger, hmc_session):
     """
     Test property related methods for Tape Links.
     """
@@ -77,7 +78,8 @@ def test_tlink_property(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'class'
@@ -85,7 +87,7 @@ def test_tlink_property(hmc_session):
         runtest_get_properties(tlink.manager, non_list_prop)
 
 
-def test_tlink_crud(hmc_session):
+def test_tlink_crud(test_logger, hmc_session):
     """
     Test create, update, and delete operations for Tape Links.
     """
@@ -99,7 +101,8 @@ def test_tlink_crud(hmc_session):
         skip_warn(f"No CPCs defined on HMC {hd.host}")
     cpc = cpc_list[0]
 
-    print(f"Testing with CPC {cpc.name!r}")
+    test_logger.info(
+        f"Testing with CPC {cpc.name!r}")
 
     # Pick a partition to test with
     part_list = cpc.partitions.list()
@@ -107,7 +110,8 @@ def test_tlink_crud(hmc_session):
         skip_warn(f"No Partitions defined on CPC {cpc.name!r}")
     partition = part_list[0]
 
-    print(f"Testing with Partition {partition.name!r}")
+    test_logger.info(
+        f"Testing with Partition {partition.name!r}")
 
     # Test creating a Tape Link
     tlink_name = 'test-tape-link-e2e'
@@ -121,7 +125,8 @@ def test_tlink_crud(hmc_session):
     try:
         existing_tlink = console.tape_links.find(name=tlink_name)
         existing_tlink.delete()
-        print(f"Deleted existing test Tape Link {tlink_name!r}")
+        test_logger.info(
+            f"Deleted existing test Tape Link {tlink_name!r}")
     except zhmcclient.NotFound:
         pass
 
@@ -130,7 +135,8 @@ def test_tlink_crud(hmc_session):
 
     try:
         assert tlink.properties['name'] == tlink_name
-        print(f"Created Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Created Tape Link {tlink.name!r}")
 
         # Test updating properties
         new_desc = "Updated tape link description for e2e testing"
@@ -141,7 +147,8 @@ def test_tlink_crud(hmc_session):
         assert tlink.properties['description'] == new_desc
         tlink.pull_full_properties()
         assert tlink.properties['description'] == new_desc
-        print(f"Updated Tape Link {tlink.name!r} description")
+        test_logger.info(
+            f"Updated Tape Link {tlink.name!r} description")
 
         # Test renaming
         new_name = 'test-tape-link-e2e-renamed'
@@ -153,18 +160,20 @@ def test_tlink_crud(hmc_session):
         assert tlink.properties['name'] == new_name
         with pytest.raises(zhmcclient.NotFound):
             console.tape_links.find(name=tlink_name)
-        print(f"Renamed Tape Link to {new_name!r}")
+        test_logger.info(
+            f"Renamed Tape Link to {new_name!r}")
 
     finally:
         # Clean up: Delete the test tape link
         try:
             tlink.delete()
-            print(f"Deleted test Tape Link {tlink.name!r}")
+            test_logger.info(
+                f"Deleted test Tape Link {tlink.name!r}")
         except zhmcclient.NotFound:
             pass
 
 
-def test_tlink_get_partitions(hmc_session):
+def test_tlink_get_partitions(test_logger, hmc_session):
     """
     Test get_partitions() method for Tape Links.
     """
@@ -180,25 +189,28 @@ def test_tlink_get_partitions(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # The code to be tested
         partitions = tlink.get_partitions()
 
         assert isinstance(partitions, list)
-        print(f"Tape Link {tlink.name!r} has {len(partitions)} "
-              f"partition(s)")
+        test_logger.info(
+            f"Tape Link {tlink.name!r} has {len(partitions)} "
+            f"partition(s)")
 
         for partition in partitions:
             assert isinstance(partition, zhmcclient.Partition)
             assert 'object-uri' in partition.properties
             assert 'name' in partition.properties
             assert 'status' in partition.properties
-            print(f"  Partition: {partition.name!r}, "
-                  f"Status: {partition.properties['status']}")
+            test_logger.info(
+                f"  Partition: {partition.name!r}, "
+                f"Status: {partition.properties['status']}")
 
 
-def test_tlink_get_histories(hmc_session):
+def test_tlink_get_histories(test_logger, hmc_session):
     """
     Test get_histories() method for Tape Links.
     """
@@ -214,21 +226,24 @@ def test_tlink_get_histories(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # The code to be tested
         histories = tlink.get_histories()
 
         assert isinstance(histories, dict)
-        print(f"Retrieved histories for Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Retrieved histories for Tape Link {tlink.name!r}")
 
         # The response should contain tape-link-histories
         if 'tape-link-histories' in histories:
             history_list = histories['tape-link-histories']
-            print(f"  Found {len(history_list)} history record(s)")
+            test_logger.info(
+                f"  Found {len(history_list)} history record(s)")
 
 
-def test_tlink_environment_report(hmc_session):
+def test_tlink_environment_report(test_logger, hmc_session):
     """
     Test get_environment_report() and update_environment_report() methods.
     """
@@ -244,13 +259,15 @@ def test_tlink_environment_report(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # The code to be tested: Get environment report
         report = tlink.get_environment_report()
 
         assert isinstance(report, dict)
-        print(f"Retrieved environment report for Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Retrieved environment report for Tape Link {tlink.name!r}")
 
         # The code to be tested: Update environment report
         # Note: The actual properties that can be updated depend on the
@@ -262,11 +279,13 @@ def test_tlink_environment_report(hmc_session):
         try:
             result = tlink.update_environment_report(update_props)
             assert isinstance(result, dict)
-            print(f"Updated environment report for Tape Link "
-                  f"{tlink.name!r}")
+            test_logger.info(
+                f"Updated environment report for Tape Link "
+                f"{tlink.name!r}")
         except zhmcclient.HTTPError as exc:
             # Some properties might not be updatable, which is acceptable
             if exc.http_status == 400:
-                print(f"Update not supported (expected): {exc}")
+                test_logger.info(
+                    f"Update not supported (expected): {exc}")
             else:
                 raise

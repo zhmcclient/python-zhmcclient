@@ -40,7 +40,7 @@ VTR_LIST_PROPS = ['element-uri', 'name', 'device-number',
 VTR_VOLATILE_PROPS = []
 
 
-def test_vtr_find_list(hmc_session):
+def test_vtr_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Virtual Tape Resources.
     """
@@ -56,7 +56,8 @@ def test_vtr_find_list(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get virtual tape resources for this tape link
         vtr_list = tlink.virtual_tape_resources.list()
@@ -68,15 +69,15 @@ def test_vtr_find_list(hmc_session):
         vtr_list = pick_test_resources(vtr_list)
 
         for vtr in vtr_list:
-            print(f"Testing with Virtual Tape Resource "
-                  f"{vtr.name!r}")
+            test_logger.info(
+                f"Testing with Virtual Tape Resource {vtr.name!r}")
             runtest_find_list(
                 hmc_session, tlink.virtual_tape_resources, vtr.name,
                 'name', 'element-uri', VTR_VOLATILE_PROPS,
                 VTR_MINIMAL_PROPS, VTR_LIST_PROPS)
 
 
-def test_vtr_property(hmc_session):
+def test_vtr_property(test_logger, hmc_session):
     """
     Test property related methods for Virtual Tape Resources.
     """
@@ -92,7 +93,8 @@ def test_vtr_property(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get virtual tape resources for this tape link
         vtr_list = tlink.virtual_tape_resources.list()
@@ -104,8 +106,8 @@ def test_vtr_property(hmc_session):
         vtr_list = pick_test_resources(vtr_list)
 
         for vtr in vtr_list:
-            print(f"Testing with Virtual Tape Resource "
-                  f"{vtr.name!r}")
+            test_logger.info(
+                f"Testing with Virtual Tape Resource {vtr.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'class'
@@ -113,7 +115,7 @@ def test_vtr_property(hmc_session):
             runtest_get_properties(vtr.manager, non_list_prop)
 
 
-def test_vtr_update_properties(hmc_session):
+def test_vtr_update_properties(test_logger, hmc_session):
     """
     Test update_properties() for Virtual Tape Resources.
     """
@@ -129,7 +131,8 @@ def test_vtr_update_properties(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get virtual tape resources for this tape link
         vtr_list = tlink.virtual_tape_resources.list()
@@ -141,8 +144,8 @@ def test_vtr_update_properties(hmc_session):
         vtr_list = pick_test_resources(vtr_list)
 
         for vtr in vtr_list:
-            print(f"Testing with Virtual Tape Resource "
-                  f"{vtr.name!r}")
+            test_logger.info(
+                f"Testing with Virtual Tape Resource {vtr.name!r}")
 
             # Get current properties
             vtr.pull_full_properties()
@@ -150,7 +153,8 @@ def test_vtr_update_properties(hmc_session):
 
             # Update description
             new_desc = 'Updated by end2end test'
-            print(f"Updating description to: {new_desc!r}")
+            test_logger.info(
+                f"Updating description to: {new_desc!r}")
             vtr.update_properties({'description': new_desc})
 
             # Verify the update
@@ -160,7 +164,8 @@ def test_vtr_update_properties(hmc_session):
                 f"Description was not updated correctly: {updated_desc!r}"
 
             # Restore original description
-            print(f"Restoring description to: {original_desc!r}")
+            test_logger.info(
+                f"Restoring description to: {original_desc!r}")
             vtr.update_properties({'description': original_desc})
 
             # Verify restoration
@@ -169,11 +174,12 @@ def test_vtr_update_properties(hmc_session):
             assert restored_desc == original_desc, \
                 f"Description was not restored correctly: {restored_desc!r}"
 
-            print(f"Successfully tested update_properties() for "
-                  f"Virtual Tape Resource {vtr.name!r}")
+            test_logger.info(
+                f"Successfully tested update_properties() for "
+                f"Virtual Tape Resource {vtr.name!r}")
 
 
-def test_vtr_attached_partition(hmc_session):
+def test_vtr_attached_partition(test_logger, hmc_session):
     """
     Test attached_partition property for Virtual Tape Resources.
     """
@@ -189,7 +195,8 @@ def test_vtr_attached_partition(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get virtual tape resources for this tape link
         vtr_list = tlink.virtual_tape_resources.list()
@@ -201,8 +208,8 @@ def test_vtr_attached_partition(hmc_session):
         vtr_list = pick_test_resources(vtr_list)
 
         for vtr in vtr_list:
-            print(f"Testing with Virtual Tape Resource "
-                  f"{vtr.name!r}")
+            test_logger.info(
+                f"Testing with Virtual Tape Resource {vtr.name!r}")
 
             # Get the attached partition
             partition = vtr.attached_partition
@@ -216,7 +223,7 @@ def test_vtr_attached_partition(hmc_session):
                 f"Partition URI mismatch for VTR {vtr.name!r}"
 
 
-def test_vtr_adapter_port(hmc_session):
+def test_vtr_adapter_port(test_logger, hmc_session):
     """
     Test adapter_port property for Virtual Tape Resources.
     """
@@ -232,7 +239,8 @@ def test_vtr_adapter_port(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get virtual tape resources for this tape link
         vtr_list = tlink.virtual_tape_resources.list()
@@ -244,15 +252,16 @@ def test_vtr_adapter_port(hmc_session):
         vtr_list = pick_test_resources(vtr_list)
 
         for vtr in vtr_list:
-            print(f"Testing with Virtual Tape Resource "
-                  f"{vtr.name!r}")
+            test_logger.info(
+                f"Testing with Virtual Tape Resource {vtr.name!r}")
 
             # Get full properties to ensure adapter-port-uri is available
             vtr.pull_full_properties()
             adapter_port_uri = vtr.get_property('adapter-port-uri')
 
             if adapter_port_uri is None:
-                print(f"Skipping VTR {vtr.name!r} - no adapter port URI")
+                test_logger.info(
+                    f"Skipping VTR {vtr.name!r} - no adapter port URI")
                 continue
 
             # Get the adapter port
@@ -265,7 +274,7 @@ def test_vtr_adapter_port(hmc_session):
                 f"Adapter port URI mismatch for VTR {vtr.name!r}"
 
 
-def test_vtr_filter_by_device_number(hmc_session):
+def test_vtr_filter_by_device_number(test_logger, hmc_session):
     """
     Test filtering Virtual Tape Resources by device number.
     """
@@ -281,7 +290,8 @@ def test_vtr_filter_by_device_number(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get all virtual tape resources for this tape link
         all_vtrs = tlink.virtual_tape_resources.list()
@@ -294,7 +304,8 @@ def test_vtr_filter_by_device_number(hmc_session):
         test_vtr = all_vtrs[0]
         device_number = test_vtr.get_property('device-number')
 
-        print(f"Testing filter by device-number: {device_number!r}")
+        test_logger.info(
+            f"Testing filter by device-number: {device_number!r}")
 
         # Filter by device number
         filtered_vtrs = tlink.virtual_tape_resources.list(
@@ -309,7 +320,7 @@ def test_vtr_filter_by_device_number(hmc_session):
                     device_number)
 
 
-def test_vtr_filter_by_partition(hmc_session):
+def test_vtr_filter_by_partition(test_logger, hmc_session):
     """
     Test filtering Virtual Tape Resources by partition URI.
     """
@@ -325,7 +336,8 @@ def test_vtr_filter_by_partition(hmc_session):
     tlink_list = pick_test_resources(tlink_list)
 
     for tlink in tlink_list:
-        print(f"Testing with Tape Link {tlink.name!r}")
+        test_logger.info(
+            f"Testing with Tape Link {tlink.name!r}")
 
         # Get all virtual tape resources for this tape link
         all_vtrs = tlink.virtual_tape_resources.list()
@@ -338,7 +350,8 @@ def test_vtr_filter_by_partition(hmc_session):
         test_vtr = all_vtrs[0]
         partition_uri = test_vtr.get_property('partition-uri')
 
-        print(f"Testing filter by partition-uri: {partition_uri!r}")
+        test_logger.info(
+            f"Testing filter by partition-uri: {partition_uri!r}")
 
         # Filter by partition URI
         filtered_vtrs = tlink.virtual_tape_resources.list(

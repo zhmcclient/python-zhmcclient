@@ -77,12 +77,12 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
+def test_actprof_crud(test_logger, classic_mode_cpcs, profile_type):
     """
     Test create, read, update and delete an activation profile.
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -90,14 +90,12 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
 
         console = cpc.manager.console
         skip_missing_api_feature(
-            zhmc_logger, console, 'create-delete-activation-profiles',
+            test_logger, console, 'create-delete-activation-profiles',
             cpc, 'create-delete-activation-profiles')
 
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
-        msg = f"Testing on CPC {cpc.name}"
-        print(msg)
-        zhmc_logger.debug(msg)
+        test_logger.debug(f"Testing on CPC {cpc.name}")
 
         actprof_name = f'ZHMC{profile_type[0].upper()}1'
 
@@ -111,14 +109,14 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
                 f"Preparation: Delete {profile_type} activation profile "
                 f"{actprof_name!r} on CPC {cpc.name} from previous run")
             warnings.warn(msg, UserWarning)
-            zhmc_logger.debug(msg)
+            test_logger.debug(msg)
             _actprof.delete()
 
         # Test creating the activation profile
         actprof_input_props = standard_activation_profile_props(
             cpc, actprof_name, profile_type)
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "Create %s activation profile %r on CPC %s",
             profile_type, actprof_name, cpc.name)
 
@@ -140,7 +138,7 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
 
             new_desc = "Updated activation profile description."
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Update a property of %s activation profile %r on CPC %s",
                 profile_type, actprof_name, cpc.name)
 
@@ -154,7 +152,7 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
         finally:
             # Test deleting the activation profile (also cleanup)
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Delete %s activation profile %r on CPC %s",
                 profile_type, actprof_name, cpc.name)
 
@@ -165,12 +163,12 @@ def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_find_list(zhmc_logger, classic_mode_cpcs, profile_type):
+def test_actprof_find_list(test_logger, classic_mode_cpcs, profile_type):
     """
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -183,14 +181,15 @@ def test_actprof_find_list(zhmc_logger, classic_mode_cpcs, profile_type):
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No {profile_type} activation profiles on CPC {cpc.name} "
                      f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
-            print(f"Testing on CPC {cpc.name} with {profile_type} activation "
-                  f"profile {actprof.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with {profile_type} activation "
+                f"profile {actprof.name!r}")
             if profile_type == 'image':
                 actprof_additional_props = ACTPROF_ADDITIONAL_PROPS
             else:
@@ -204,12 +203,12 @@ def test_actprof_find_list(zhmc_logger, classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_property(zhmc_logger, classic_mode_cpcs, profile_type):
+def test_actprof_property(test_logger, classic_mode_cpcs, profile_type):
     """
     Test property related methods
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -222,14 +221,15 @@ def test_actprof_property(zhmc_logger, classic_mode_cpcs, profile_type):
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No {profile_type} activation profiles on CPC {cpc.name} "
                      f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
-            print(f"Testing on CPC {cpc.name} with {profile_type} activation "
-                  f"profile {actprof.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with {profile_type} activation "
+                f"profile {actprof.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'

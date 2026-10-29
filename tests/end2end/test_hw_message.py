@@ -43,7 +43,7 @@ HW_MESSAGE_VOLATILE_PROPS = []
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_find_list(zhmc_logger, hmc_session, parent):
+def test_hw_message_find_list(test_logger, hmc_session, parent):
     # pylint: disable=unused-argument
     """
     Test list(), find(), findall().
@@ -82,13 +82,14 @@ def test_hw_message_find_list(zhmc_logger, hmc_session, parent):
 
     # Pick the hw_messages to test with
     if not hw_message_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No hardware messages for {parent_str} on HMC {hd.host}")
     hw_message_list = pick_test_resources(hw_message_list)
 
     for hw_message in hw_message_list:
         element_id = hw_message.properties['element-id']
-        print(f"Testing with hardware message {element_id!r} on {parent_str}")
+        test_logger.info(
+            f"Testing with hardware message {element_id!r} on {parent_str}")
         runtest_find_list(
             hmc_session, parent_obj.hw_messages, element_id, 'element-id',
             'timestamp', HW_MESSAGE_VOLATILE_PROPS, HW_MESSAGE_MINIMAL_PROPS,
@@ -98,7 +99,7 @@ def test_hw_message_find_list(zhmc_logger, hmc_session, parent):
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_list_filtered(zhmc_logger, hmc_session, parent):
+def test_hw_message_list_filtered(test_logger, hmc_session, parent):
     # pylint: disable=unused-argument
     """
     Test list() with timestamp filtering.
@@ -121,7 +122,7 @@ def test_hw_message_list_filtered(zhmc_logger, hmc_session, parent):
     exp_number = end_index - begin_index + 1
     min_number = exp_number + 2
     if len(sorted_message_list) < min_number:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"Not enough hardware messages ({len(sorted_message_list)}) "
                  "for timestamp filtering for {parent_str} on HMC {hd.host}")
     begin_msg = sorted_message_list[begin_index]

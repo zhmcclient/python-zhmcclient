@@ -13,77 +13,136 @@
 # limitations under the License.
 
 """
-Pytest fixtures for end2end tests.
+Pytest config file for this subtree that provides support for logging.
 """
 
-
 import os
-import time
 import logging
 import pytest
+from zhmcclient.testutils import LOG_FILE_ENV_VAR, LOG_FORMAT, \
+    LOG_DATETIME_FORMAT, LOG_DATETIME_TIMEZONE
+
+# Path name of the log file, or None if logging is disabled
+LOG_FILE = os.environ.get(LOG_FILE_ENV_VAR)
+
+# Name of the Python logger for end2end test functions
+TESTFUNC_LOGGER_NAME = "test.end2end"
+
+# Log level
+LOG_LEVEL = logging.DEBUG
 
 
-LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
-
-LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
-
-LOG_DATETIME_TIMEZONE = time.gmtime
-
-
-def has_file_handler(logger, log_file):
+def file_handler(logger, log_file):
     """
-    Returns whether a Python logger has a FileHandler for the specified log
-    file.
-    """
-    abs_log_file = os.path.abspath(log_file)
-    return any(
-        isinstance(h, logging.FileHandler) and h.baseFilename == abs_log_file
-        for h in logger.handlers
-    )
+    Returns the FileHandler of the logger that logs to the specified log file,
+    or None if no such handler could be found.
 
+    Parameters:
 
-@pytest.fixture(scope='function')
-def zhmc_logger(request):
-    # Note: The first paragraph is shown by 'pytest --fixtures'
-    """
-    Pytest fixture that provides a logger for an end2end test function.
+      logger (logging.Logger): Logger to be checked.
 
-    This functionm creates a logger named after the test function.
-    Using this fixture as an argument in a test function resolves to that
-    logger.
-
-    Logging is enabled by setting the env var TESTLOGFILE. If logging is
-    enabled, the logger is set to debug level, otherwise the logger is disabled.
-
-    During setup of the fixture, a log entry for entering the test function
-    is written, and during teardown of the fixture, a log entry for leaving
-    the test function is written.
-
-    Because this fixture is called for each invocation of a test
-    function, it ends up being called multiple times within the same Python
-    process. Therefore, the logger is created only when it does not exist yet.
+      log_file (str): Path name of log file to be checked.
 
     Returns:
-        logging.Logger: Logger for the test function
-    """
-    testfunc_name = request.function.__name__
-    testfunc_logger = logging.getLogger(testfunc_name)
 
-    log_file = os.getenv('TESTLOGFILE', None)
+      logging.FileHandler: File handler for the log file, or None if not found.
+    """
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler) and \
+                handler.baseFilename == log_file:
+            return handler
+    return None
+
+
+def setup_logging(log_file):
+    """
+    Set up logging for end2end testcases.
+
+    If a log file is specified, logging is enabled and one logger is created
+    with a file handler to the log file:
+
+      * The test function Logger.
+        That logger is named as defined in TESTFUNC_LOGGER_NAME and is used
+        for logging the entry to and exit from the end2end test functions
+        and for additional logging within the end2end test functions.
+
+    If no log file is specified, logging is disabled. The same two loggers are
+    created but disabled by setting them to log level NOTSET.
+
+    Note that the zhmcclient logging is also enabled to go to the same log
+    file and controlled by the same env var, via the zhmcclient testutils
+    support. For details, see zhmcclient/testutils/_hmc_session_functions.py.
+
+    This setup function tolerates being called multiple times in the same
+    Python process and will set up the loggers only once. However, it will
+    be called only once in each Python process running pytest.
+
+    Parameters:
+
+      log_file (str): Path name of log file, if logging should be enabled.
+        `None`, if logging should be disabled.
+    """
+
+    testfunc_logger = logging.getLogger(TESTFUNC_LOGGER_NAME)
+
     if log_file:
+
+        abs_log_file = os.path.abspath(log_file)
+        formatter = logging.Formatter(
+            LOG_FORMAT, datefmt=LOG_DATETIME_FORMAT)
+
+        # Globally set the timezone conversion on Python logging
         logging.Formatter.converter = LOG_DATETIME_TIMEZONE
-        log_formatter = logging.Formatter(
-            LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
-        log_handler = logging.FileHandler(log_file, encoding='utf-8')
-        log_handler.setFormatter(log_formatter)
-        if not has_file_handler(testfunc_logger, log_file):
-            testfunc_logger.addHandler(log_handler)
-        testfunc_logger.setLevel(logging.DEBUG)
+
+        # Add the file handler to the test function logger, if needed.
+        testfunc_handler = file_handler(testfunc_logger, abs_log_file)
+        if testfunc_handler is None:
+            testfunc_handler = logging.FileHandler(
+                abs_log_file, encoding='utf-8')
+            testfunc_logger.addHandler(testfunc_handler)
+        testfunc_handler.setFormatter(formatter)
+        testfunc_logger.setLevel(LOG_LEVEL)
+
+        testfunc_logger.info(
+            "Logging is enabled for logger %s at level %s",
+            TESTFUNC_LOGGER_NAME, logging.getLevelName(LOG_LEVEL))
+
     else:
         testfunc_logger.setLevel(logging.NOTSET)
 
-    testfunc_logger.debug("Entered test function for %s", request.node.name)
+
+def pytest_configure(config):
+    # pylint: disable=unused-argument
+    """
+    Initialize logging once per pytest process, if a log file is given.
+    """
+    if LOG_FILE:
+        setup_logging(LOG_FILE)
+
+
+@pytest.fixture(autouse=True)
+def test_logger(request):
+    """
+    Pytest fixture that provides the test function logger to end2end test
+    functions and will log entry into and exit from each end2end test function
+    call.
+
+    This fixture has "autouse" set, so the entry into and exit from the test
+    function will be automatically logged, if logging is enabled via the
+    env var.
+
+    When a test function needs to perform additional logging, this fixture can
+    be specified as a parameter to the test function and resolves to the test
+    function logger, which will log if logging is enabled via the env var.
+    """
+    logger = logging.getLogger(TESTFUNC_LOGGER_NAME)
+    nodeid = request.node.nodeid
+
+    logger.info("ENTER %s", nodeid)
+
+    # The yield is protected in order to ensure that errors in other fixtures
+    # do not cause the exit log to be skipped.
     try:
-        yield testfunc_logger
+        yield logger
     finally:
-        testfunc_logger.debug("Leaving test function for %s", request.node.name)
+        logger.info("LEAVE %s", nodeid)

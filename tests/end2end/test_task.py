@@ -38,7 +38,7 @@ TASK_LIST_PROPS = ['element-uri', 'name']
 TASK_VOLATILE_PROPS = []
 
 
-def test_task_find_list(zhmc_logger, hmc_session):
+def test_task_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -50,7 +50,7 @@ def test_task_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "tasks")
 
@@ -60,13 +60,14 @@ def test_task_find_list(zhmc_logger, hmc_session):
     task_list = pick_test_resources(task_list)
 
     for task in task_list:
-        print(f"Testing with task {task.name!r}")
+        test_logger.info(
+            f"Testing with task {task.name!r}")
         runtest_find_list(
             hmc_session, console.tasks, task.name, 'name', 'element-uri',
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
 
 
-def test_task_property(zhmc_logger, hmc_session):
+def test_task_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -78,7 +79,7 @@ def test_task_property(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "tasks")
 
@@ -88,7 +89,8 @@ def test_task_property(zhmc_logger, hmc_session):
     task_list = pick_test_resources(task_list)
 
     for task in task_list:
-        print(f"Testing with task {task.name!r}")
+        test_logger.info(
+            f"Testing with task {task.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'

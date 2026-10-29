@@ -42,12 +42,12 @@ VFUNC_LIST_PROPS = ['element-uri', 'name', 'description']
 VFUNC_VOLATILE_PROPS = []
 
 
-def test_vfunc_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_vfunc_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -64,26 +64,27 @@ def test_vfunc_find_list(zhmc_logger, dpm_mode_cpcs):
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with virtual functions on CPC {cpc.name} "
                      f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
-            print(f"Testing on CPC {cpc.name} with virtual function "
-                  f"{vfunc.name!r} of partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with virtual function "
+                f"{vfunc.name!r} of partition {part.name!r}")
             runtest_find_list(
                 session, part.virtual_functions, vfunc.name, 'name',
                 'description', VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS,
                 VFUNC_LIST_PROPS)
 
 
-def test_vfunc_property(zhmc_logger, dpm_mode_cpcs):
+def test_vfunc_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -100,14 +101,15 @@ def test_vfunc_property(zhmc_logger, dpm_mode_cpcs):
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with virtual functions on CPC {cpc.name} "
                      f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
-            print(f"Testing on CPC {cpc.name} with virtual function "
-                  f"{vfunc.name!r} of partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with virtual function "
+                f"{vfunc.name!r} of partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -115,12 +117,12 @@ def test_vfunc_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(vfunc.manager, non_list_prop)
 
 
-def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
+def test_vfunc_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a virtual function (and a partition).
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -129,7 +131,8 @@ def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_vfunc_crud part1'
         vfunc_name = 'vfunc1'
@@ -155,7 +158,7 @@ def test_vfunc_crud(zhmc_logger, dpm_mode_cpcs):
             # Pick a zEDC accelerator adapter that will back the virtual func.
             edc_adapters = cpc.adapters.findall(type='zedc')
             if not edc_adapters:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"No zEDC accelerator adapters on CPC {cpc.name} "
                          f"managed by HMC {hd.host}")
             edc_adapter = edc_adapters[-1]  # Pick the last one

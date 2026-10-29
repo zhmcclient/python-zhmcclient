@@ -44,7 +44,7 @@ SS_LIST_PROPS = ['object-uri', 'name', 'cpc-uris']
 SS_VOLATILE_PROPS = []
 
 
-def test_ss_find_list(zhmc_logger, hmc_session):
+def test_ss_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() on existing storage sites.
     """
@@ -55,19 +55,20 @@ def test_ss_find_list(zhmc_logger, hmc_session):
     # Pick the storage sites to test with
     ss_list = console.storage_sites.list()
     if not ss_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No storage sites defined on HMC {hd.host}")
     ss_list = pick_test_resources(ss_list)
 
     for ss in ss_list:
-        print(f"Testing with Storage Site {ss.name!r}")
+        test_logger.info(
+            f"Testing with Storage Site {ss.name!r}")
         runtest_find_list(
             hmc_session, console.storage_sites, ss.name,
             'name', 'object-uri', SS_VOLATILE_PROPS,
             SS_MINIMAL_PROPS, SS_LIST_PROPS)
 
 
-def test_ss_property(zhmc_logger, hmc_session):
+def test_ss_property(test_logger, hmc_session):
     """
     Test property-related methods (pull_full_properties, get_property, etc.)
     on existing storage sites.
@@ -79,12 +80,13 @@ def test_ss_property(zhmc_logger, hmc_session):
     # Pick the storage sites to test with
     ss_list = console.storage_sites.list()
     if not ss_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No storage sites defined on HMC {hd.host}")
     ss_list = pick_test_resources(ss_list)
 
     for ss in ss_list:
-        print(f"Testing with Storage Site {ss.name!r}")
+        test_logger.info(
+            f"Testing with Storage Site {ss.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -92,7 +94,7 @@ def test_ss_property(zhmc_logger, hmc_session):
         runtest_get_properties(ss.manager, non_list_prop)
 
 
-def test_ss_list_filter_by_name(zhmc_logger, hmc_session):
+def test_ss_list_filter_by_name(test_logger, hmc_session):
     """
     Test list() with a name filter argument.
     """
@@ -103,7 +105,7 @@ def test_ss_list_filter_by_name(zhmc_logger, hmc_session):
     # Get all storage sites
     all_sites = console.storage_sites.list()
     if not all_sites:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No storage sites defined on HMC {hd.host}")
 
     # Pick one site to filter by
@@ -121,7 +123,7 @@ def test_ss_list_filter_by_name(zhmc_logger, hmc_session):
         f"Expected site {target_name!r} in filtered list {names!r}")
 
 
-def test_ss_list_short_and_full_props(zhmc_logger, hmc_session):
+def test_ss_list_short_and_full_props(test_logger, hmc_session):
     """
     Test list() returns correct properties in short and full-properties mode.
     """
@@ -131,7 +133,7 @@ def test_ss_list_short_and_full_props(zhmc_logger, hmc_session):
 
     all_sites = console.storage_sites.list()
     if not all_sites:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No storage sites defined on HMC {hd.host}")
 
     # Verify that list() (short props) includes the expected properties
@@ -151,7 +153,7 @@ def test_ss_list_short_and_full_props(zhmc_logger, hmc_session):
                 f"result for storage site {ss.name!r}")
 
 
-def test_ss_crud(zhmc_logger, hmc_session):
+def test_ss_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete an alternate storage site.
     """
@@ -165,7 +167,7 @@ def test_ss_crud(zhmc_logger, hmc_session):
     # Find a DPM-mode CPC on this HMC to use as the cpc-uri
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No DPM-mode CPC on HMC {hd.host} for storage site test")
     cpc = cpcs[0]
 
@@ -178,7 +180,8 @@ def test_ss_crud(zhmc_logger, hmc_session):
     ss = None
     try:
         # Test creating a storage site
-        print(f"Creating storage site {ss_name!r}")
+        test_logger.info(
+            f"Creating storage site {ss_name!r}")
 
         # The code to be tested
         ss = console.storage_sites.create(ss_input_props)
@@ -205,7 +208,8 @@ def test_ss_crud(zhmc_logger, hmc_session):
 
         # Test updating the description
         new_desc = 'Updated storage site description for zhmcclient tests'
-        print(f"Updating description of storage site {ss_name!r}")
+        test_logger.info(
+            f"Updating description of storage site {ss_name!r}")
 
         # The code to be tested
         ss.update_properties({'description': new_desc})
@@ -215,7 +219,8 @@ def test_ss_crud(zhmc_logger, hmc_session):
         assert ss.properties['description'] == new_desc
 
         # Test renaming the storage site
-        print(f"Renaming storage site {ss_name!r} to {ss_name_new!r}")
+        test_logger.info(
+            f"Renaming storage site {ss_name!r} to {ss_name_new!r}")
 
         # The code to be tested
         ss.update_properties({'name': ss_name_new})
@@ -235,7 +240,8 @@ def test_ss_crud(zhmc_logger, hmc_session):
     finally:
         # Test deleting the storage site
         if ss:
-            print(f"Deleting storage site {ss.name!r}")
+            test_logger.info(
+                f"Deleting storage site {ss.name!r}")
 
             # The code to be tested
             ss.delete()
@@ -282,7 +288,7 @@ SS_CREATE_DELETE_TESTCASES = [
     "desc, input_props, exp_props, exp_exc_type",
     SS_CREATE_DELETE_TESTCASES)
 def test_ss_create_delete(
-        zhmc_logger, hmc_session,
+        test_logger, hmc_session,
         desc, input_props, exp_props, exp_exc_type):
     # pylint: disable=unused-argument
     """
@@ -296,7 +302,7 @@ def test_ss_create_delete(
     # Find a DPM-mode CPC to reference
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No DPM-mode CPC on HMC {hd.host} for storage site test")
     cpc = cpcs[0]
 
@@ -343,7 +349,7 @@ def test_ss_create_delete(
                 console.storage_sites.find(name=ss_name)
 
 
-def test_ss_update_properties(zhmc_logger, hmc_session):
+def test_ss_update_properties(test_logger, hmc_session):
     """
     Test update_properties() on an alternate storage site.
     """
@@ -354,7 +360,7 @@ def test_ss_update_properties(zhmc_logger, hmc_session):
     # Find a DPM-mode CPC to reference
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No DPM-mode CPC on HMC {hd.host} for storage site test")
     cpc = cpcs[0]
 
@@ -386,7 +392,7 @@ def test_ss_update_properties(zhmc_logger, hmc_session):
             ss.delete()
 
 
-def test_ss_delete_nonexistent(zhmc_logger, hmc_session):
+def test_ss_delete_nonexistent(test_logger, hmc_session):
     """
     Test that deleting a storage site that was already deleted raises NotFound
     on a subsequent find().
@@ -398,7 +404,7 @@ def test_ss_delete_nonexistent(zhmc_logger, hmc_session):
     # Find a DPM-mode CPC to reference
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No DPM-mode CPC on HMC {hd.host} for storage site test")
     cpc = cpcs[0]
 
@@ -417,7 +423,7 @@ def test_ss_delete_nonexistent(zhmc_logger, hmc_session):
         console.storage_sites.find(name=ss_name)
 
 
-def test_ss_zzz_cleanup(zhmc_logger, hmc_session):
+def test_ss_zzz_cleanup(test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Cleanup any test storage sites that may have been left over from prior
@@ -430,10 +436,12 @@ def test_ss_zzz_cleanup(zhmc_logger, hmc_session):
     sites = console.storage_sites.findall(name=name_pattern)
     for ss in sites:
 
-        print("Deleting leftover test storage site from a prior run: "
-              f"{ss.name!r} - please open a zhmcclient issue for that")
+        test_logger.info(
+            "Deleting leftover test storage site from a prior run: "
+            f"{ss.name!r} - please open a zhmcclient issue for that")
 
         try:
             ss.delete()
         except zhmcclient.HTTPError as exc:
-            print(f"HTTPError during StorageSite.delete(): {exc}")
+            test_logger.info(
+                f"HTTPError during StorageSite.delete(): {exc}")

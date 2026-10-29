@@ -41,7 +41,7 @@ UROLE_LIST_PROPS = ['object-uri', 'name', 'type']
 UROLE_VOLATILE_PROPS = []
 
 
-def test_urole_find_list(zhmc_logger, hmc_session):
+def test_urole_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -53,26 +53,27 @@ def test_urole_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "user roles")
 
     # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No user roles defined on HMC {hd.host}")
     urole_list = pick_test_resources(urole_list)
 
     for urole in urole_list:
-        print(f"Testing with user role {urole.name!r}")
+        test_logger.info(
+            f"Testing with user role {urole.name!r}")
         runtest_find_list(
             hmc_session, console.user_roles, urole.name, 'name',
             'object-uri', UROLE_VOLATILE_PROPS, UROLE_MINIMAL_PROPS,
             UROLE_LIST_PROPS)
 
 
-def test_urole_property(zhmc_logger, hmc_session):
+def test_urole_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -84,19 +85,20 @@ def test_urole_property(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "user roles")
 
     # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No user roles defined on HMC {hd.host}")
     urole_list = pick_test_resources(urole_list)
 
     for urole in urole_list:
-        print(f"Testing with user role {urole.name!r}")
+        test_logger.info(
+            f"Testing with user role {urole.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -104,7 +106,7 @@ def test_urole_property(zhmc_logger, hmc_session):
         runtest_get_properties(urole.manager, non_list_prop)
 
 
-def test_urole_crud(zhmc_logger, hmc_session):
+def test_urole_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a user role.
     """
@@ -116,7 +118,7 @@ def test_urole_crud(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "user roles")
 
@@ -151,7 +153,7 @@ def test_urole_crud(zhmc_logger, hmc_session):
             urole_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC userid {hd.userid!r} is not authorized for task "
                      f"'Manage User Roles' on HMC {hd.host}")
         else:

@@ -33,23 +33,24 @@ from .utils import skip_log, TEST_PREFIX, standard_partition_props
 urllib3.disable_warnings()
 
 
-def test_autoupdate_prop(zhmc_logger, dpm_mode_cpcs):
+def test_autoupdate_prop(test_logger, dpm_mode_cpcs):
     """
     Test auto-updated partitions when updating a property.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         if isinstance(cpc.manager.client.session, FakedSession):
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "Auto-update test requires notifications which are "
                      "not supported by zhmcclient.mock")
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
 
@@ -204,19 +205,19 @@ def test_autoupdate_prop(zhmc_logger, dpm_mode_cpcs):
                     raise
 
 
-def test_autoupdate_list(zhmc_logger, dpm_mode_cpcs):
+def test_autoupdate_list(test_logger, dpm_mode_cpcs):
     """
     Test list() with auto-updated Partition manager.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         if isinstance(cpc.manager.client.session, FakedSession):
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "Auto-update test requires notifications which are "
                      "not supported by zhmcclient.mock")
 
@@ -228,7 +229,7 @@ def test_autoupdate_list(zhmc_logger, dpm_mode_cpcs):
         # Get the initial set of partitions, for later comparison
         initial_part_list = cpc.partitions.list()
         if not initial_part_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
         initial_part_names = {p.name for p in initial_part_list}

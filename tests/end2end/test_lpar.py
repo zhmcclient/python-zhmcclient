@@ -20,6 +20,7 @@ test LPARs.
 """
 
 
+import warnings
 import random
 from datetime import timedelta, datetime, timezone
 import pdb
@@ -51,12 +52,12 @@ LPAR_LIST_PERMITTED_PROPS = [
 LPAR_VOLATILE_PROPS = []
 
 
-def test_lpar_find_list(zhmc_logger, classic_mode_cpcs):
+def test_lpar_find_list(test_logger, classic_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -68,23 +69,24 @@ def test_lpar_find_list(zhmc_logger, classic_mode_cpcs):
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
-            print(f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
             runtest_find_list(
                 session, cpc.lpars, lpar.name, 'name', 'status',
                 LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
 
 
-def test_lpar_property(zhmc_logger, classic_mode_cpcs):
+def test_lpar_property(test_logger, classic_mode_cpcs):
     """
     Test property related methods
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -96,12 +98,13 @@ def test_lpar_property(zhmc_logger, classic_mode_cpcs):
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
-            print(f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -172,16 +175,16 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
     "desc, input_kwargs, exp_prop_names",
     TESTCASES_CONSOLE_LIST_PERMITTED_LPARS)
 def test_console_list_permitted_lpars(
-        zhmc_logger, classic_mode_cpcs, desc, input_kwargs,
+        test_logger, classic_mode_cpcs, desc, input_kwargs,
         exp_prop_names):
     """
     Test Console.list_permitted_lpars() method
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
-    zhmc_logger.debug(
+    test_logger.debug(
         "Arguments: desc=%r, input_kwargs=%r, exp_prop_names=%r",
         desc, input_kwargs, exp_prop_names)
 
@@ -196,17 +199,17 @@ def test_console_list_permitted_lpars(
         hmc_version = api_version['hmc-version']
         hmc_version_info = tuple(map(int, hmc_version.split('.')))
         if hmc_version_info < (2, 14, 0):
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC {hd.host} of version {hmc_version} does not yet "
                      "support 'List Permitted Logical Partitions'")
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "Calling list_permitted_lpars() with kwargs: %r", input_kwargs)
 
         # Execute the code to be tested
         lpars = console.list_permitted_lpars(**input_kwargs)
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "list_permitted_lpars() returned %d LPARs", len(lpars))
 
         for lpar in lpars:
@@ -218,12 +221,12 @@ def test_console_list_permitted_lpars(
 
 
 def test_lpar_list_os_messages(
-        zhmc_logger, classic_mode_cpcs):
+        test_logger, classic_mode_cpcs):
     """
     Test "List OS Messages" operation on LPARs
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -233,14 +236,14 @@ def test_lpar_list_os_messages(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support 'List OS Messages' "
                      "operation")
 
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         test_lpar = None
@@ -248,7 +251,7 @@ def test_lpar_list_os_messages(
 
             # Test: List all messages (without begin or end)
             try:
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Listing OS messages of LPAR %s with no begin/end",
                     lpar.name)
                 result = lpar.list_os_messages()
@@ -256,7 +259,7 @@ def test_lpar_list_os_messages(
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the LPAR is not
                     # available
-                    zhmc_logger.debug(
+                    test_logger.debug(
                         "LPAR %s cannot list OS messages", lpar.name)
                     continue
                 raise
@@ -266,19 +269,19 @@ def test_lpar_list_os_messages(
                 test_lpar = lpar
                 break
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "LPAR %s has only %d OS messages",
                 lpar.name, len(all_messages))
 
         if test_lpar is None:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No LPAR on CPC {cpc.name} has the minimum number of "
                      "3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        zhmc_logger.debug(
+        test_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s",
             test_lpar.name, all_begin, all_end)
         result = test_lpar.list_os_messages(begin=all_begin, end=all_end)
@@ -297,7 +300,7 @@ def test_lpar_list_os_messages(
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        zhmc_logger.debug(
+        test_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s",
             test_lpar.name, begin, end)
         result = test_lpar.list_os_messages(begin=begin, end=end)
@@ -308,7 +311,7 @@ def test_lpar_list_os_messages(
 
         # Test with begin/end and maximum messages
         max_messages = random.randint(0, end - begin + 1)
-        zhmc_logger.debug(
+        test_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s, "
             "max_messages=%d", test_lpar.name, begin, end, max_messages)
         result = test_lpar.list_os_messages(
@@ -320,7 +323,7 @@ def test_lpar_list_os_messages(
 
         # Test with is_held
         for is_held in (False, True):
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Listing OS messages of LPAR %s with is_held=%s",
                 test_lpar.name, is_held)
             result = test_lpar.list_os_messages(is_held=is_held)
@@ -330,7 +333,7 @@ def test_lpar_list_os_messages(
 
         # Test with is_priority
         for is_priority in (False, True):
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Listing OS messages of LPAR %s with is_priority=%s",
                 test_lpar.name, is_priority)
             result = test_lpar.list_os_messages(is_priority=is_priority)
@@ -523,7 +526,7 @@ LPAR_ACTIVATE_TESTCASES = [
     "exp_props, exp_exc_type, run",
     LPAR_ACTIVATE_TESTCASES)
 def test_lpar_activate(
-        zhmc_logger, classic_mode_cpcs,
+        test_logger, classic_mode_cpcs,
         desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs,
         exp_props, exp_exc_type, run):
     # pylint: disable=unused-argument
@@ -565,11 +568,11 @@ def test_lpar_activate(
 
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     if not run:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "Testcase is disabled in testcase definition")
 
     for cpc in classic_mode_cpcs:
@@ -585,14 +588,14 @@ def test_lpar_activate(
         try:
             loadable_lpars = hd_cpc['loadable_lpars']
         except KeyError:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"Inventory file entry for HMC nickname {hd.nickname!r} "
                      "does not have a 'loadable_lpars' property in its entry "
                      f"for CPC {cpc.name!r}")
         try:
             load_profiles = hd_cpc['load_profiles']
         except KeyError:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"Inventory file entry for HMC nickname {hd.nickname!r} "
                      "does not have a 'load_profiles' property in its entry "
                      f"for CPC {cpc.name!r}")
@@ -600,7 +603,7 @@ def test_lpar_activate(
         try:
             lpar_name = loadable_lpars[lpar_mode]
         except (KeyError, TypeError):
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"Inventory file entry for HMC nickname {hd.nickname!r} "
                      f"does not have an entry for operating mode {lpar_mode!r} "
                      f"in its 'loadable_lpars' property for CPC {cpc.name!r}")
@@ -613,7 +616,7 @@ def test_lpar_activate(
         if len(lpar_iaps) >= 1:
             iap = lpar_iaps[0]
         else:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"Image activation profile {iap_name!r} does not exist "
                      f"on CPC {cpc.name}.")
         wrong_iap_names = [_iap.name for _iap in all_iaps
@@ -627,7 +630,7 @@ def test_lpar_activate(
             try:
                 ap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"Inventory file entry for HMC nickname "
                          f"{hd.nickname!r} does not have an entry for "
                          f"operating mode {lpar_mode!r} in its 'load_profiles' "
@@ -641,7 +644,7 @@ def test_lpar_activate(
             try:
                 nap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"Inventory file entry for HMC nickname "
                          f"{hd.nickname!r} does not have an entry for "
                          f"operating mode {lpar_mode!r} in its 'load_profiles' "
@@ -652,7 +655,7 @@ def test_lpar_activate(
         try:
             lpar = cpc.lpars.find(name=lpar_name)
         except zhmcclient.NotFound:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"LPAR {lpar_name!r} does not exist on CPC {cpc.name}.")
 
         if ap_type == 'load' or nap_type == 'load':
@@ -660,7 +663,7 @@ def test_lpar_activate(
             try:
                 cpc.load_activation_profiles.find(name=lap_name)
             except zhmcclient.NotFound:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"Load activation profile {lap_name!r} does not "
                          f"exist on CPC {cpc.name}.")
 
@@ -671,32 +674,31 @@ def test_lpar_activate(
             f"image activation profile {iap_name!r} on CPC {cpc.name} does not "
             f"match the lpar_mode {lpar_mode!r} of the testcase")
 
-        msg = f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}"
-        print(msg)
-        zhmc_logger.debug(msg)
+        test_logger.info(
+            f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
 
         if run == 'pdb':
             # pylint: disable=forgotten-debug-statement
             pdb.set_trace()
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "Preparation: Ensuring that LPAR %r is inactive", lpar.name)
         ensure_lpar_inactive(lpar)
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "Preparation: Setting 'next-activation-profile-name' = %r "
             "in LPAR %r", nap_name, lpar.name)
         saved_nap_name = set_resource_property(
             lpar, 'next-activation-profile-name', nap_name)
 
-        zhmc_logger.debug(
+        test_logger.debug(
             "Preparation: Setting 'load-at-activation' = %r in image "
             "profile %r", auto_load, iap.name)
         saved_auto_load = set_resource_property(
             iap, 'load-at-activation', auto_load)
 
         try:
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Activating LPAR %r (profile arg: %r, add. args: %r)",
                 lpar.name, ap_name, input_kwargs)
 
@@ -721,7 +723,7 @@ def test_lpar_activate(
                 # Check the expected properties
                 lpar.pull_full_properties()
                 lpar_props = dict(lpar.properties)
-                zhmc_logger.debug(
+                test_logger.debug(
                     "Status of LPAR %r is %r after test",
                     lpar.name, lpar_props['status'])
                 for pname, exp_value in exp_props.items():
@@ -733,18 +735,18 @@ def test_lpar_activate(
                         f"Property {pname!r} has unexpected value "
                         f"{act_value!r}; expected value: {exp_value!r}")
         finally:
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Cleanup: Ensuring that LPAR %r is inactive",
                 lpar.name)
             ensure_lpar_inactive(lpar)
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Cleanup: Setting 'next-activation-profile-name' = %r "
                 "in LPAR %r", saved_nap_name, lpar.name)
             set_resource_property(
                 lpar, 'next-activation-profile-name', saved_nap_name)
 
-            zhmc_logger.debug(
+            test_logger.debug(
                 "Cleanup: Setting 'load-at-activation' = %r in image "
                 "profile %r", saved_auto_load, iap.name)
             set_resource_property(iap, 'load-at-activation', saved_auto_load)
@@ -798,14 +800,14 @@ LPAR_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_LPAR_GET_SUSTAINABILITY_DATA)
 def test_lpar_get_sustainability_data(
-        zhmc_logger, tc, input_kwargs, exp_oldest, exp_delta,
+        test_logger, tc, input_kwargs, exp_oldest, exp_delta,
         classic_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Lpar.get_sustainability_data(...)
     """
     if not classic_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
@@ -815,14 +817,14 @@ def test_lpar_get_sustainability_data(
         hd = session.hmc_definition
 
         if hd.mock_file:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "zhmcclient mock does not support "
                      "Lpar.get_sustainability_data()")
 
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         # Pick a random LPAR to test with
@@ -831,7 +833,8 @@ def test_lpar_get_sustainability_data(
         session = lpar.manager.session
         hd = session.hmc_definition
 
-        print(f"Testing with LPAR {lpar.name}")
+        test_logger.info(
+            f"Testing with LPAR {lpar.name}")
 
         try:
 
@@ -840,11 +843,11 @@ def test_lpar_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"HMC userid {hd.userid!r} is not authorized for task "
                          f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"LPAR {lpar.name} on HMC {hd.host} does not support "
                          f"feature: {exc}")
             else:
@@ -884,11 +887,13 @@ def test_lpar_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print(f"Warning: Oldest data point of metric "
-                              f"{metric_name!r} is not within 15 minutes of "
-                              "range start: Oldest data point: "
-                              f"{dp_timestamp_dt}, Range start: "
-                              f"{exp_oldest_dt}, Delta: {delta_sec} sec")
+                        warnings.warn(
+                            f"Warning: Oldest data point of metric "
+                            f"{metric_name!r} is not within 15 minutes of "
+                            "range start: Oldest data point: "
+                            f"{dp_timestamp_dt}, Range start: "
+                            f"{exp_oldest_dt}, Delta: {delta_sec} sec",
+                            UserWarning)
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -899,10 +904,11 @@ def test_lpar_get_sustainability_data(
                     delta_td = abs(dp_timestamp_dt - previous_dt)
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
-                        print("Warning: Timestamp of a data point of metric "
-                              f"{metric_name!r} is not within expected delta "
-                              "of its previous data point. Actual delta: "
-                              f"{delta_td}, Expected delta: {exp_delta} "
-                              f"(+/-{tolerance_pct}%)")
+                        warnings.warn(
+                            "Warning: Timestamp of a data point of metric "
+                            f"{metric_name!r} is not within expected delta "
+                            "of its previous data point. Actual delta: "
+                            f"{delta_td}, Expected delta: {exp_delta} "
+                            f"(+/-{tolerance_pct}%)", UserWarning)
 
                 previous_dt = dp_timestamp_dt

@@ -43,7 +43,7 @@ MFASRVDEF_LIST_PROPS = ['element-uri', 'name']
 MFASRVDEF_VOLATILE_PROPS = []
 
 
-def test_mfasrvdef_find_list(zhmc_logger, hmc_session):
+def test_mfasrvdef_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -55,26 +55,27 @@ def test_mfasrvdef_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support MFA server definitions")
 
     # Pick the MFA server definitions to test with
     mfasrvdef_list = console.mfa_server_definitions.list()
     if not mfasrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No MFA server definitions defined on HMC {hd.host}")
     mfasrvdef_list = pick_test_resources(mfasrvdef_list)
 
     for mfasrvdef in mfasrvdef_list:
-        print(f"Testing with MFA server definition {mfasrvdef.name!r}")
+        test_logger.info(
+            f"Testing with MFA server definition {mfasrvdef.name!r}")
         runtest_find_list(
             hmc_session, console.mfa_server_definitions, mfasrvdef.name,
             'name', 'element-uri', MFASRVDEF_VOLATILE_PROPS,
             MFASRVDEF_MINIMAL_PROPS, MFASRVDEF_LIST_PROPS)
 
 
-def test_mfasrvdef_property(zhmc_logger, hmc_session):
+def test_mfasrvdef_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -86,19 +87,20 @@ def test_mfasrvdef_property(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support MFA server definitions")
 
     # Pick the MFA server definitions to test with
     mfasrvdef_list = console.mfa_server_definitions.list()
     if not mfasrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No MFA server definitions defined on HMC {hd.host}")
     mfasrvdef_list = pick_test_resources(mfasrvdef_list)
 
     for mfasrvdef in mfasrvdef_list:
-        print(f"Testing with MFA server definition {mfasrvdef.name!r}")
+        test_logger.info(
+            f"Testing with MFA server definition {mfasrvdef.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -106,7 +108,7 @@ def test_mfasrvdef_property(zhmc_logger, hmc_session):
         runtest_get_properties(mfasrvdef.manager, non_list_prop)
 
 
-def test_mfasrvdef_crud(zhmc_logger, hmc_session):
+def test_mfasrvdef_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a MFA server definition.
     """
@@ -118,7 +120,7 @@ def test_mfasrvdef_crud(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 15, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support MFA server definitions")
 
@@ -158,7 +160,7 @@ def test_mfasrvdef_crud(zhmc_logger, hmc_session):
                 mfasrvdef_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_log(zhmc_logger,
+                skip_log(test_logger,
                          f"HMC userid {hd.userid!r} is not authorized for "
                          "task 'Manage Multi-factor Authentication' on HMC "
                          f"{hd.host}")

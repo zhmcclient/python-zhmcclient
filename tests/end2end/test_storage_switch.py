@@ -39,7 +39,7 @@ SSWITCH_LIST_PROPS = ['object-uri', 'name', 'domain-id', 'storage-fabric-uri']
 SSWITCH_VOLATILE_PROPS = []
 
 
-def test_sswitch_find_list(hmc_session):
+def test_sswitch_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Storage Switches.
     """
@@ -54,14 +54,15 @@ def test_sswitch_find_list(hmc_session):
     switch_list = pick_test_resources(switch_list)
 
     for switch in switch_list:
-        print(f"Testing with Storage Switch {switch.name!r}")
+        test_logger.info(
+            f"Testing with Storage Switch {switch.name!r}")
         runtest_find_list(
             hmc_session, console.storage_switches, switch.name,
             'name', 'object-uri', SSWITCH_VOLATILE_PROPS,
             SSWITCH_MINIMAL_PROPS, SSWITCH_LIST_PROPS)
 
 
-def test_sswitch_property(hmc_session):
+def test_sswitch_property(test_logger, hmc_session):
     """
     Test property related methods for Storage Switches.
     """
@@ -76,7 +77,8 @@ def test_sswitch_property(hmc_session):
     switch_list = pick_test_resources(switch_list)
 
     for switch in switch_list:
-        print(f"Testing with Storage Switch {switch.name!r}")
+        test_logger.info(
+            f"Testing with Storage Switch {switch.name!r}")
 
         # 'class' is not returned by list(), so use it as the non_list_prop
         non_list_prop = 'class'
@@ -84,7 +86,7 @@ def test_sswitch_property(hmc_session):
         runtest_get_properties(switch.manager, non_list_prop)
 
 
-def test_sswitch_full_properties(hmc_session):
+def test_sswitch_full_properties(test_logger, hmc_session):
     """
     Test that pull_full_properties() fills in all expected properties.
     """
@@ -99,7 +101,8 @@ def test_sswitch_full_properties(hmc_session):
     switch_list = pick_test_resources(switch_list)
 
     for switch in switch_list:
-        print(f"Testing with Storage Switch {switch.name!r}")
+        test_logger.info(
+            f"Testing with Storage Switch {switch.name!r}")
 
         switch.pull_full_properties()
 
@@ -115,7 +118,7 @@ def test_sswitch_full_properties(hmc_session):
         assert isinstance(switch.properties['domain-id'], str)
 
 
-def test_sswitch_list_filter_name(hmc_session):
+def test_sswitch_list_filter_name(test_logger, hmc_session):
     """
     Test list() with name filter for Storage Switches.
     """
@@ -136,11 +139,12 @@ def test_sswitch_list_filter_name(hmc_session):
     assert len(filtered) >= 1
     names = [s.name for s in filtered]
     assert switch_name in names
-    print(f"name filter returned {len(filtered)} switch(es) "
-          f"for name {switch_name!r}")
+    test_logger.info(
+        f"name filter returned {len(filtered)} switch(es) "
+        f"for name {switch_name!r}")
 
 
-def test_sswitch_list_filter_domain_id(hmc_session):
+def test_sswitch_list_filter_domain_id(test_logger, hmc_session):
     """
     Test list() with domain-id filter for Storage Switches.
     """
@@ -166,11 +170,12 @@ def test_sswitch_list_filter_domain_id(hmc_session):
     for s in filtered:
         s.pull_full_properties()
         assert s.properties['domain-id'] == domain_id
-    print(f"domain-id filter returned {len(filtered)} switch(es) "
-          f"for domain-id {domain_id!r}")
+    test_logger.info(
+        f"domain-id filter returned {len(filtered)} switch(es) "
+        f"for domain-id {domain_id!r}")
 
 
-def test_sswitch_list_by_fabric(hmc_session):
+def test_sswitch_list_by_fabric(test_logger, hmc_session):
     """
     Test listing storage switches associated with a storage fabric.
     """
@@ -198,11 +203,12 @@ def test_sswitch_list_by_fabric(hmc_session):
     assert 'storage-switches' in result
     returned_uris = {s['object-uri'] for s in result['storage-switches']}
     assert switch.uri in returned_uris
-    print(f"Fabric {fabric_uri!r} has "
-          f"{len(result['storage-switches'])} switch(es)")
+    test_logger.info(
+        f"Fabric {fabric_uri!r} has "
+        f"{len(result['storage-switches'])} switch(es)")
 
 
-def test_sswitch_crud(hmc_session):
+def test_sswitch_crud(test_logger, hmc_session):
     """
     Test define, update properties, and undefine operations for Storage
     Switches.
@@ -241,7 +247,8 @@ def test_sswitch_crud(hmc_session):
     try:
         existing = console.storage_switches.find(name=switch_name)
         existing.undefine()
-        print(f"Cleaned up leftover Storage Switch {switch_name!r}")
+        test_logger.info(
+            f"Cleaned up leftover Storage Switch {switch_name!r}")
     except zhmcclient.NotFound:
         pass
 
@@ -251,7 +258,8 @@ def test_sswitch_crud(hmc_session):
     try:
         assert switch.properties['name'] == switch_name
         assert switch.properties['storage-fabric-uri'] == fabric_uri
-        print(f"Defined Storage Switch {switch.name!r}")
+        test_logger.info(
+            f"Defined Storage Switch {switch.name!r}")
 
         # Pull full properties and verify
         switch.pull_full_properties()
@@ -266,7 +274,8 @@ def test_sswitch_crud(hmc_session):
         assert switch.properties['description'] == new_desc
         switch.pull_full_properties()
         assert switch.properties['description'] == new_desc
-        print(f"Updated Storage Switch {switch.name!r} description")
+        test_logger.info(
+            f"Updated Storage Switch {switch.name!r} description")
 
         # The code to be tested: Rename
         renamed = switch_name + '-renamed'
@@ -276,18 +285,20 @@ def test_sswitch_crud(hmc_session):
         assert switch.properties['name'] == renamed
         with pytest.raises(zhmcclient.NotFound):
             console.storage_switches.find(name=switch_name)
-        print(f"Renamed Storage Switch to {renamed!r}")
+        test_logger.info(
+            f"Renamed Storage Switch to {renamed!r}")
 
     finally:
         # Clean up: undefine the test switch
         try:
             switch.undefine()
-            print("Undefined test Storage Switch")
+            test_logger.info(
+                "Undefined test Storage Switch")
         except zhmcclient.NotFound:
             pass
 
 
-def test_sswitch_move_to_fabric(hmc_session):
+def test_sswitch_move_to_fabric(test_logger, hmc_session):
     """
     Test the move-to-storage-fabric operation for a Storage Switch.
 
@@ -336,8 +347,9 @@ def test_sswitch_move_to_fabric(hmc_session):
 
         switch.pull_full_properties()
         assert switch.properties['storage-fabric-uri'] == fabric2.uri
-        print(f"Moved Storage Switch {switch.name!r} "
-              f"from {fabric1.name!r} to {fabric2.name!r}")
+        test_logger.info(
+            f"Moved Storage Switch {switch.name!r} "
+            f"from {fabric1.name!r} to {fabric2.name!r}")
 
     finally:
         try:
@@ -346,7 +358,7 @@ def test_sswitch_move_to_fabric(hmc_session):
             pass
 
 
-def test_sswitch_move_to_site(hmc_session):
+def test_sswitch_move_to_site(test_logger, hmc_session):
     """
     Test the move-to-storage-site operation for a Storage Switch.
 
@@ -395,8 +407,9 @@ def test_sswitch_move_to_site(hmc_session):
 
         switch.pull_full_properties()
         assert switch.properties['storage-site-uri'] == site2.uri
-        print(f"Moved Storage Switch {switch.name!r} "
-              f"from {site1.name!r} to {site2.name!r}")
+        test_logger.info(
+            f"Moved Storage Switch {switch.name!r} "
+            f"from {site1.name!r} to {site2.name!r}")
 
     finally:
         try:

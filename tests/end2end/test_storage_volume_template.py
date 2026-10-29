@@ -41,17 +41,17 @@ STOVOLTPL_LIST_PROPS = ['element-uri', 'name', 'size', 'usage']
 STOVOLTPL_VOLATILE_PROPS = []
 
 
-def test_stovoltpl_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_stovoltpl_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -66,32 +66,33 @@ def test_stovoltpl_find_list(zhmc_logger, dpm_mode_cpcs):
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage group templates with volumes associated to "
                      f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with storage volume template "
-                  f"{stovoltpl.name!r} of storage group template "
-                  f"{stogrptpl.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with storage volume template "
+                f"{stovoltpl.name!r} of storage group template "
+                f"{stogrptpl.name!r}")
             runtest_find_list(
                 session, stogrptpl.storage_volume_templates, stovoltpl.name,
                 'name', 'size', STOVOLTPL_VOLATILE_PROPS,
                 STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS)
 
 
-def test_stovoltpl_property(zhmc_logger, dpm_mode_cpcs):
+def test_stovoltpl_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -106,15 +107,16 @@ def test_stovoltpl_property(zhmc_logger, dpm_mode_cpcs):
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage group templates with volumes associated to "
                      f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with storage volume template "
-                  f"{stovoltpl.name!r} of storage group template "
-                  f"{stogrptpl.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with storage volume template "
+                f"{stovoltpl.name!r} of storage group template "
+                f"{stogrptpl.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -122,20 +124,21 @@ def test_stovoltpl_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(stovoltpl.manager, non_list_prop)
 
 
-def test_stovoltpl_crud(zhmc_logger, dpm_mode_cpcs):
+def test_stovoltpl_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a storage volume template in a storage
     group template.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
 

@@ -43,7 +43,7 @@ LDAPSRVDEF_LIST_PROPS = ['element-uri', 'name']
 LDAPSRVDEF_VOLATILE_PROPS = []
 
 
-def test_ldapsrvdef_find_list(zhmc_logger, hmc_session):
+def test_ldapsrvdef_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -55,26 +55,27 @@ def test_ldapsrvdef_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support LDAP server definitions")
 
     # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No LDAP server definitions defined on HMC {hd.host}")
     ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
     for ldapsrvdef in ldapsrvdef_list:
-        print(f"Testing with LDAP server definition {ldapsrvdef.name!r}")
+        test_logger.info(
+            f"Testing with LDAP server definition {ldapsrvdef.name!r}")
         runtest_find_list(
             hmc_session, console.ldap_server_definitions, ldapsrvdef.name,
             'name', 'element-uri', LDAPSRVDEF_VOLATILE_PROPS,
             LDAPSRVDEF_MINIMAL_PROPS, LDAPSRVDEF_LIST_PROPS)
 
 
-def test_ldapsrvdef_property(zhmc_logger, hmc_session):
+def test_ldapsrvdef_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -86,19 +87,20 @@ def test_ldapsrvdef_property(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support LDAP server definitions")
 
     # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No LDAP server definitions defined on HMC {hd.host}")
     ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
     for ldapsrvdef in ldapsrvdef_list:
-        print(f"Testing with LDAP server definition {ldapsrvdef.name!r}")
+        test_logger.info(
+            f"Testing with LDAP server definition {ldapsrvdef.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -106,7 +108,7 @@ def test_ldapsrvdef_property(zhmc_logger, hmc_session):
         runtest_get_properties(ldapsrvdef.manager, non_list_prop)
 
 
-def test_ldapsrvdef_crud(zhmc_logger, hmc_session):
+def test_ldapsrvdef_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a LDAP server definition.
     """
@@ -118,7 +120,7 @@ def test_ldapsrvdef_crud(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet "
                  "support LDAP server definitions")
 
@@ -157,7 +159,7 @@ def test_ldapsrvdef_crud(zhmc_logger, hmc_session):
             ldapsrvdef_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC userid {hd.userid!r} is not authorized for task "
                      f"'Manage LDAP Server Definitions' on HMC {hd.host}")
         else:

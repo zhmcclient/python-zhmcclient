@@ -39,7 +39,7 @@ TL_LIST_PROPS = ['object-uri', 'cpc-uri', 'name', 'state']
 TL_VOLATILE_PROPS = []
 
 
-def test_tl_find_list(zhmc_logger, hmc_session):
+def test_tl_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -50,19 +50,20 @@ def test_tl_find_list(zhmc_logger, hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No Tape Library defined on HMC {hd.host}")
     tl_list = pick_test_resources(tl_list)
 
     for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+        test_logger.info(
+            f"Testing with Tape Library {tl.name!r}")
         runtest_find_list(
             hmc_session, console.tape_library, tl.name,
             'name', 'object-uri', TL_VOLATILE_PROPS,
             TL_MINIMAL_PROPS, TL_LIST_PROPS)
 
 
-def test_tl_property(zhmc_logger, hmc_session):
+def test_tl_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -73,12 +74,13 @@ def test_tl_property(zhmc_logger, hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No Tape Library defined on HMC {hd.host}")
     tl_list = pick_test_resources(tl_list)
 
     for tl in tl_list:
-        print(f"Testing with Tape Library {tl.name!r}")
+        test_logger.info(
+            f"Testing with Tape Library {tl.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -86,7 +88,7 @@ def test_tl_property(zhmc_logger, hmc_session):
         runtest_get_properties(tl.manager, non_list_prop)
 
 
-def test_tl_crud(zhmc_logger, hmc_session):
+def test_tl_crud(test_logger, hmc_session):
     """
     Test  update Tape Library
     """
@@ -98,7 +100,7 @@ def test_tl_crud(zhmc_logger, hmc_session):
     # Pick the Tape Library to test with
     tl_list = console.tape_library.list()
     if not tl_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No Tape Library defined on HMC {hd.host}")
     tl = tl_list[0]
 
