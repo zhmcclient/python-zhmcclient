@@ -22,7 +22,6 @@ and delete Hipersocket adapters.
 
 import uuid
 import warnings
-import pdb
 import pytest
 from requests.packages import urllib3
 
@@ -30,6 +29,7 @@ import zhmcclient
 
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
+from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
 
@@ -247,7 +247,9 @@ ADAPTER_FAMILIES = [
 @pytest.mark.parametrize(
     "test_family",
     ADAPTER_FAMILIES)
-def test_adapter_list_assigned_part(test_logger, dpm_mode_cpcs, test_family):
+def test_adapter_list_assigned_part(
+        test_family,
+        test_logger, dpm_mode_cpcs):
     """
     Test Adapter.list_assigned_partitions().
     """
@@ -684,14 +686,14 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
     # - exp_props (list): List of expected properties in the result. Each list
     #     item is a tuple(prop name, minimum CPC version).
     # - exp_exc_type (class): Expected exception type, or None for success.
-    # - run (bool or 'pdb'): Whether to run the test or call the debugger.
+    # - runmode (RunMode): Run mode for the testcase.
 
     (
         "Default parameters",
         {},
         DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS,
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "full_properties",
@@ -700,7 +702,7 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
         },
         COMMON_FULL_PROPS_ADAPTERS,
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "'detected-card-type' in additional_properties",
@@ -711,22 +713,24 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
             ('detected-card-type', [2, 13, 1]),
         ],
         None,
-        True,
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, input_kwargs, exp_props, exp_exc_type, run",
+    "desc, input_kwargs, exp_props, exp_exc_type, runmode",
     LIST_PERMITTED_ADAPTERS_TESTCASES)
 def test_adapter_list_permitted(
-        test_logger, desc, input_kwargs, exp_props, exp_exc_type, run,
-        all_cpcs):
+        desc, input_kwargs, exp_props, exp_exc_type, runmode,
+        request, test_logger, all_cpcs):
     # pylint: disable=unused-argument
     """
     Test Console.list_permitted_adapters() without filtering, but with
     different variations of returned properties.
     """
+    handle_runmode(request, runmode)
+
     if not all_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs")
@@ -748,14 +752,6 @@ def test_adapter_list_permitted(
         skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "'List Permitted Adapters'")
-
-    if run == 'pdb':
-        # pylint: disable=forgotten-debug-statement
-        pdb.set_trace()
-
-    if not run:
-        skip_log(test_logger,
-                 "Testcase is disabled in testcase definition")
 
     # Prepare what the managed CPCs support and from which CPCs adapters
     # are expected.

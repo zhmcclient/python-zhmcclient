@@ -32,6 +32,7 @@ import zhmcclient
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
     pformat_as_dict, validate_firmware_features
+from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
 
@@ -469,22 +470,26 @@ FULL_PROPS_LIST = COMMON_PROPS_LIST + [
     'initial-ifl-processing-weight', 'nic-uris', 'partition-link-uris',
     'storage-group-uris', 'tape-link-uris', 'virtual-function-uris'
 ]
+
 LIST_PERMITTED_PARTITION_TESTCASES = [
     # The list items are tuples with the following items:
     # - desc (string): description of the testcase.
     # - input_kwargs (dict): Input parameters for the function.
     # - exp_props (List) : Expected properties in the output
+    # - runmode (RunMode): Run mode for the testcase.
     (
         "Default parameters",
         {},
         COMMON_PROPS_LIST,
+        RunMode.RUN
     ),
     (
         "full_properties",
         {
             'full_properties': True,
         },
-        FULL_PROPS_LIST
+        FULL_PROPS_LIST,
+        RunMode.RUN
     ),
     (
         "full_properties and filtering",
@@ -492,34 +497,40 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
             'full_properties': True,
             'filter_args': {'type': 'linux'},
         },
-        FULL_PROPS_LIST
+        FULL_PROPS_LIST,
+        RunMode.RUN
     ),
     (
         "Bad request in filter_args",
         {
             'filter_args': {'name': '@#1c'}
         },
-        COMMON_PROPS_LIST
+        COMMON_PROPS_LIST,
+        RunMode.RUN
     ),
     (
         "additional_properties",
         {
             'additional_properties': ['partition-id', 'tape-link-uris']
         },
-        COMMON_PROPS_LIST + ['partition-id', 'tape-link-uris']
+        COMMON_PROPS_LIST + ['partition-id', 'tape-link-uris'],
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, input_kwargs, exp_props",
+    "desc, input_kwargs, exp_props, runmode",
     LIST_PERMITTED_PARTITION_TESTCASES)
 def test_console_list_permitted_partitions(
-        test_logger, desc, input_kwargs, exp_props, dpm_mode_cpcs):
+        desc, input_kwargs, exp_props, runmode,
+        request, test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test list permitted partitions on a cpc
     """
+    handle_runmode(request, runmode)
+
     if not dpm_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
@@ -577,11 +588,13 @@ TESTCASES_PART_GET_SUSTAINABILITY_DATA = [
     # * exp_oldest: expected delta time from now to oldest data point,
     #   as timedelta
     # * exp_delta: expected delta time between data points, as timedelta
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "Default values (range=last-week, resolution=one-hour)",
         {},
         timedelta(days=7),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=one-hour",
@@ -591,6 +604,7 @@ TESTCASES_PART_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=fifteen-minutes",
@@ -600,6 +614,7 @@ TESTCASES_PART_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(minutes=15),
+        RunMode.RUN
     ),
 ]
 
@@ -613,14 +628,17 @@ PART_METRICS = {
 
 
 @pytest.mark.parametrize(
-    "tc, input_kwargs, exp_oldest, exp_delta",
+    "tc, input_kwargs, exp_oldest, exp_delta, runmode",
     TESTCASES_PART_GET_SUSTAINABILITY_DATA)
 def test_part_get_sustainability_data(
-        test_logger, tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
+        tc, input_kwargs, exp_oldest, exp_delta, runmode,
+        request, test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Partition.get_sustainability_data(...)
     """
+    handle_runmode(request, runmode)
+
     if not dpm_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
@@ -738,17 +756,20 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
     # * type: Partition link type ("hipersockets", "smc-d")
     # * number_of_nics: Number of NICs to be created during attach
     # * nic_property_list: Properties of the NICs to be created during attach
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "Hipersockets, 1 NIC with default properties",
         "hipersockets",
         1,
-        []
+        [],
+        RunMode.RUN
     ),
     (
         "Hipersockets, 2 NICs with default properties",
         "hipersockets",
         2,
-        []
+        [],
+        RunMode.RUN
     ),
     (
         "Hipersockets, 1 NIC with devno",
@@ -758,7 +779,8 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
             {
                 'device-number': '4711',
             },
-        ]
+        ],
+        RunMode.RUN
     ),
     (
         "Hipersockets, 1 NIC with VLAN",
@@ -768,19 +790,22 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
             {
                 'vlan-id': 53,
             },
-        ]
+        ],
+        RunMode.RUN
     ),
     (
         "SMC-D, 1 NIC with default properties",
         "smc-d",
         1,
-        []
+        [],
+        RunMode.RUN
     ),
     (
         "SMC-D, 2 NICs with default properties",
         "smc-d",
         2,
-        []
+        [],
+        RunMode.RUN
     ),
     (
         "SMC-D, 1 NIC with with devno",
@@ -790,7 +815,8 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
             {
                 'device-number': '4711',
             },
-        ]
+        ],
+        RunMode.RUN
     ),
     # Note: Disabled because it currently fails
     # (
@@ -801,21 +827,24 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
     #         {
     #             'fid': 53,
     #         },
-    #     ]
+    #     ],
+    #     RunMode.RUN
     # ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, type, number_of_nics, nic_property_list",
+    "desc, type, number_of_nics, nic_property_list, runmode",
     TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK)
 def test_part_attach_detach_network_link(
-        test_logger, desc, type, number_of_nics, nic_property_list,
-        dpm_mode_cpcs):
+        desc, type, number_of_nics, nic_property_list, runmode,
+        request, test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument,redefined-builtin
     """
     Test for Partition.attach/detach_network_link()
     """
+    handle_runmode(request, runmode)
+
     if not dpm_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
@@ -918,28 +947,34 @@ TESTCASES_PART_ATTACH_DETACH_CTC_LINK = [
     # * desc: Testcase short description
     # * num_partitions: Number of partitions for creating the PL
     # * num_paths: Number of paths for creating the PL
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "2 partitions, 1 path",
         2,
         1,
+        RunMode.RUN
     ),
     (
         "3 partitions, 2 paths",
         3,
         2,
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, num_partitions, num_paths",
+    "desc, num_partitions, num_paths, runmode",
     TESTCASES_PART_ATTACH_DETACH_CTC_LINK)
 def test_part_attach_detach_ctc_link(
-        test_logger, dpm_mode_cpcs, desc, num_partitions, num_paths):
+        desc, num_partitions, num_paths, runmode,
+        request, test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Partition.attach/detach_ctc_link()
     """
+    handle_runmode(request, runmode)
+
     if not dpm_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")

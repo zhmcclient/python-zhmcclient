@@ -31,6 +31,7 @@ import zhmcclient
 
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
+from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
 
@@ -261,6 +262,7 @@ SS_CREATE_DELETE_TESTCASES = [
     #   'name' and 'cpc-uris' are checked separately.
     # - exp_exc_type (class or None): Exception type expected from create(),
     #   or None if no exception is expected.
+    # - runmode (RunMode): Run mode for the testcase.
     (
         "Minimal input properties (name + cpc-uris only)",
         {},
@@ -269,6 +271,7 @@ SS_CREATE_DELETE_TESTCASES = [
             'class': 'storage-site',
         },
         None,
+        RunMode.RUN
     ),
     (
         "With description",
@@ -280,21 +283,24 @@ SS_CREATE_DELETE_TESTCASES = [
             'class': 'storage-site',
         },
         None,
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, input_props, exp_props, exp_exc_type",
+    "desc, input_props, exp_props, exp_exc_type, runmode",
     SS_CREATE_DELETE_TESTCASES)
 def test_ss_create_delete(
-        test_logger, hmc_session,
-        desc, input_props, exp_props, exp_exc_type):
+        desc, input_props, exp_props, exp_exc_type, runmode,
+        request, test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Test creation of a storage site with various property combinations,
     and verify properties, then delete it.
     """
+    handle_runmode(request, runmode)
+
     client = zhmcclient.Client(hmc_session)
     console = client.consoles.console
     hd = hmc_session.hmc_definition
