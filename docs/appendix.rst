@@ -627,8 +627,8 @@ Resources scoped to CPCs in DPM mode
      or a virtual function (VF) assigned to a management or consumer
      partition.
 
-     AI Accelerator Function resources require the ``"ai-adapter"`` firmware
-     feature to be enabled on the CPC.
+     AI Accelerator Function resources require the ``"ai-adapter"``
+     :ref:`API feature <API features>` to be enabled on the CPC.
 
      For details, see section :ref:`AI Accelerator Functions`.
 

@@ -313,7 +313,7 @@ class Partition(BaseResource):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
         """
         # We do here some lazy loading.
         if not self._ai_accelerator_functions:
