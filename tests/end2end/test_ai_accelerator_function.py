@@ -19,10 +19,10 @@ These tests do not change any existing partitions or AI Accelerator Functions,
 but create, modify, and delete test resources as needed.
 
 Requirements:
-  - A CPC in DPM mode with the "ai-adapter" firmware feature enabled.
+  - A CPC in DPM mode with the "ai-adapter" API feature enabled.
   - At least one adapter of type "ai" visible to the test user.
 
-The tests skip gracefully when the firmware feature or suitable adapters
+The tests skip gracefully when the API feature or suitable adapters
 are not found.
 """
 
@@ -50,10 +50,10 @@ AI_FUNC_VOLATILE_PROPS = []
 
 
 def _skip_if_no_ai_feature(logger, cpc):
-    """Skip the test if the 'ai-adapter' firmware feature is not enabled."""
-    if not cpc.firmware_feature_enabled('ai-adapter'):
+    """Skip the test if the 'ai-adapter' API feature is not enabled."""
+    if not cpc.api_feature_enabled('ai-adapter'):
         skip_log(logger,
-                 f"Firmware feature 'ai-adapter' not enabled on CPC {cpc.name}")
+                 f"API feature 'ai-adapter' not enabled on CPC {cpc.name}")
 
 
 def _find_ai_adapter(cpc):

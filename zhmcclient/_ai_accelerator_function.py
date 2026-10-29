@@ -23,7 +23,7 @@ or consumer partition.
 AI Accelerator Function resources are contained in Partition resources.
 
 AI Accelerator Functions only exist in :term:`CPCs <CPC>` that are in DPM
-mode and have the "ai-adapter" firmware feature enabled.
+mode and have the "ai-adapter" :ref:`API feature <API features>` enabled.
 """
 
 
@@ -54,7 +54,7 @@ class AiAcceleratorFunctionManager(BaseManager):
 
     HMC/SE version requirements:
 
-    * :ref:`firmware feature <firmware features>` "ai-adapter"
+    * :ref:`API feature <API features>` "ai-adapter"
     """
 
     def __init__(self, partition):
@@ -108,7 +108,7 @@ class AiAcceleratorFunctionManager(BaseManager):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
 
         Authorization requirements:
 
@@ -165,7 +165,7 @@ class AiAcceleratorFunctionManager(BaseManager):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
 
         Authorization requirements:
 
@@ -241,7 +241,7 @@ class AiAcceleratorFunctionManager(BaseManager):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
 
         Authorization requirements:
 
@@ -285,7 +285,7 @@ class AiAcceleratorFunction(BaseResource):
 
     HMC/SE version requirements:
 
-    * :ref:`firmware feature <firmware features>` "ai-adapter"
+    * :ref:`API feature <API features>` "ai-adapter"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -319,7 +319,7 @@ class AiAcceleratorFunction(BaseResource):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
 
         Authorization requirements:
 
@@ -355,7 +355,7 @@ class AiAcceleratorFunction(BaseResource):
 
         HMC/SE version requirements:
 
-        * :ref:`firmware feature <firmware features>` "ai-adapter"
+        * :ref:`API feature <API features>` "ai-adapter"
 
         Authorization requirements:
 
@@ -390,3 +390,49 @@ class AiAcceleratorFunction(BaseResource):
         if is_rename:
             # Add the new name to the cache
             self.manager._name_uri_cache.update(self.name, self.uri)
+
+    @logged_api_call
+    def delete(self):
+        """
+        Delete this AI Accelerator Function.
+
+        This performs the "Delete AI Accelerator Functions" HMC operation for
+        this single AI Accelerator Function (see
+        :meth:`~zhmcclient.AiAcceleratorFunctionManager.delete_functions`).
+
+        Note that the HMC enforces constraints on which functions can be
+        deleted: For example, deleting the physical function of a management
+        partition is rejected while consumer partitions have functions on the
+        same adapter.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "ai-adapter"
+
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this AI
+          Accelerator Function.
+        * Task permission to the "Partition Details" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        # pylint: disable=protected-access
+        self.manager.delete_functions([self.uri])
+        self.manager._name_uri_cache.delete(
+            self.get_properties_local(self.manager._name_prop, None))
+
+        parent_uris = self.manager.parent.get_properties_local(
+            'ai-accelerator-function-uris')
+        if parent_uris:
+            try:
+                parent_uris.remove(self.uri)
+            except ValueError:
+                pass
+
+        self.cease_existence_local()

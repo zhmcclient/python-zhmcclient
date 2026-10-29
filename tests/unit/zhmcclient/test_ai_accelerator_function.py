@@ -22,7 +22,7 @@ import copy
 import pytest
 
 from zhmcclient import Client, AiAcceleratorFunction, \
-    AiAcceleratorFunctionManager, HTTPError, NotFound
+    AiAcceleratorFunctionManager, HTTPError, NotFound, CeasedExistence
 from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -474,6 +474,37 @@ class TestAiAcceleratorFunction:
     # -----------------------------------------------------------------------
     # AiAcceleratorFunction resource tests
     # -----------------------------------------------------------------------
+
+    def test_function_delete(self):
+        """Test AiAcceleratorFunction.delete()."""
+        faked_func1 = self.add_aifunc1()
+        faked_func2 = self.add_aifunc2()
+        mgr = self.partition.ai_accelerator_functions
+        func1 = mgr.resource_object(faked_func1.uri)
+
+        func1.delete()
+
+        funcs = mgr.list()
+        assert len(funcs) == 1
+        assert funcs[0].uri == faked_func2.uri
+        part_uris = self.faked_partition.properties[
+            'ai-accelerator-function-uris']
+        assert faked_func1.uri not in part_uris
+        assert faked_func2.uri in part_uris
+        with pytest.raises(CeasedExistence):
+            func1.get_property('name')
+
+    def test_function_delete_part_status(self):
+        """Test AiAcceleratorFunction.delete() in invalid partition status."""
+        faked_func = self.add_aifunc1()
+        self.faked_partition.properties['status'] = 'starting'
+        mgr = self.partition.ai_accelerator_functions
+        func = mgr.resource_object(faked_func.uri)
+
+        with pytest.raises(HTTPError) as exc_info:
+            func.delete()
+        assert exc_info.value.http_status == 409
+        assert exc_info.value.reason == 1
 
     def test_function_repr(self):
         """Test AiAcceleratorFunction.__repr__()."""
