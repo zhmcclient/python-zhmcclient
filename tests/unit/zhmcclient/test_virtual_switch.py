@@ -125,7 +125,8 @@ class TestVirtualSwitch:
         """
         vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
-            result = {
+
+            mock_result_list = {
                 'virtual-switches': [
                     {
                         'name': 'VSWITCH1',
@@ -139,8 +140,8 @@ class TestVirtualSwitch:
                     }
                 ]
             }
-
-            m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches', json=result)
+            m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches',
+                  json=mock_result_list)
 
             mock_result_get_bulk = [
                 {
@@ -173,12 +174,11 @@ class TestVirtualSwitch:
 
             vswitches = vswitch_mgr.list(full_properties=True)
 
-            assert len(vswitches) == len(result['virtual-switches'])
+            assert len(vswitches) == len(mock_result_get_bulk)
             for idx, vswitch in enumerate(vswitches):
-                assert vswitch.properties['name'] == \
-                    result['virtual-switches'][idx]['name']
-                assert vswitch.uri == \
-                    result['virtual-switches'][idx]['object-uri']
+                exp_switch_props = mock_result_get_bulk[idx]['body']
+                assert vswitch.properties['name'] == exp_switch_props['name']
+                assert vswitch.uri == exp_switch_props['object-uri']
                 assert vswitch.full_properties
                 assert vswitch.manager == vswitch_mgr
 
@@ -188,7 +188,8 @@ class TestVirtualSwitch:
         """
         vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
-            result = {
+
+            mock_result_list = {
                 'virtual-switches': [
                     {
                         'name': 'VSWITCH1',
@@ -204,20 +205,18 @@ class TestVirtualSwitch:
                     }
                 ]
             }
-
-            m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches', json=result)
+            m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches',
+                  json=mock_result_list)
 
             vswitches = vswitch_mgr.list(additional_properties=['port'])
 
-            assert len(vswitches) == len(result['virtual-switches'])
+            assert len(vswitches) == len(mock_result_list['virtual-switches'])
             for idx, vswitch in enumerate(vswitches):
-                assert vswitch.properties['name'] == \
-                    result['virtual-switches'][idx]['name']
-                assert vswitch.uri == \
-                    result['virtual-switches'][idx]['object-uri']
+                exp_switch_props = mock_result_list['virtual-switches'][idx]
+                assert vswitch.properties['name'] == exp_switch_props['name']
+                assert vswitch.uri == exp_switch_props['object-uri']
                 assert 'port' in vswitch.properties
-                assert vswitch.properties['port'] == \
-                    result['virtual-switches'][idx]['port']
+                assert vswitch.properties['port'] == exp_switch_props['port']
                 assert vswitch.manager == vswitch_mgr
 
     def test_update_properties(self):

@@ -1,0 +1,18 @@
+Added support for the "additional_properties" parameter in the "list()"
+methods of all resource types, and in the "list_permitted_<resource_type>()"
+methods of the console. So far, only some of the resource types
+supported that parameter, and in several cases, it required the use of a
+particular minimum version of the HMC and the user had to know that that
+version was present.
+
+The now uniform support for the "additional_properties" parameter alleviates
+users from having to know which resource type supports it, which HMC version
+added support for it, and which HMC version is actually used. The zhmcclient
+library will now find out automatically and will use the most efficient
+approach for all HMC versions and all resource types, and will fall back
+to less efficient approaches if the actually used HMC does not support the
+more efficient approaches. For more details, see the new section
+:ref:`Listing resources`.
+
+As a side effect, the Console objects now take advantage of the resource
+cache when they are enabled for auto-updating.

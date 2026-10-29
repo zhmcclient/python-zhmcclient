@@ -66,7 +66,8 @@ class MyManager(BaseManager):
             name_prop='fake-name-prop',
             query_props=['qp1', 'qp2'])
 
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         # We have this method here just to avoid the warning about
         # an unimplemented abstract method. It is not being used in this
         # set of testcases.

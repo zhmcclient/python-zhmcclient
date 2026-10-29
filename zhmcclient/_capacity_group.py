@@ -80,29 +80,24 @@ class CapacityGroupManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the Capacity Groups in this CPC.
+
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Capacity Groups of a CPC"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled in an optimized way:
-
-        * If this manager is enabled for :ref:`auto-updating`, a locally
-          maintained resource list is used (which is automatically updated via
-          inventory notifications from the HMC) and the provided filter
-          arguments are applied.
-
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
-
-        * Otherwise, the HMC List operation is performed with the subset of the
-          provided filter arguments that can be handled on the HMC side and the
-          remaining filter arguments are applied on the client side on the list
-          result.
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         HMC/SE version requirements:
 
@@ -115,9 +110,11 @@ class CapacityGroupManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Capacity Group objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -126,6 +123,12 @@ class CapacityGroupManager(BaseManager):
 
             `None` causes no filtering to happen, i.e. all resources are
             returned.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -143,7 +146,8 @@ class CapacityGroupManager(BaseManager):
         result_prop = 'capacity-groups'
         list_uri = f'{self.cpc.uri}/capacity-groups'
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None)
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create(self, properties):

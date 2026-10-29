@@ -178,19 +178,25 @@ class TestPort:
 
         with requests_mock.mock() as m:
 
-            mock_result_port1 = {
-                'parent': '/api/adapters/fake-adapter-id-1',
-                'index': 0,
-                'fabric-id': '',
-                'description': '',
-                'element-uri':
-                    '/api/adapters/fake-adapter-id-1/storage-ports/0',
-                'element-id': '0',
-                'class': 'storage-port',
-                'name': 'Port 0'
-            }
-            m.get('/api/adapters/fake-adapter-id-1/storage-ports/0',
-                  json=mock_result_port1)
+            mock_result_get_bulk = [
+                {
+                    'id': '1',
+                    'status': 200,
+                    'body': {
+                        'parent': '/api/adapters/fake-adapter-id-1',
+                        'index': 0,
+                        'fabric-id': '',
+                        'description': '',
+                        'element-uri':
+                            '/api/adapters/fake-adapter-id-1/storage-ports/0',
+                        'element-id': '0',
+                        'class': 'storage-port',
+                        'name': 'Port 0'
+                    }
+                }
+            ]
+            m.post('/api/services/aggregation/submit',
+                   json=mock_result_get_bulk)
 
             ports = port_mgr.list(full_properties=True)
             if len(ports) != 0:

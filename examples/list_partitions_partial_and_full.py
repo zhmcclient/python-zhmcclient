@@ -59,30 +59,37 @@ def main():
             cpc = cpcs[0]
             print(f"Using first CPC {cpc.name}")
 
-        for full_properties in (False, True):
-            print("\nListing partitions with "
-                  f"full_properties={full_properties} ...")
+        kwargs_list = [
+            {'full_properties': True},
+            {'full_properties': False,
+             'additional_properties': ['processor-mode']},
+            {'full_properties': False,
+             'additional_properties': None},
+        ]
+
+        for kwargs in kwargs_list:
+            kwargs_str = ", ".join([f"{n}={v}" for n, v in kwargs.items()])
+
+            print(f"\nListing partitions with {kwargs_str} ...")
+
             start_dt = datetime.now()
-            partitions = cpc.partitions.list(full_properties)
+            partitions = cpc.partitions.list(**kwargs)
             end_dt = datetime.now()
             duration = end_dt - start_dt
-            non_stopped_partitions = [p for p in partitions
-                                      if p.properties['status'] != 'stopped']
-            num_props = 0
-            for partition in partitions:
-                num_props += len(partition.properties)
+
+            num_props = [len(p.properties) for p in partitions]
+            min_props = min(num_props)
+            max_props = max(num_props)
+            num_props_str = (f"{min_props}" if min_props == max_props else
+                             f"{min_props}...{max_props}")
             print(f"Duration: {duration.total_seconds():.2f} s")
             print(f"Number of partitions: {len(partitions)}")
-            print("Number of non-stopped partitions: "
-                  f"{len(non_stopped_partitions)}")
-            avg_props = num_props / len(partitions)
-            print("Average number of properties per partition: "
-                  f"{avg_props:.1f}")
+            print(f"Number of properties in each partition: {num_props_str}")
 
         return 0
 
     finally:
-        print("Logging off ...")
+        print("\nLogging off ...")
         session.logoff()
 
 

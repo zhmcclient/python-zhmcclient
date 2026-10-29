@@ -78,9 +78,26 @@ class StoragePathManager(BaseManager):
         return self._storage_control_unit
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the storage paths of this storage control unit.
+
+        The properties in the returned resource objects are by default only
+        "element-uri" and "element-id" and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -90,9 +107,11 @@ class StoragePathManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls that the full set of resource properties for each returned
-            storage path is being retrieved, vs. only the following short set:
-            ``element-uri``.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Storage Path element objects within Storage Control Unit objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -100,6 +119,12 @@ class StoragePathManager(BaseManager):
             :ref:`Filtering`.
 
             `None` causes no filtering to happen.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -116,8 +141,8 @@ class StoragePathManager(BaseManager):
         result_prop = 'storage-paths'
         list_uri = self._base_uri
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None
-        )
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create(self, properties):

@@ -499,7 +499,7 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
         COMMON_PROPS_LIST
     ),
     (
-        "additional-properties",
+        "additional_properties",
         {
             'additional_properties': ['partition-id', 'tape-link-uris']
         },
@@ -527,12 +527,14 @@ def test_console_list_permitted_partitions(
         hd = session.hmc_definition
         client = zhmcclient.Client(session)
         console = client.consoles.console
-        features = console.list_api_features()
-        if 'additional_properties' in input_kwargs and \
-                'dpm-ctc-partition-link-management' not in features and \
-                'dpm-hipersockets-partition-link-management' not in features:
+
+        api_version = client.query_api_version()
+        hmc_version = api_version['hmc-version']
+        hmc_version_info = tuple(map(int, hmc_version.split('.')))
+        if hmc_version_info < (2, 14, 0):
             skip_log(zhmc_logger,
-                     "HMC does not support additional-properties parameter.")
+                     f"HMC {hd.host} of version {hmc_version} does not yet "
+                     "support 'List Permitted Partitions'")
 
         permitted_part_list = console.list_permitted_partitions(**input_kwargs)
         if not permitted_part_list:

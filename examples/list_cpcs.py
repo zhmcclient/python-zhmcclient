@@ -44,16 +44,16 @@ def main():
 
     try:
         client = zhmcclient.Client(session)
-        format_str = "{:<8}  {:<6}  {:<7}  {:<16}"
-
-        cpcs = client.cpcs.list()
+        format_str = "{:<8}  {:<6}  {:<7}  {:<16}  {:<12}"
+        cpcs = client.cpcs.list(additional_properties=['machine-serial-number'])
         print()
         print('CPCs managed by this HMC:')
-        print(format_str.format('CPC', 'SE', 'Mode', 'Status'))
+        print(format_str.format('CPC', 'SE', 'Mode', 'Status', 'S/N'))
         for cpc in sorted(cpcs, key=lambda x: x.name):
             mode = 'DPM' if cpc.prop('dpm-enabled') else 'classic'
             print(format_str.format(
-                cpc.name, cpc.prop('se-version'), mode, cpc.prop('status')))
+                cpc.name, cpc.prop('se-version'), mode, cpc.prop('status'),
+                cpc.prop('machine-serial-number')))
         print()
 
         return 0

@@ -82,9 +82,24 @@ class GroupManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the Groups managed by the HMC this client is connected to.
+
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Custom Groups"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         HMC/SE version requirements: None
 
@@ -95,9 +110,11 @@ class GroupManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            Group objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned resources to
@@ -106,6 +123,12 @@ class GroupManager(BaseManager):
 
             `None` causes no filtering to happen, i.e. all resources are
             returned.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -123,7 +146,8 @@ class GroupManager(BaseManager):
         result_prop = 'groups'
         list_uri = '/api/groups'
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None)
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create(self, properties):

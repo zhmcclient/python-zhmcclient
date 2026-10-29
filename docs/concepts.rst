@@ -372,6 +372,181 @@ Examples:
   The returned resource object will have only a minimal set of properties.
 
 
+.. _`Listing resources`:
+
+Listing resources
+-----------------
+
+The listing of resources is performed using the class-specific implementations
+of :meth:`zhmcclient.BaseManager.list`.
+
+The :meth:`zhmcclient.BaseManager.findall` method is built on
+:meth:`zhmcclient.BaseManager.list` and supports a subset of its functionality.
+
+The HMC operations for listing resources differ in their support of returning
+additional properties of the listed resources. The zhmcclient library unifies
+that and the class-specific implementations of
+:meth:`zhmcclient.BaseManager.list` all support the following mechanisms for
+adding properties:
+
+* The "full_properties" parameter: It causes the full set of readable properties
+  to be in the listed resources.
+
+* The "additional_properties" parameter: It allows specifying a list of
+  property names and causes the specified properties to be added to the default
+  set of properties in the listed resources.
+
+This uniformity across the resource types is achieved by using whatever
+mechanisms are supported by the HMC for the specific resource type. In doing
+so, the zhmcclient library optimizes for auto-updated resources, and uses
+the most efficient mechanism supported by the HMC. The zhmcclient library
+has knowledge for each resource type whether the "List" operation supports
+the "additional-properties" query parameter, and whether the "Get Properties"
+operation supports the "properties" query parameter. Because these parameters
+have been added by the HMC over the various HMC versions, the zhmcclient
+has this knowledge only for the latest available HMC version. The zhmcclient
+library attempts to use these query parameters if the resource indicates that
+the latest available HMC version supports them. The zhmcclient library falls
+back to using earlier but less efficient mechanisms if it turns out that the
+HMC version that is actually used does not support the respective query
+parameter. That way, the zhmcclient library supports these two parameters
+on all HMC versions (and for all resource types), but optimizes for the latest
+available HMC version.
+
+Here is the detailed description of how the zhmcclient library uses these
+mechanisms to achieve uniformity for these parameters in an efficient way:
+
+* For **resource objects with a List operation**:
+
+  Example: CPCs, for which the HMC supports a "List CPC objects" operation.
+
+  * If the manager object on which the ``list()`` method is called is enabled
+    for :ref:`auto-updating`, a locally maintained resource list is used (which
+    is automatically updated via inventory notifications from the HMC) and the
+    provided filter arguments are applied to that list.
+
+    In this case, the returned objects will have all readable properties defined
+    in the data model, regardless of what is specified in the "full_properties"
+    and "additional_properties" parameters, and no HMC operation needs to be
+    performed.
+
+  * Otherwise, the HMC "List <resource_type>" operation is performed with
+    the subset of the provided filter arguments that can be handled on the
+    HMC side. The remaining filter arguments are applied on the client
+    side on the list result.
+
+    The actual processing for the "List <resource_type>" operation is as
+    follows:
+
+    * If "full_properties" is True, the List operation is performed
+      without the "additional-properties" query parameter, followed by a
+      bulk operation with the "Get <resource_type> Properties" operations
+      for the returned resource objects.
+
+    * Otherwise, if "additional_properties" is specified, the following is
+      performed:
+
+      - For resource types with a List operation that supports the
+        "additional-properties" query parameter in the latest HMC version,
+        that query parameter is set accordingly.
+
+        If the "additional-properties" query parameter turns out to be
+        unsupported in the actual HMC version, the next item in this list
+        is performed.
+
+      - Otherwise, for resource types with a "Get <resource_type> Properties"
+        operation that supports the "properties" query parameter in the latest
+        HMC version, a bulk operation of "Get <resource_type> Properties"
+        operations is performed for the listed resources, with the "properties"
+        query parameter set accordingly.
+
+        If the "properties" query parameter turns out to be unsupported in the
+        actual HMC version, the next item in this list is performed.
+
+      - Otherwise, a bulk operation of "Get <resource_type> Properties"
+        operations is performed for the listed resources.
+
+    * Otherwise, the List operation is performed without the
+      "additional-properties" query parameter, and the result is used
+      without retrieving any additional properties.
+
+* For **resource objects with an array of URIs in a parent object**:
+
+  Example: NICs, for which the HMC provides the URIs of the NICs of a partition
+  in the "nic-uris" property of the Partition object.
+
+  * If the manager object on which the ``list()`` method is called is enabled
+    for :ref:`auto-updating`, a locally maintained resource list is used (which
+    is automatically updated via inventory notifications from the HMC) and the
+    provided filter arguments are applied to that list.
+
+    In this case, the returned objects will have all readable properties defined
+    in the data model, regardless of what is specified in the "full_properties"
+    and "additional_properties" parameters, and no HMC operation needs to be
+    performed.
+
+  * Otherwise, the corresponding array property for this resource in the
+    parent object is used to list the resources, and the provided filter
+    arguments are applied.
+
+    The further processing for retrieving additional properties is as follows:
+
+    * If "full_properties" is True, a bulk operation with the
+      "Get <resource_type> Properties" operations is performed on the
+      listed resource objects.
+
+    * Otherwise, if "additional_properties" is specified, the following is
+      performed:
+
+      - For resource types with a "Get <resource_type> Properties" operation
+        that supports the "properties" query parameter in the latest HMC
+        version, that query parameter is set accordingly in a bulk operation of
+        "Get <resource_type> Properties" operations for the listed resource
+        objects.
+
+        If the "properties" query parameter turns out to be unsupported in the
+        actual HMC version, the next item in this list is performed.
+
+      - Otherwise, a bulk operation with the "Get <resource_type>
+        Properties" operations is performed on the listed resource objects.
+
+* For **singleton resource objects**:
+
+  Example: The HMC console object.
+
+  * If the manager object on which the ``list()`` method is called is enabled
+    for :ref:`auto-updating`, a locally maintained resource list is used (which
+    is automatically updated via inventory notifications from the HMC) and the
+    provided filter arguments are applied to that list.
+
+    In this case, the returned objects will have all readable properties defined
+    in the data model, regardless of what is specified in the "full_properties"
+    and "additional_properties" parameters, and no HMC operation needs to be
+    performed.
+
+  * Otherwise, the URI of the singleton object is used to construct a local
+    resource object that has only its URI property.
+
+    The further processing for retrieving additional properties is as follows:
+
+    * If "full_properties" is `True`, a "Get <resource_type> Properties"
+      operation is performed on the resource object.
+
+    * Otherwise, if "additional_properties" is specified, the following is
+      performed:
+
+      - For resource types with a "Get <resource_type> Properties" operation
+        that supports the "properties" query parameter in the latest HMC
+        version, that query parameter is set accordingly in the
+        "Get <resource_type> Properties" operation.
+
+        If the "properties" query parameter turns out to be unsupported in the
+        actual HMC version, the next item in this list is performed.
+
+      - Otherwise, the "Get <resource_type> Properties" operation is performed
+        on the resource object.
+
+
 .. _`Auto-updating`:
 
 Auto-updating

@@ -187,11 +187,18 @@ def test_console_list_permitted_lpars(
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-
-        zhmc_logger.debug("Testing with CPC %s", cpc.name)
-
+        session = cpc.manager.session
+        hd = session.hmc_definition
         client = cpc.manager.client
         console = client.consoles.console
+
+        api_version = client.query_api_version()
+        hmc_version = api_version['hmc-version']
+        hmc_version_info = tuple(map(int, hmc_version.split('.')))
+        if hmc_version_info < (2, 14, 0):
+            skip_log(zhmc_logger,
+                     f"HMC {hd.host} of version {hmc_version} does not yet "
+                     "support 'List Permitted Logical Partitions'")
 
         zhmc_logger.debug(
             "Calling list_permitted_lpars() with kwargs: %r", input_kwargs)

@@ -63,11 +63,24 @@ class HwMessageManager(BaseManager):
             query_props=query_props)
 
     @logged_api_call
-    def list(
-            self, full_properties=False, filter_args=None, begin_time=None,
-            end_time=None):
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None, *, begin_time=None, end_time=None):
         """
         List the hardware messages for the parent object (Console or CPC).
+
+        The properties in the returned resource objects are by default those
+        returned by the
+        "List Console Hardware Messages" or "List CPC Hardware Messages"
+        HMC operation defined in the :term:`HMC API` book and can be expanded
+        with the "full_properties" and "additional_properties" parameters of
+        this method.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled by performing an HMC list operation
+        in context of the parent resource, in an optimized way. For details,
+        see :ref:`Listing resources`.
 
         HMC/SE version requirements: None
 
@@ -80,9 +93,11 @@ class HwMessageManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            If `True`, the set of properties in the returned resource objects
+            will be expanded to the full set of readable properties defined in
+            the data model for
+            hardware-message element objects within CPC objects
+            in the :term:`HMC API` book.
 
           filter_args (dict):
             Filter arguments that narrow the list of returned messages to those
@@ -106,6 +121,12 @@ class HwMessageManager(BaseManager):
             timezone-naive, the UTC timezone is assumed.
 
             `None` causes no such filtering to happen.
+
+          additional_properties (list of string):
+            A list of property names.
+            If specified, the set of properties in the returned resource objects
+            will be expanded with the specified properties.
+            `None` is treated the same as an empty list.
 
         Returns:
 
@@ -136,7 +157,9 @@ class HwMessageManager(BaseManager):
             query_parms.append(f'end-time={end_time}')
         msg_list = self._list_with_operation(
             self._base_uri, result_prop, full_properties,
-            filter_args=filter_args, query_parms=query_parms)
+            filter_args=filter_args,
+            additional_properties=additional_properties,
+            query_parms=query_parms)
         if not full_properties:
             # Add the element-id property since that is used as the 'name'.
             for msg in msg_list:

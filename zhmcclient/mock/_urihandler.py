@@ -7765,7 +7765,9 @@ class VirtualTapeResourcesHandler:
     """
 
     valid_query_parms_get = [
-        'name', 'device-number', 'adapter-port-uri', 'partition-uri']
+        'name', 'device-number', 'adapter-port-uri', 'partition-uri',
+        # Added in HMC 2.17:
+        'additional-properties']
 
     returned_props = [
         'element-uri', 'name', 'device-number',
