@@ -30,6 +30,134 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.27.0
+^^^^^^^^^^^^^^
+
+Released: 2026-10-30
+
+**Incompatible changes:**
+
+* The :meth:`zhmcclient.AutoUpdater.open` method has been changed to no
+  longer raise stomp exceptions that may occur when connecting to the HMC.
+  Such exceptions are now raised as :exc:`zhmcclient.NotificationConnectionError`.
+  This change affects only users who use the auto-update feature of zhmcclient
+  (i.e. call the :meth:`zhmcclient.BaseResource.enable_auto_update` method) and
+  handle "stomp.StompException" exceptions or their subclasses in their code.
+  Such code needs to be changed to handle
+  :exc:`zhmcclient.NotificationConnectionError` instead.
+  Note that the :meth:`zhmcclient.NotificationReceiver.connect` method already
+  raised stomp exceptions as :exc:`zhmcclient.NotificationConnectionError`.
+
+* FC-type storage groups do not have a property "candidate-adapter-port-uris".
+  The :meth:`zhmcclient.StorageGroup.list_candidate_adapter_ports` method
+  raised ``KeyError`` when called for FC-type storage groups. However, this was
+  not documented. Changed the method to return `None` when called for
+  FC-type storage groups and documented that. This is an incompatible change
+  for users that handle that ``KeyError`` exception. If you have such code,
+  it needs to be changed to test for `None` instead. (`#2239 <https://github.com/zhmcclient/python-zhmcclient/issues/2239>`_)
+
+**Deprecations:**
+
+* Getting or setting the password in a 'zhmcclient.Session' object via its
+  protected '_password' attribute is deprecated. Doing that will cause an
+  according Python 'DeprecationWarning' to be issued. Use the new public
+  'password' attribute instead. Note that there are legitimate reasons to get
+  the session password in a Python program, including the zhmcclient package
+  itself. (`#2304 <https://github.com/zhmcclient/python-zhmcclient/issues/2304>`_)
+
+**Bug fixes:**
+
+* Development: Fixed that pip-missing-reqs raised TypeError by pinning pip
+  to <26.2.
+
+* Fixed safety issues up to 2026-09-08.
+
+* Test: Fixed that the TESTLOGFILE env var was ignored and the log file was
+  set to end2end.log in the Makefile. The env var is now honored.
+
+* AutoUpdater: Fixed an issue where the 'verify_cert' setting from the
+  Session was not passed to the STOMP connection. (`#2230 <https://github.com/zhmcclient/python-zhmcclient/issues/2230>`_)
+
+* Fixed that the :meth:`zhmcclient.NotificationReceiver.notifications` method
+  fails when receiving a message body with an empty string. (`#2256 <https://github.com/zhmcclient/python-zhmcclient/issues/2256>`_)
+
+* Fixed an error when deleting hipersocket adapters on a system with CTC partition links. (`#2276 <https://github.com/zhmcclient/python-zhmcclient/issues/2276>`_)
+
+**Enhancements:**
+
+* Test: Improved parametrized testcases by adding or migrating to a 'runmode'
+  parameter that allows specifying how to run the testcase, for example to
+  expect failure or to invoke the pdb debugger before running the test.
+
+* Added logging before opening and closing the JMS (stomp) connection in the
+  zhmcclient auto-update support, to provide context for any errors logged
+  during opening and closing the connection.
+
+* Test: Improved the logging of the end2end test functions to automatically log
+  entry and exit with their pytest ID; changed most print() calls in end2end test
+  functions to use logging instead.
+
+* Docs: Improved the :ref:`Setting up the HMC` section by adding the requirement
+  to enable Web Services API access for the zhmcclient user, and the
+  recommendation to configure a CA-verifiable certificate. Minor other
+  improvements and fixes in that section.
+
+* Test: Added support for additional-properties to list() method for partition links mock and delete backing adapter when mocked partition link is deleted.
+
+* Added support for the following methods on :class:`~zhmcclient.StorageGroup`:
+
+  * :meth:`~zhmcclient.StorageGroup.fulfill_ficon_storage_volumes`
+  * :meth:`~zhmcclient.StorageGroup.reject_mismatched_fcp_storage_volumes`
+  * :meth:`~zhmcclient.StorageGroup.accept_mismatched_fcp_storage_volumes`
+  * :meth:`~zhmcclient.StorageGroup.get_storage_group_histories`
+
+* Changed the protected '_password' attribute in the 'zhmcclient.Session' class
+  to be available via a new public 'password' attribute, which is gettable and
+  settable.
+  Access via the protected attribute '_password' is still possible, but that
+  attribute has been deprecated and getting or setting it now causes an according
+  Python DeprecationWarning to be issued. (`#2304 <https://github.com/zhmcclient/python-zhmcclient/issues/2304>`_)
+
+* Added support for the "additional_properties" parameter in the "list()"
+  methods of all resource types, and in the "list_permitted_<resource_type>()"
+  methods of the console. So far, only some of the resource types
+  supported that parameter, and in several cases, it required the use of a
+  particular minimum version of the HMC and the user had to know that that
+  version was present.
+
+  The now uniform support for the "additional_properties" parameter alleviates
+  users from having to know which resource type supports it, which HMC version
+  added support for it, and which HMC version is actually used. The zhmcclient
+  library will now find out automatically and will use the most efficient
+  approach for all HMC versions and all resource types, and will fall back
+  to less efficient approaches if the actually used HMC does not support the
+  more efficient approaches. For more details, see the new section
+  :ref:`Listing resources`.
+
+  As a side effect, the Console objects now take advantage of the resource
+  cache when they are enabled for auto-updating. (`#2306 <https://github.com/zhmcclient/python-zhmcclient/issues/2306>`_)
+
+**Cleanup:**
+
+* Simplified pip dependency file requirements-develop.txt by removing any indirect
+  package dependencies and leaving that to the requirements of the packages
+  we use directly. Reorganized the minimum-constraints-develop.txt file
+  accordingly.
+
+* Resolved several issues reported by new ruff version 4. This includes changing
+  an 'AssertionError' to 'TypeError' in 'MetricsContext()'.
+
+* Changed pinning of stomp.py from <8.3.0 to <9.0.0. The 8.3.0 version is
+  meanwhile yanked, but the changes in version 9.0.0 have not yet been
+  accommodated in zhmcclient. In preparation of future version 9 support,
+  added explicit enabling or disabling of certificate validation with stomp,
+  in the :class:`zhmcclient.NotificationReceiver` and
+  :class:`zhmcclient.AutoUpdater` classes.
+
+* Clarified in the build-system dependencies in pyproject.toml that the
+  versions specified there are in their own temporary virtual environment. (`#2262 <https://github.com/zhmcclient/python-zhmcclient/issues/2262>`_)
+
+
 Version 1.26.0
 ^^^^^^^^^^^^^^
 
