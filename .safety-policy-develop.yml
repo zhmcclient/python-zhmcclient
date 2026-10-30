@@ -100,6 +100,72 @@ security:
             reason: Fixed nltk version 3.9.4 requires Python>=3.10 and is used there
         SFTY-20260813-62140:
             reason: Fixed nltk version 3.10.0 requires Python>=3.10 and is used there
+        SFTY-20260918-79260:
+            reason: Fixed anyio version 4.14.2 requires Python>=3.10 and is used there
+        SFTY-20260918-16338:
+            reason: Fixed anyio version 4.14.2 requires Python>=3.10 and is used there
+        SFTY-20260917-30788:
+            reason: Fixed jupyter-server version 2.21.0 requires Python>=3.10 and is used there
+        SFTY-20260902-58666:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260917-33640:
+            reason: Fixed soupsieve version 2.10 requires Python>=3.10 and is used there
+        SFTY-20260917-33719:
+            reason: Fixed soupsieve version 2.10 requires Python>=3.10 and is used there
+        SFTY-20260902-43043:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-90243:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-96400:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-91145:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-36021:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-94610:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260704-39717:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-82787:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-32727:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260901-40389:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-61270:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260901-05934:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-10897:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-76797:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-62888:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-33687:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-67392:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-26023:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260902-50166:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-69359:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-92033:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260821-99503:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-33140:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-21917:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260908-78718:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260807-53322:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
+        SFTY-20260810-80316:
+            reason: Fixed nltk version 3.10.4 requires Python>=3.10 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
