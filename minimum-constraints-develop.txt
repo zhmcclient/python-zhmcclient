@@ -105,8 +105,9 @@ docutils==0.20.1
 dparse==0.6.4
 executing==2.2.1
 fastjsonschema==2.21.2
-filelock==3.16.1; python_version == '3.9'
-filelock==3.20.3; python_version >= '3.10'
+filelock==3.19.1; python_version == '3.9'
+# safety 3.8.1 pins filelock<4
+filelock==3.32.7; python_version >= '3.10'
 fqdn==1.5.1
 gitdb==4.0.8
 GitPython==3.2.1
