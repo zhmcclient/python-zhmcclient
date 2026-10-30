@@ -23,7 +23,6 @@ test LPARs.
 import warnings
 import random
 from datetime import timedelta, datetime, timezone
-import pdb
 import pytest
 from requests.packages import urllib3
 
@@ -31,6 +30,7 @@ import zhmcclient
 
 from .utils import skip_log, pick_test_resources, runtest_find_list, \
     runtest_get_properties, ensure_lpar_inactive, set_resource_property
+from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
 
@@ -119,10 +119,12 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
     # * desc: description
     # * input_kwargs: Keyword arguments to the test function
     # * exp_prop_names: List of expected property names
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "Default arguments",
         {},
         LPAR_LIST_PERMITTED_PROPS,
+        RunMode.RUN
     ),
     (
         "Explicit defaults for arguments",
@@ -132,6 +134,7 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'additional_properties': None
         },
         LPAR_LIST_PERMITTED_PROPS,
+        RunMode.RUN
     ),
     (
         "One server-side filter",
@@ -139,6 +142,7 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'filter_args': {'status': 'not-operating'},
         },
         LPAR_LIST_PERMITTED_PROPS,
+        RunMode.RUN
     ),
     (
         "One client-side filter that is not in result",
@@ -146,6 +150,7 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'filter_args': {'has-operating-system-messages': False},
         },
         LPAR_LIST_PERMITTED_PROPS,
+        RunMode.RUN
     ),
     (
         "Empty additional properties",
@@ -153,6 +158,7 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'additional_properties': [],
         },
         LPAR_LIST_PERMITTED_PROPS,
+        RunMode.RUN
     ),
     (
         "One additional property",
@@ -160,6 +166,7 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'additional_properties': ['description'],
         },
         LPAR_LIST_PERMITTED_PROPS + ['description'],
+        RunMode.RUN
     ),
     (
         "Full properties",
@@ -167,19 +174,22 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
             'full_properties': True,
         },
         LPAR_LIST_PERMITTED_PROPS + ['has-operating-system-messages'],
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, input_kwargs, exp_prop_names",
+    "desc, input_kwargs, exp_prop_names, runmode",
     TESTCASES_CONSOLE_LIST_PERMITTED_LPARS)
 def test_console_list_permitted_lpars(
-        test_logger, classic_mode_cpcs, desc, input_kwargs,
-        exp_prop_names):
+        desc, input_kwargs, exp_prop_names, runmode,
+        request, test_logger, classic_mode_cpcs):
     """
     Test Console.list_permitted_lpars() method
     """
+    handle_runmode(request, runmode)
+
     if not classic_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
@@ -220,8 +230,7 @@ def test_console_list_permitted_lpars(
                     f"properties, got: {lpar_props!r}")
 
 
-def test_lpar_list_os_messages(
-        test_logger, classic_mode_cpcs):
+def test_lpar_list_os_messages(test_logger, classic_mode_cpcs):
     """
     Test "List OS Messages" operation on LPARs
     """
@@ -358,7 +367,7 @@ LPAR_ACTIVATE_TESTCASES = [
     # - exp_props (dict): Dict of expected properties of the Lpar after
     #   calling Lpar.activate().
     # - exp_exc_type (class): Expected exception type, or None for success.
-    # - run (bool or 'pdb'): Whether to run the test or call the debugger.
+    # - runmode (RunMode): Run mode for the testcase.
 
     (
         "General LPAR w/o auto-load, default parms, next profile is image",
@@ -371,7 +380,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'not-operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "General LPAR with auto-load, default parms, next profile is image",
@@ -384,7 +393,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "General LPAR w/o auto-load, image profile as parm",
@@ -397,7 +406,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'not-operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "Linux LPAR with auto-load, image profile as parm",
@@ -410,7 +419,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
 
     (
@@ -424,7 +433,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'not-operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "Linux LPAR with auto-load, default parms, next profile is image",
@@ -437,7 +446,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "Linux LPAR w/o auto-load, image profile as parm",
@@ -450,7 +459,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'not-operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "Linux LPAR with auto-load, image profile as parm",
@@ -463,7 +472,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
 
     (
@@ -477,7 +486,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "SSC LPAR (always auto-loads), image profile as parm",
@@ -490,7 +499,7 @@ LPAR_ACTIVATE_TESTCASES = [
             'status': 'operating',
         },
         None,
-        True,
+        RunMode.RUN
     ),
     (
         "Linux LPAR, wrong image profile",
@@ -502,7 +511,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         # HTTP 500,263: LPAR name and image profile name must match
         zhmcclient.HTTPError,
-        True,
+        RunMode.RUN
     ),
     (
         "SSC LPAR, wrong image profile",
@@ -514,7 +523,7 @@ LPAR_ACTIVATE_TESTCASES = [
         None,
         # HTTP 500,263: LPAR name and image profile name must match
         zhmcclient.HTTPError,
-        True,
+        RunMode.RUN
     ),
 
     # TODO: Add testcases with load profiles
@@ -523,12 +532,12 @@ LPAR_ACTIVATE_TESTCASES = [
 
 @pytest.mark.parametrize(
     "desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs, "
-    "exp_props, exp_exc_type, run",
+    "exp_props, exp_exc_type, runmode",
     LPAR_ACTIVATE_TESTCASES)
 def test_lpar_activate(
-        test_logger, classic_mode_cpcs,
         desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs,
-        exp_props, exp_exc_type, run):
+        exp_props, exp_exc_type, runmode,
+        request, test_logger, classic_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test Lpar.activate().
@@ -567,13 +576,11 @@ def test_lpar_activate(
                 ssc: "LP03LOAD"
 
     """
+    handle_runmode(request, runmode)
+
     if not classic_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")
-
-    if not run:
-        skip_log(test_logger,
-                 "Testcase is disabled in testcase definition")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -677,10 +684,6 @@ def test_lpar_activate(
         test_logger.info(
             f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
 
-        if run == 'pdb':
-            # pylint: disable=forgotten-debug-statement
-            pdb.set_trace()
-
         test_logger.debug(
             "Preparation: Ensuring that LPAR %r is inactive", lpar.name)
         ensure_lpar_inactive(lpar)
@@ -761,11 +764,13 @@ TESTCASES_LPAR_GET_SUSTAINABILITY_DATA = [
     # * exp_oldest: expected delta time from now to oldest data point,
     #   as timedelta
     # * exp_delta: expected delta time between data points, as timedelta
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "Default values (range=last-week, resolution=one-hour)",
         {},
         timedelta(days=7),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=one-hour",
@@ -775,6 +780,7 @@ TESTCASES_LPAR_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=fifteen-minutes",
@@ -784,6 +790,7 @@ TESTCASES_LPAR_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(minutes=15),
+        RunMode.RUN
     ),
 ]
 
@@ -797,15 +804,17 @@ LPAR_METRICS = {
 
 
 @pytest.mark.parametrize(
-    "tc, input_kwargs, exp_oldest, exp_delta",
+    "tc, input_kwargs, exp_oldest, exp_delta, runmode",
     TESTCASES_LPAR_GET_SUSTAINABILITY_DATA)
 def test_lpar_get_sustainability_data(
-        test_logger, tc, input_kwargs, exp_oldest, exp_delta,
-        classic_mode_cpcs):
+        tc, input_kwargs, exp_oldest, exp_delta, runmode,
+        request, test_logger, classic_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Lpar.get_sustainability_data(...)
     """
+    handle_runmode(request, runmode)
+
     if not classic_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in classic mode")

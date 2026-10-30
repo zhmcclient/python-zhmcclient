@@ -32,6 +32,7 @@ import zhmcclient
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     skipif_no_partition_link_feature, runtest_find_list, \
     runtest_get_properties, assert_properties, standard_partition_props
+from ..utils import RunMode, handle_runmode
 
 
 urllib3.disable_warnings()
@@ -93,7 +94,9 @@ def replace_expressions(obj, replacements):
         'smc-d',
         'ctc'
     ])
-def test_partlink_find_list(test_logger, dpm_mode_cpcs, pl_type):
+def test_partlink_find_list(
+        pl_type,
+        test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -137,7 +140,9 @@ def test_partlink_find_list(test_logger, dpm_mode_cpcs, pl_type):
         'smc-d',
         'ctc'
     ])
-def test_partlink_property(test_logger, dpm_mode_cpcs, pl_type):
+def test_partlink_property(
+        pl_type,
+        test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -182,7 +187,9 @@ def test_partlink_property(test_logger, dpm_mode_cpcs, pl_type):
         'smc-d',
         'ctc'
     ])
-def test_partlink_crud(test_logger, dpm_mode_cpcs, pl_type):
+def test_partlink_crud(
+        pl_type,
+        test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a partition link.
     """
@@ -324,6 +331,7 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
     #   - type
     # - exp_exc_type (class): Exception that is expected to be raised during
     #   PartitionLink.create(), or None.
+    # - runmode (RunMode): Run mode for the testcase.
     (
         "Hipersockets with minimal input properties",
         'hipersockets',
@@ -333,7 +341,8 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
             'starting-device-number': '7400',  # default
             'maximum-transmission-unit-size': 8,  # default
         },
-        None
+        None,
+        RunMode.RUN
     ),
     (
         "SMC-D with minimal input properties",
@@ -343,7 +352,8 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
             'bus-connections': [],
             'starting-fid': 4096,  # default
         },
-        None
+        None,
+        RunMode.RUN
     ),
     (
         "CTC with minimal input properties",
@@ -378,21 +388,24 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
             ],
             'devices-per-path': 4  # default
         },
-        None
+        None,
+        RunMode.RUN
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, pl_type, input_props, exp_props, exp_exc_type",
+    "desc, pl_type, input_props, exp_props, exp_exc_type, runmode",
     PARTLINK_CREATE_DELETE_TESTCASES)
 def test_partlink_create_delete(
-        test_logger, dpm_mode_cpcs,
-        desc, pl_type, input_props, exp_props, exp_exc_type):
+        desc, pl_type, input_props, exp_props, exp_exc_type, runmode,
+        request, test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Test creation of a partition link (and deletion, for cleanup)
     """
+    handle_runmode(request, runmode)
+
     if not dpm_mode_cpcs:
         skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")

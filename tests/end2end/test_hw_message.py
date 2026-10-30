@@ -43,7 +43,9 @@ HW_MESSAGE_VOLATILE_PROPS = []
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_find_list(test_logger, hmc_session, parent):
+def test_hw_message_find_list(
+        parent,
+        test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Test list(), find(), findall().
@@ -99,7 +101,9 @@ def test_hw_message_find_list(test_logger, hmc_session, parent):
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_list_filtered(test_logger, hmc_session, parent):
+def test_hw_message_list_filtered(
+        parent,
+        test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Test list() with timestamp filtering.

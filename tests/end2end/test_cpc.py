@@ -28,6 +28,7 @@ import zhmcclient
 from .utils import skip_log, assert_res_prop, runtest_find_list, \
     runtest_get_properties, validate_firmware_features, validate_api_features, \
     cleanup_and_import_example_certificate, has_api_feature
+from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
 
@@ -340,11 +341,13 @@ TESTCASES_CPC_GET_SUSTAINABILITY_DATA = [
     # * exp_oldest: expected delta time from now to oldest data point,
     #   as timedelta
     # * exp_delta: expected delta time between data points, as timedelta
+    # * runmode (RunMode): Run mode for the testcase.
     (
         "Default values (range=last-week, resolution=one-hour)",
         {},
         timedelta(days=7),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=one-hour",
@@ -354,6 +357,7 @@ TESTCASES_CPC_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(hours=1),
+        RunMode.RUN
     ),
     (
         "range=last-day, resolution=fifteen-minutes",
@@ -363,6 +367,7 @@ TESTCASES_CPC_GET_SUSTAINABILITY_DATA = [
         },
         timedelta(hours=24),
         timedelta(minutes=15),
+        RunMode.RUN
     ),
 ]
 
@@ -385,14 +390,17 @@ CPC_METRICS = {
 
 
 @pytest.mark.parametrize(
-    "tc, input_kwargs, exp_oldest, exp_delta",
+    "tc, input_kwargs, exp_oldest, exp_delta, runmode",
     TESTCASES_CPC_GET_SUSTAINABILITY_DATA)
 def test_cpc_get_sustainability_data(
-        test_logger, tc, input_kwargs, exp_oldest, exp_delta, all_cpcs):
+        tc, input_kwargs, exp_oldest, exp_delta, runmode,
+        request, test_logger, all_cpcs):
     # pylint: disable=unused-argument
     """
     Test for Cpc.get_sustainability_data(...)
     """
+    handle_runmode(request, runmode)
+
     for cpc in all_cpcs:
 
         session = cpc.manager.session

@@ -77,7 +77,9 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_crud(test_logger, classic_mode_cpcs, profile_type):
+def test_actprof_crud(
+        profile_type,
+        test_logger, classic_mode_cpcs):
     """
     Test create, read, update and delete an activation profile.
     """
@@ -163,7 +165,9 @@ def test_actprof_crud(test_logger, classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_find_list(test_logger, classic_mode_cpcs, profile_type):
+def test_actprof_find_list(
+        profile_type,
+        test_logger, classic_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -203,7 +207,9 @@ def test_actprof_find_list(test_logger, classic_mode_cpcs, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_property(test_logger, classic_mode_cpcs, profile_type):
+def test_actprof_property(
+        profile_type,
+        test_logger, classic_mode_cpcs):
     """
     Test property related methods
     """
