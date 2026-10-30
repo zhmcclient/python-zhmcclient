@@ -39,12 +39,12 @@ VSWITCH_ADDITIONAL_PROPS = ['description', 'port']
 VSWITCH_VOLATILE_PROPS = []
 
 
-def test_vswitch_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_vswitch_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -56,26 +56,27 @@ def test_vswitch_find_list(zhmc_logger, dpm_mode_cpcs):
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No virtual switches (= no OSA/HS network adapters) on "
                      f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:
-            print(f"Testing on CPC {cpc.name} with virtual switch "
-                  f"{vswitch.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with virtual switch "
+                f"{vswitch.name!r}")
             runtest_find_list(
                 session, cpc.virtual_switches, vswitch.name, 'name',
                 'description', VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS,
                 VSWITCH_LIST_PROPS, VSWITCH_ADDITIONAL_PROPS)
 
 
-def test_vswitch_property(zhmc_logger, dpm_mode_cpcs):
+def test_vswitch_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -87,14 +88,15 @@ def test_vswitch_property(zhmc_logger, dpm_mode_cpcs):
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No virtual switches (= no OSA/HS network adapters) on "
                      f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:
-            print(f"Testing on CPC {cpc.name} with virtual switch "
-                  f"{vswitch.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with virtual switch "
+                f"{vswitch.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'

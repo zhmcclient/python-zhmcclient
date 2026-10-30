@@ -63,7 +63,7 @@ def _first_cu_with_paths(hmc_session, min_paths=1):
 
 # ── list() ────────────────────────────────────────────────────────────────────
 
-def test_path_list(hmc_session):
+def test_path_list(test_logger, hmc_session):
     """
     Test StoragePathManager.list() returns StoragePath objects.
     """
@@ -77,7 +77,8 @@ def test_path_list(hmc_session):
 
     for cu in pick_test_resources(cu_list):
         path_list = cu.storage_paths.list()
-        print(f"CU {cu.name!r}: {len(path_list)} path(s) from list()")
+        test_logger.info(
+            f"CU {cu.name!r}: {len(path_list)} path(s) from list()")
         for path in path_list:
             assert isinstance(path, zhmcclient.StoragePath), (
                 f"Expected StoragePath, got {type(path)!r}")
@@ -263,7 +264,7 @@ def test_path_uris_consistent_with_cu(hmc_session):
 
 # ── update_properties() ───────────────────────────────────────────────────────
 
-def test_path_update_properties(hmc_session):
+def test_path_update_properties(test_logger, hmc_session):
     """
     Test StoragePath.update_properties() - update a writeable property and
     verify the change is persisted, then restore the original value.
@@ -309,20 +310,23 @@ def test_path_update_properties(hmc_session):
         assert target_path.properties['exit-port'] == new_port, (
             f"HMC property not updated for path {target_path.uri!r} "
             f"of CU {target_cu.name!r}")
-        print(f"Updated exit-port of path {target_path.uri!r} on "
-              f"CU {target_cu.name!r}")
+        test_logger.info(
+            f"Updated exit-port of path {target_path.uri!r} on "
+            f"CU {target_cu.name!r}")
 
     finally:
         try:
             target_path.update_properties({'exit-port': original_port})
-            print(f"Restored exit-port of path {target_path.uri!r}")
+            test_logger.info(
+                f"Restored exit-port of path {target_path.uri!r}")
         except zhmcclient.HTTPError as exc:
-            print(f"Failed to restore exit-port: {exc}")
+            test_logger.info(
+                f"Failed to restore exit-port: {exc}")
 
 
 # ── create() and delete() ─────────────────────────────────────────────────────
 
-def test_path_create_and_delete(hmc_session):
+def test_path_create_and_delete(test_logger, hmc_session):
     """
     Test creating a new StoragePath and then deleting it.
 
@@ -391,18 +395,21 @@ def test_path_create_and_delete(hmc_session):
             f"Newly created path {new_path.uri!r} not in "
             f"CU storage-path-uris")
 
-        print(f"Created path {new_path.uri!r} on CU {target_cu.name!r}")
+        test_logger.info(
+            f"Created path {new_path.uri!r} on CU {target_cu.name!r}")
 
     finally:
         if new_path is not None:
             try:
                 new_path.delete()
-                print(f"Deleted path {new_path.uri!r} on CU {target_cu.name!r}")
+                test_logger.info(
+                    f"Deleted path {new_path.uri!r} on CU {target_cu.name!r}")
             except zhmcclient.HTTPError as exc:
-                print(f"Failed to delete test path {new_path.uri!r}: {exc}")
+                test_logger.info(
+                    f"Failed to delete test path {new_path.uri!r}: {exc}")
 
 
-def test_path_delete_removes_from_cu_uris(hmc_session):
+def test_path_delete_removes_from_cu_uris(test_logger, hmc_session):
     """
     Test that deleting a StoragePath removes its URI from the parent CU's
     storage-path-uris property.
@@ -451,11 +458,13 @@ def test_path_delete_removes_from_cu_uris(hmc_session):
         assert path_uri not in target_cu.properties['storage-path-uris'], (
             f"Deleted path {path_uri!r} still present in "
             f"CU storage-path-uris after delete")
-        print(f"Verified deletion of {path_uri!r} from CU {target_cu.name!r}")
+        test_logger.info(
+            f"Verified deletion of {path_uri!r} from CU {target_cu.name!r}")
 
     finally:
         if new_path is not None:
             try:
                 new_path.delete()
             except zhmcclient.HTTPError as exc:
-                print(f"Failed to cleanup test path {new_path.uri!r}: {exc}")
+                test_logger.info(
+                    f"Failed to cleanup test path {new_path.uri!r}: {exc}")

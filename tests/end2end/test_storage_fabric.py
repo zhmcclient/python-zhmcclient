@@ -38,7 +38,7 @@ SFABRIC_LIST_PROPS = ['object-uri', 'name', 'cpc-uri']
 SFABRIC_VOLATILE_PROPS = []
 
 
-def test_sfabric_find_list(hmc_session):
+def test_sfabric_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Storage Fabrics.
     """
@@ -53,14 +53,15 @@ def test_sfabric_find_list(hmc_session):
     fabric_list = pick_test_resources(fabric_list)
 
     for fabric in fabric_list:
-        print(f"Testing with Storage Fabric {fabric.name!r}")
+        test_logger.info(
+            f"Testing with Storage Fabric {fabric.name!r}")
         runtest_find_list(
             hmc_session, console.storage_fabrics, fabric.name,
             'name', 'object-uri', SFABRIC_VOLATILE_PROPS,
             SFABRIC_MINIMAL_PROPS, SFABRIC_LIST_PROPS)
 
 
-def test_sfabric_property(hmc_session):
+def test_sfabric_property(test_logger, hmc_session):
     """
     Test property related methods for Storage Fabrics.
     """
@@ -75,7 +76,8 @@ def test_sfabric_property(hmc_session):
     fabric_list = pick_test_resources(fabric_list)
 
     for fabric in fabric_list:
-        print(f"Testing with Storage Fabric {fabric.name!r}")
+        test_logger.info(
+            f"Testing with Storage Fabric {fabric.name!r}")
 
         # 'class' is not returned by list(), so use it as the non_list_prop
         non_list_prop = 'class'
@@ -83,7 +85,7 @@ def test_sfabric_property(hmc_session):
         runtest_get_properties(fabric.manager, non_list_prop)
 
 
-def test_sfabric_crud(hmc_session):
+def test_sfabric_crud(test_logger, hmc_session):
     """
     Test create, update, and delete operations for Storage Fabrics.
     """
@@ -97,7 +99,8 @@ def test_sfabric_crud(hmc_session):
         skip_warn(f"No CPCs defined on HMC {hd.host}")
     cpc = cpc_list[0]
 
-    print(f"Testing with CPC {cpc.name!r}")
+    test_logger.info(
+        f"Testing with CPC {cpc.name!r}")
 
     fabric_name = 'zhmcclient-e2e-storage-fabric'
     fabric_props = {
@@ -111,7 +114,8 @@ def test_sfabric_crud(hmc_session):
     try:
         existing = console.storage_fabrics.find(name=fabric_name)
         existing.delete()
-        print(f"Cleaned up leftover Storage Fabric {fabric_name!r}")
+        test_logger.info(
+            f"Cleaned up leftover Storage Fabric {fabric_name!r}")
     except zhmcclient.NotFound:
         pass
 
@@ -121,7 +125,8 @@ def test_sfabric_crud(hmc_session):
     try:
         assert fabric.properties['name'] == fabric_name
         assert fabric.properties['cpc-uri'] == cpc.uri
-        print(f"Created Storage Fabric {fabric.name!r}")
+        test_logger.info(
+            f"Created Storage Fabric {fabric.name!r}")
 
         # Pull full properties and verify defaults
         fabric.pull_full_properties()
@@ -136,7 +141,8 @@ def test_sfabric_crud(hmc_session):
         assert fabric.properties['description'] == new_desc
         fabric.pull_full_properties()
         assert fabric.properties['description'] == new_desc
-        print(f"Updated Storage Fabric {fabric.name!r} description")
+        test_logger.info(
+            f"Updated Storage Fabric {fabric.name!r} description")
 
         # The code to be tested: Rename
         renamed = fabric_name + '-renamed'
@@ -146,18 +152,20 @@ def test_sfabric_crud(hmc_session):
         assert fabric.properties['name'] == renamed
         with pytest.raises(zhmcclient.NotFound):
             console.storage_fabrics.find(name=fabric_name)
-        print(f"Renamed Storage Fabric to {renamed!r}")
+        test_logger.info(
+            f"Renamed Storage Fabric to {renamed!r}")
 
     finally:
         # Clean up: delete the test fabric
         try:
             fabric.delete()
-            print(f"Deleted test Storage Fabric {fabric.name!r}")
+            test_logger.info(
+                f"Deleted test Storage Fabric {fabric.name!r}")
         except zhmcclient.NotFound:
             pass
 
 
-def test_sfabric_list_filter_cpc_uri(hmc_session):
+def test_sfabric_list_filter_cpc_uri(test_logger, hmc_session):
     """
     Test list() with cpc-uri filter for Storage Fabrics.
     """
@@ -188,11 +196,12 @@ def test_sfabric_list_filter_cpc_uri(hmc_session):
             f"Fabric {f.name!r} cpc-uri {f.properties['cpc-uri']!r} "
             f"does not match filter {cpc_uri!r}"
         )
-    print(f"cpc-uri filter returned {len(filtered)} fabric(s) "
-          f"for cpc-uri {cpc_uri!r}")
+    test_logger.info(
+        f"cpc-uri filter returned {len(filtered)} fabric(s) "
+        f"for cpc-uri {cpc_uri!r}")
 
 
-def test_sfabric_full_properties(hmc_session):
+def test_sfabric_full_properties(test_logger, hmc_session):
     """
     Test that pull_full_properties() fills in all expected properties.
     """
@@ -207,7 +216,8 @@ def test_sfabric_full_properties(hmc_session):
     fabric_list = pick_test_resources(fabric_list)
 
     for fabric in fabric_list:
-        print(f"Testing with Storage Fabric {fabric.name!r}")
+        test_logger.info(
+            f"Testing with Storage Fabric {fabric.name!r}")
 
         fabric.pull_full_properties()
 

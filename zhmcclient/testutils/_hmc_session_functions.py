@@ -30,12 +30,18 @@ from ..mock import FakedSession
 
 __all__ = ['setup_hmc_session', 'teardown_hmc_session',
            'teardown_hmc_session_id', 'is_valid_hmc_session_id',
-           'LOG_FORMAT_STRING', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE']
+           'LOG_FORMAT', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE',
+           'LOG_FILE_ENV_VAR']
 
-LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
+# Name of the env var that controls logging:
+# * If not set, logging is disabled.
+# * If set, logging is enabled to the specified log file.
+# Keep the variable name in sync with the Makefile help.
+LOG_FILE_ENV_VAR = "TESTLOGFILE"
 
+# Log format
+LOG_FORMAT = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
-
 LOG_DATETIME_TIMEZONE = time.gmtime
 
 
@@ -126,12 +132,12 @@ def setup_hmc_session(hd, rt_config=None, skip_on_failure=True):
             pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
 
     # Enable debug logging if specified
-    log_file = os.getenv('TESTLOGFILE', None)
+    log_file = os.getenv(LOG_FILE_ENV_VAR, None)
     if log_file:
 
         logging.Formatter.converter = LOG_DATETIME_TIMEZONE
         log_formatter = logging.Formatter(
-            LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
+            LOG_FORMAT, datefmt=LOG_DATETIME_FORMAT)
         log_handler = logging.FileHandler(log_file, encoding='utf-8')
         log_handler.setFormatter(log_formatter)
 

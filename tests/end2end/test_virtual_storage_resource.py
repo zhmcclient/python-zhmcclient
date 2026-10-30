@@ -40,17 +40,17 @@ VSR_LIST_PROPS = ['element-uri', 'name', 'device-number', 'adapter-port-uri',
 VSR_VOLATILE_PROPS = []
 
 
-def test_vsr_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_vsr_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -64,14 +64,15 @@ def test_vsr_find_list(zhmc_logger, dpm_mode_cpcs):
             for vsr in vsr_list:
                 grp_vol_tuples.append((stogrp, vsr))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage groups with VSRs associated to CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrp, vsr in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with VSR "
-                  f"{vsr.name!r} of storage group {stogrp.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with VSR "
+                f"{vsr.name!r} of storage group {stogrp.name!r}")
             runtest_find_list(
                 session, stogrp.virtual_storage_resources, vsr.name, 'name',
                 'description',
@@ -79,17 +80,17 @@ def test_vsr_find_list(zhmc_logger, dpm_mode_cpcs):
                 unique_name=True)
 
 
-def test_vsr_property(zhmc_logger, dpm_mode_cpcs):
+def test_vsr_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -103,14 +104,15 @@ def test_vsr_property(zhmc_logger, dpm_mode_cpcs):
             for vsr in vsr_list:
                 grp_vol_tuples.append((stogrp, vsr))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage groups with VSRs associated to CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrp, vsr in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with VSR "
-                  f"{vsr.name!r} of storage group {stogrp.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with VSR "
+                f"{vsr.name!r} of storage group {stogrp.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'

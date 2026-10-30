@@ -41,7 +41,7 @@ USER_LIST_PROPS = ['object-uri', 'name', 'type']
 USER_VOLATILE_PROPS = []
 
 
-def test_user_find_list(zhmc_logger, hmc_session):
+def test_user_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -53,26 +53,27 @@ def test_user_find_list(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "users")
 
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No users defined on HMC {hd.host}")
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
-        print(f"Testing with user {user.name!r}")
+        test_logger.info(
+            f"Testing with user {user.name!r}")
         runtest_find_list(
             hmc_session, console.users, user.name, 'name',
             'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
             USER_LIST_PROPS)
 
 
-def test_user_property(zhmc_logger, hmc_session):
+def test_user_property(test_logger, hmc_session):
     """
     Test property related methods
     """
@@ -84,19 +85,20 @@ def test_user_property(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "users")
 
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"No users defined on HMC {hd.host}")
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
-        print(f"Testing with user {user.name!r}")
+        test_logger.info(
+            f"Testing with user {user.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -104,7 +106,7 @@ def test_user_property(zhmc_logger, hmc_session):
         runtest_get_properties(user.manager, non_list_prop)
 
 
-def test_user_crud(zhmc_logger, hmc_session):
+def test_user_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a user.
     """
@@ -116,7 +118,7 @@ def test_user_crud(zhmc_logger, hmc_session):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  f"HMC {hd.host} of version {hmc_version} does not yet support "
                  "users")
 
@@ -148,7 +150,7 @@ def test_user_crud(zhmc_logger, hmc_session):
     try:
         pwrule = console.password_rules.find(name='Basic')
     except zhmcclient.NotFound:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "Password rule 'Basic' not found to create test user")
 
     # Test creating the user
@@ -173,7 +175,7 @@ def test_user_crud(zhmc_logger, hmc_session):
         user = console.users.create(user_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"HMC userid {hd.userid!r} is not authorized for task "
                      f"{task_name!r} on HMC {hd.host}")
         else:

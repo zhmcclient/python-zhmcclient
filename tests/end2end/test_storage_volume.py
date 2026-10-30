@@ -42,17 +42,17 @@ STOVOL_LIST_PROPS = ['element-uri', 'name', 'fulfillment-state', 'size',
 STOVOL_VOLATILE_PROPS = []
 
 
-def test_stovol_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_stovol_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -70,7 +70,7 @@ def test_stovol_find_list(zhmc_logger, dpm_mode_cpcs):
             for stovol in stovol_list:
                 grp_vol_tuples.append((stogrp, stovol))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage groups with volumes associated to CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
@@ -79,28 +79,30 @@ def test_stovol_find_list(zhmc_logger, dpm_mode_cpcs):
         # made unique only in 2.14.1.
         unique_name = (hmc_version >= (2, 14, 1))
         if not unique_name:
-            print("Tolerating non-unique storage volume names on HMC "
-                  f"version {hmc_version}")
+            test_logger.info(
+                "Tolerating non-unique storage volume names on HMC "
+                f"version {hmc_version}")
         for stogrp, stovol in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with storage volume "
-                  f"{stovol.name!r} of storage group {stogrp.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with storage volume "
+                f"{stovol.name!r} of storage group {stogrp.name!r}")
             runtest_find_list(
                 session, stogrp.storage_volumes, stovol.name, 'name', 'size',
                 STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS,
                 add_props=['uuid'], unique_name=unique_name)
 
 
-def test_stovol_property(zhmc_logger, dpm_mode_cpcs):
+def test_stovol_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
         session = cpc.manager.session
         client = cpc.manager.client
@@ -118,7 +120,7 @@ def test_stovol_property(zhmc_logger, dpm_mode_cpcs):
             for stovol in stovol_list:
                 grp_vol_tuples.append((stogrp, stovol))
         if not grp_vol_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      "No storage groups with volumes associated to CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
@@ -127,11 +129,13 @@ def test_stovol_property(zhmc_logger, dpm_mode_cpcs):
         # made unique only in 2.14.1.
         unique_name = (hmc_version >= (2, 14, 1))
         if not unique_name:
-            print("Tolerating non-unique storage volume names on HMC "
-                  f"version {hmc_version}")
+            test_logger.info(
+                "Tolerating non-unique storage volume names on HMC "
+                f"version {hmc_version}")
         for stogrp, stovol in grp_vol_tuples:
-            print(f"Testing on CPC {cpc.name} with storage volume "
-                  f"{stovol.name!r} of storage group {stogrp.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with storage volume "
+                f"{stovol.name!r} of storage group {stogrp.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -139,19 +143,20 @@ def test_stovol_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(stovol.manager, non_list_prop)
 
 
-def test_stovol_crud(zhmc_logger, dpm_mode_cpcs):
+def test_stovol_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a storage volume in a storage group.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_no_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_no_storage_mgmt_feature(test_logger, cpc)
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
 

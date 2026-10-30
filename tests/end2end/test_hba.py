@@ -42,17 +42,17 @@ HBA_LIST_PROPS = ['element-uri', 'name', 'description', 'wwpn']
 HBA_VOLATILE_PROPS = []
 
 
-def test_hba_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_hba_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_storage_mgmt_feature(test_logger, cpc)
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -65,25 +65,26 @@ def test_hba_find_list(zhmc_logger, dpm_mode_cpcs):
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with HBAs on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
-            print(f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
-                  f"partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
+                f"partition {part.name!r}")
             runtest_find_list(
                 session, part.hbas, hba.name, 'name', 'wwpn',
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
 
 
-def test_hba_property(zhmc_logger, dpm_mode_cpcs):
+def test_hba_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -100,14 +101,15 @@ def test_hba_property(zhmc_logger, dpm_mode_cpcs):
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with HBAs on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
-            print(f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
-                  f"partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
+                f"partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -115,19 +117,20 @@ def test_hba_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(hba.manager, non_list_prop)
 
 
-def test_hba_crud(zhmc_logger, dpm_mode_cpcs):
+def test_hba_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update and delete a HBA (and a partition).
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        skipif_storage_mgmt_feature(zhmc_logger, cpc)
+        skipif_storage_mgmt_feature(test_logger, cpc)
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_hba_crud part1'
         hba_name = 'hba1'

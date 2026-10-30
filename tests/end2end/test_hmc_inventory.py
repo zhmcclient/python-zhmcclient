@@ -37,7 +37,7 @@ def _print_cpc(cpc):
     print(f"Found test CPC {cpc.name} ({mode_str} mode)")
 
 
-def test_hmcdef_all_cpcs(zhmc_logger, all_cpcs):
+def test_hmcdef_all_cpcs(test_logger, all_cpcs):
     # pylint: disable=unused-argument
     """
     Display all CPCs to be tested.
@@ -46,7 +46,7 @@ def test_hmcdef_all_cpcs(zhmc_logger, all_cpcs):
         _print_cpc(cpc)
 
 
-def test_hmcdef_dpm_cpcs(zhmc_logger, dpm_mode_cpcs):
+def test_hmcdef_dpm_cpcs(test_logger, dpm_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Display DPM mode CPCs to be tested.
@@ -55,7 +55,7 @@ def test_hmcdef_dpm_cpcs(zhmc_logger, dpm_mode_cpcs):
         _print_cpc(cpc)
 
 
-def test_hmcdef_classic_cpcs(zhmc_logger, classic_mode_cpcs):
+def test_hmcdef_classic_cpcs(test_logger, classic_mode_cpcs):
     # pylint: disable=unused-argument
     """
     Display classic mode CPCs to be tested.
@@ -64,7 +64,7 @@ def test_hmcdef_classic_cpcs(zhmc_logger, classic_mode_cpcs):
         _print_cpc(cpc)
 
 
-def test_hmcdef_cpcs(zhmc_logger, hmc_session):
+def test_hmcdef_cpcs(test_logger, hmc_session):
     # pylint: disable=unused-argument
     """
     Test that the HMC actually manages the CPCs defined in its inventory file
@@ -117,7 +117,7 @@ def test_hmcdef_cpcs(zhmc_logger, hmc_session):
 
 
 @pytest.mark.check_hmcs  # zhmcclient specific marker, see pytest.ini
-def test_hmcdef_check_all_hmcs(zhmc_logger):
+def test_hmcdef_check_all_hmcs(test_logger):
     # pylint: disable=unused-argument
     """
     Check out the HMCs specified in the HMC inventory file.

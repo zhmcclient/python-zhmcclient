@@ -66,13 +66,13 @@ def _find_ai_adapter(cpc):
     return adapters[0]
 
 
-def test_ai_func_list(zhmc_logger, dpm_mode_cpcs):
+def test_ai_func_list(test_logger, dpm_mode_cpcs):
     """
     Test list() for AI Accelerator Functions on an existing partition that
     already has AI Accelerator Functions assigned.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -81,7 +81,7 @@ def test_ai_func_list(zhmc_logger, dpm_mode_cpcs):
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        _skip_if_no_ai_feature(zhmc_logger, cpc)
+        _skip_if_no_ai_feature(test_logger, cpc)
 
         # Collect (partition, ai-func) pairs from all partitions on this CPC
         part_func_tuples = []
@@ -90,15 +90,16 @@ def test_ai_func_list(zhmc_logger, dpm_mode_cpcs):
                 part_func_tuples.append((part, ai_func))
 
         if not part_func_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with AI Accelerator Functions on CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
 
         part_func_tuples = pick_test_resources(part_func_tuples)
 
         for part, ai_func in part_func_tuples:
-            print(f"Testing on CPC {cpc.name} with AI Accelerator Function "
-                  f"{ai_func.name!r} of partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with AI Accelerator Function "
+                f"{ai_func.name!r} of partition {part.name!r}")
 
             # Verify that list() returns the resource with its URI
             funcs = part.ai_accelerator_functions.list()
@@ -108,13 +109,13 @@ def test_ai_func_list(zhmc_logger, dpm_mode_cpcs):
                 f"in the list result URIs: {uris!r}")
 
 
-def test_ai_func_get_properties(zhmc_logger, dpm_mode_cpcs):
+def test_ai_func_get_properties(test_logger, dpm_mode_cpcs):
     """
     Test get_properties() / pull_full_properties() for an existing AI
     Accelerator Function.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -123,7 +124,7 @@ def test_ai_func_get_properties(zhmc_logger, dpm_mode_cpcs):
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        _skip_if_no_ai_feature(zhmc_logger, cpc)
+        _skip_if_no_ai_feature(test_logger, cpc)
 
         # Find a partition with at least one AI Accelerator Function
         part_func_tuples = []
@@ -132,15 +133,16 @@ def test_ai_func_get_properties(zhmc_logger, dpm_mode_cpcs):
                 part_func_tuples.append((part, ai_func))
 
         if not part_func_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No partitions with AI Accelerator Functions on CPC "
                      f"{cpc.name} managed by HMC {hd.host}")
 
         part_func_tuples = pick_test_resources(part_func_tuples)
 
         for part, ai_func in part_func_tuples:
-            print(f"Testing on CPC {cpc.name} with AI Accelerator Function "
-                  f"{ai_func.name!r} of partition {part.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with AI Accelerator Function "
+                f"{ai_func.name!r} of partition {part.name!r}")
 
             # Test get_properties()
             props = ai_func.get_properties()
@@ -159,7 +161,7 @@ def test_ai_func_get_properties(zhmc_logger, dpm_mode_cpcs):
             assert ai_func.properties['class'] == 'ai-accelerator-function'
 
 
-def test_ai_func_crud(zhmc_logger, dpm_mode_cpcs):
+def test_ai_func_crud(test_logger, dpm_mode_cpcs):
     """
     Test create, read, update, and delete of AI Accelerator Functions.
 
@@ -172,20 +174,21 @@ def test_ai_func_crud(zhmc_logger, dpm_mode_cpcs):
       6. Deletes the test partition.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        _skip_if_no_ai_feature(zhmc_logger, cpc)
+        _skip_if_no_ai_feature(test_logger, cpc)
 
         ai_adapter = _find_ai_adapter(cpc)
         if ai_adapter is None:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No adapter of type 'ai' found on CPC {cpc.name}")
 
-        print(f"Testing on CPC {cpc.name} with AI adapter {ai_adapter.name!r}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name} with AI adapter {ai_adapter.name!r}")
 
         part_name = TEST_PREFIX + ' test_ai_func_crud part1'
         vf_name = 'ai-vf-1'
@@ -211,7 +214,8 @@ def test_ai_func_crud(zhmc_logger, dpm_mode_cpcs):
             # --- Create a test partition ---
             part_props = standard_partition_props(cpc, part_name)
             part = cpc.partitions.create(part_props)
-            print(f"Created partition {part_name!r}")
+            test_logger.info(
+                f"Created partition {part_name!r}")
 
             # --- Create AI Accelerator Functions (one virtual function) ---
             ai_funcs = part.ai_accelerator_functions.create(
@@ -228,7 +232,8 @@ def test_ai_func_crud(zhmc_logger, dpm_mode_cpcs):
                 f"Expected 1 created function, got {len(ai_funcs)}"
             ai_func = ai_funcs[0]
             assert isinstance(ai_func, zhmcclient.AiAcceleratorFunction)
-            print(f"Created AI Accelerator Function URI: {ai_func.uri!r}")
+            test_logger.info(
+                f"Created AI Accelerator Function URI: {ai_func.uri!r}")
 
             # Verify the URI is listed by the partition
             listed_uris = [
@@ -301,7 +306,7 @@ def test_ai_func_crud(zhmc_logger, dpm_mode_cpcs):
                     pass
 
 
-def test_ai_func_zzz_cleanup(zhmc_logger, dpm_mode_cpcs):
+def test_ai_func_zzz_cleanup(test_logger, dpm_mode_cpcs):
     """
     Cleanup leftover test partitions from previous runs.
 
@@ -310,7 +315,7 @@ def test_ai_func_zzz_cleanup(zhmc_logger, dpm_mode_cpcs):
     previous, failed test run.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:

@@ -41,12 +41,12 @@ PORT_LIST_PROPS = ['element-uri', 'name', 'description']
 PORT_VOLATILE_PROPS = []
 
 
-def test_port_find_list(zhmc_logger, dpm_mode_cpcs):
+def test_port_find_list(test_logger, dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -63,25 +63,26 @@ def test_port_find_list(zhmc_logger, dpm_mode_cpcs):
             for port in port_list:
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No adapters with ports on CPC {cpc.name} managed by HMC "
                      f"{hd.host}")
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:
-            print(f"Testing on CPC {cpc.name} with port {port.name!r} of "
-                  f"adapter {adapter.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with port {port.name!r} of "
+                f"adapter {adapter.name!r}")
             runtest_find_list(
                 session, adapter.ports, port.name, 'name', 'element-uri',
                 PORT_VOLATILE_PROPS, PORT_MINIMAL_PROPS, PORT_LIST_PROPS)
 
 
-def test_port_property(zhmc_logger, dpm_mode_cpcs):
+def test_port_property(test_logger, dpm_mode_cpcs):
     """
     Test property related methods
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
@@ -98,14 +99,15 @@ def test_port_property(zhmc_logger, dpm_mode_cpcs):
             for port in port_list:
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
-            skip_log(zhmc_logger,
+            skip_log(test_logger,
                      f"No adapters with ports on CPC {cpc.name} managed by "
                      f"HMC {hd.host}")
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:
-            print(f"Testing on CPC {cpc.name} with port {port.name!r} of "
-                  f"adapter {adapter.name!r}")
+            test_logger.info(
+                f"Testing on CPC {cpc.name} with port {port.name!r} of "
+                f"adapter {adapter.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -113,18 +115,19 @@ def test_port_property(zhmc_logger, dpm_mode_cpcs):
             runtest_get_properties(port.manager, non_list_prop)
 
 
-def test_port_update(zhmc_logger, dpm_mode_cpcs):
+def test_port_update(test_logger, dpm_mode_cpcs):
     """
     Test updating the port of a Hipersocket adapter.
     """
     if not dpm_mode_cpcs:
-        skip_log(zhmc_logger,
+        skip_log(test_logger,
                  "HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print(f"Testing on CPC {cpc.name}")
+        test_logger.info(
+            f"Testing on CPC {cpc.name}")
 
         adapter_name = TEST_PREFIX + ' test_port_update adapter1'
 

@@ -41,7 +41,7 @@ SSUB_LIST_PROPS = ['object-uri', 'name', 'storage-site-uri']
 SSUB_VOLATILE_PROPS = []
 
 
-def test_ssub_find_list(hmc_session):
+def test_ssub_find_list(test_logger, hmc_session):
     """
     Test list(), find(), findall() for Storage Subsystems.
     """
@@ -56,14 +56,15 @@ def test_ssub_find_list(hmc_session):
     subsystem_list = pick_test_resources(subsystem_list)
 
     for subsystem in subsystem_list:
-        print(f"Testing with Storage Subsystem {subsystem.name!r}")
+        test_logger.info(
+            f"Testing with Storage Subsystem {subsystem.name!r}")
         runtest_find_list(
             hmc_session, console.storage_subsystems, subsystem.name,
             'name', 'object-uri', SSUB_VOLATILE_PROPS,
             SSUB_MINIMAL_PROPS, SSUB_LIST_PROPS)
 
 
-def test_ssub_property(hmc_session):
+def test_ssub_property(test_logger, hmc_session):
     """
     Test property related methods for Storage Subsystems.
     """
@@ -78,7 +79,8 @@ def test_ssub_property(hmc_session):
     subsystem_list = pick_test_resources(subsystem_list)
 
     for subsystem in subsystem_list:
-        print(f"Testing with Storage Subsystem {subsystem.name!r}")
+        test_logger.info(
+            f"Testing with Storage Subsystem {subsystem.name!r}")
 
         # 'class' is not returned by list(), so use it as the non_list_prop
         non_list_prop = 'class'
@@ -86,7 +88,7 @@ def test_ssub_property(hmc_session):
         runtest_get_properties(subsystem.manager, non_list_prop)
 
 
-def test_ssub_full_properties(hmc_session):
+def test_ssub_full_properties(test_logger, hmc_session):
     """
     Test that pull_full_properties() fills in all expected properties.
     """
@@ -101,7 +103,8 @@ def test_ssub_full_properties(hmc_session):
     subsystem_list = pick_test_resources(subsystem_list)
 
     for subsystem in subsystem_list:
-        print(f"Testing with Storage Subsystem {subsystem.name!r}")
+        test_logger.info(
+            f"Testing with Storage Subsystem {subsystem.name!r}")
 
         subsystem.pull_full_properties()
 
@@ -117,7 +120,7 @@ def test_ssub_full_properties(hmc_session):
         assert isinstance(subsystem.properties['connection-endpoints'], list)
 
 
-def test_ssub_list_filter_name(hmc_session):
+def test_ssub_list_filter_name(test_logger, hmc_session):
     """
     Test list() with name filter for Storage Subsystems.
     """
@@ -138,11 +141,12 @@ def test_ssub_list_filter_name(hmc_session):
     assert len(filtered) >= 1
     names = [s.name for s in filtered]
     assert subsystem_name in names
-    print(f"name filter returned {len(filtered)} subsystem(s) "
-          f"for name {subsystem_name!r}")
+    test_logger.info(
+        f"name filter returned {len(filtered)} subsystem(s) "
+        f"for name {subsystem_name!r}")
 
 
-def test_ssub_list_filter_storage_site_uri(hmc_session):
+def test_ssub_list_filter_storage_site_uri(test_logger, hmc_session):
     """
     Test list() with storage-site-uri filter for Storage Subsystems.
     """
@@ -168,7 +172,8 @@ def test_ssub_list_filter_storage_site_uri(hmc_session):
     for s in filtered:
         s.pull_full_properties()
         assert s.properties['storage-site-uri'] == site_uri
-    print(f"storage-site-uri filter returned {len(filtered)} subsystem(s)")
+    test_logger.info(
+        f"storage-site-uri filter returned {len(filtered)} subsystem(s)")
 
 
 def test_ssub_list_short_and_full_props(hmc_session):
@@ -199,7 +204,7 @@ def test_ssub_list_short_and_full_props(hmc_session):
                 f"result for storage subsystem {ss.name!r}")
 
 
-def test_ssub_list_by_site(hmc_session):
+def test_ssub_list_by_site(test_logger, hmc_session):
     """
     Test listing storage subsystems associated with a storage site via the
     storage-sites sub-resource endpoint.
@@ -228,11 +233,12 @@ def test_ssub_list_by_site(hmc_session):
     assert 'storage-subsystems' in result
     returned_uris = {ss['object-uri'] for ss in result['storage-subsystems']}
     assert subsystem.uri in returned_uris
-    print(f"Site {site_uri!r} has "
-          f"{len(result['storage-subsystems'])} subsystem(s)")
+    test_logger.info(
+        f"Site {site_uri!r} has "
+        f"{len(result['storage-subsystems'])} subsystem(s)")
 
 
-def test_ssub_update_description(hmc_session):
+def test_ssub_update_description(test_logger, hmc_session):
     """
     Test update_properties() – update the description of an existing
     storage subsystem and verify the change, then restore the original value.
@@ -260,21 +266,24 @@ def test_ssub_update_description(hmc_session):
         assert subsystem.properties['description'] == new_desc
         subsystem.pull_full_properties()
         assert subsystem.properties['description'] == new_desc
-        print(f"Updated description of Storage Subsystem "
-              f"{subsystem.name!r}")
+        test_logger.info(
+            f"Updated description of Storage Subsystem "
+            f"{subsystem.name!r}")
 
     finally:
         # Restore original description
         try:
             subsystem.update_properties({'description': original_desc})
-            print(f"Restored description of Storage Subsystem "
-                  f"{subsystem.name!r}")
+            test_logger.info(
+                f"Restored description of Storage Subsystem "
+                f"{subsystem.name!r}")
         except zhmcclient.HTTPError as exc:
-            print(f"Failed to restore description of storage subsystem "
-                  f"{subsystem.name!r}: {exc}")
+            test_logger.info(
+                f"Failed to restore description of storage subsystem "
+                f"{subsystem.name!r}: {exc}")
 
 
-def test_ssub_connection_endpoints(hmc_session):
+def test_ssub_connection_endpoints(test_logger, hmc_session):
     """
     Test that connection-endpoints property is accessible and has the
     correct structure.
@@ -291,8 +300,9 @@ def test_ssub_connection_endpoints(hmc_session):
         subsystem.pull_full_properties()
         endpoints = subsystem.properties.get('connection-endpoints', [])
 
-        print(f"Storage Subsystem {subsystem.name!r} has "
-              f"{len(endpoints)} connection endpoint(s)")
+        test_logger.info(
+            f"Storage Subsystem {subsystem.name!r} has "
+            f"{len(endpoints)} connection endpoint(s)")
 
         for ep in endpoints:
             assert 'endpoint-uri' in ep, (
@@ -306,7 +316,7 @@ def test_ssub_connection_endpoints(hmc_session):
                 f"subsystem {subsystem.name!r}")
 
 
-def test_ssub_move_to_storage_site(hmc_session):
+def test_ssub_move_to_storage_site(test_logger, hmc_session):
     """
     Test the move-to-storage-site operation for a Storage Subsystem.
 
@@ -348,15 +358,18 @@ def test_ssub_move_to_storage_site(hmc_session):
         assert subsystem.properties['storage-site-uri'] == target_site.uri, (
             f"Expected storage-site-uri {target_site.uri!r}, got "
             f"{subsystem.properties['storage-site-uri']!r}")
-        print(f"Moved Storage Subsystem {subsystem.name!r} to "
-              f"{target_site.name!r}")
+        test_logger.info(
+            f"Moved Storage Subsystem {subsystem.name!r} to "
+            f"{target_site.name!r}")
 
     finally:
         # Move it back to the original site
         try:
             subsystem.move_to_storage_site(original_site_uri)
-            print(f"Moved Storage Subsystem {subsystem.name!r} back to "
-                  f"original site")
+            test_logger.info(
+                f"Moved Storage Subsystem {subsystem.name!r} back to "
+                f"original site")
         except zhmcclient.HTTPError as exc:
-            print(f"Failed to move storage subsystem back to original site: "
-                  f"{exc}")
+            test_logger.info(
+                f"Failed to move storage subsystem back to original site: "
+                f"{exc}")
