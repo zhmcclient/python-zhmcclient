@@ -28,6 +28,9 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
+# Enable PyO3 stable ABI forward compatibility for compiling Rust-based packages on newer Python versions (e.g. Python 3.15+)
+export PYO3_USE_ABI3_FORWARD_COMPATIBILITY := 1
+
 # Python / Pip commands
 ifndef PYTHON_CMD
   PYTHON_CMD := python
