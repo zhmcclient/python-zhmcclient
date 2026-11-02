@@ -36,10 +36,10 @@ jsonschema==4.18.0
 # websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
 websocket-client==1.8.0
 
-certifi==2024.07.04
+certifi==2026.10.19
 
 urllib3==2.6.3; python_version == '3.9'
-urllib3==2.7.0; python_version >= '3.10'
+urllib3==2.8.0; python_version >= '3.10'
 
 
 # Direct dependencies for install of extra 'testutils' (must be consistent with requirements-testutils.txt)
@@ -60,7 +60,7 @@ idna==3.15
 attrs==22.2.0
 argcomplete==3.6.3
 charset-normalizer==3.4.7
-click==8.0.2  # used by pipx which is preinstalled in GitHub Actions for Python 3.12 on Windows
+click==8.1.8  # used by pipx which is preinstalled in GitHub Actions for Python 3.12 on Windows
 colorama==0.4.6
 docopt==0.6.2
 exceptiongroup==1.3.1
