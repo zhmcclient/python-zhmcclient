@@ -529,9 +529,17 @@ def get_additional_properties(query_parms, wo_properties=None):
     query_parms parameter, if present.
 
     Parameters:
-      query_parms (dict): Query parameters
-      wo_properties (iterable of str): Write-only properties
+      query_parms (dict): Query parameters, with key (str):
+        Parameter name, and value (str or list of str): Parameter value.
+        Must not be None.
+      wo_properties (iterable of str): Write-only properties.
+
+    Returns:
+      list of str: List of property names specified in the
+        'additional-properties' query parameter, or empty list if that query
+        parameter was not specified.
     """
+    assert isinstance(query_parms, dict)
     if 'additional-properties' in query_parms:
         add_props = query_parms.pop('additional-properties').split(',')
         if wo_properties:

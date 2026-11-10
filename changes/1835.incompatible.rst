@@ -1,0 +1,9 @@
+Removed the 'session' property of :class:`zhmcclient.Session` which represented
+the underlying 'requests.Session' object that is used to communicate with the
+HMC over the network, to prepare for a future easier addition of BCPII support.
+
+You should not have used that property in your code anyway, but if you did
+use it for communicating with the HMC for cases where the zhmcclient library
+does not support a particular HMC operation yet, use the
+:meth:`zhmcclient.Session.get`, :meth:`zhmcclient.Session.post` or
+:meth:`zhmcclient.Session.delete` methods instead.
