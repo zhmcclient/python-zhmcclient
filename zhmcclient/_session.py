@@ -1824,10 +1824,9 @@ class Job:
 
         Returns:
 
-          tuple(job_status, op_status, op_reason, op_result): With the following
-          items:
+          tuple: A tuple with these items:
 
-          * job_status(string): Job status, one of:
+          * job_status (string): Job status, one of:
 
             - "running" - indicates that the job was found and it has not ended
               at the time of the query.
@@ -1838,13 +1837,13 @@ class Job:
             - "complete" - indicates that the job was found and has completed
               the operation, and the job has now ended.
 
-          * op_status(int): HTTP status code of the operation performed by
+          * op_status (int): HTTP status code of the operation performed by
             the job. Will be `None` if the job has not ended.
 
-          * op_reason(int): HTTP reason code of the operation performed by
+          * op_reason (int): HTTP reason code of the operation performed by
             the job. Will be `None` if the job has not ended.
 
-          * op_result(dict): Result of the operation performed by
+          * op_result (dict): Result of the operation performed by
             the job, as described in the zhmcclient method that performed
             the operation. Will be `None` if the job has not ended.
 

@@ -691,10 +691,11 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
 
         Returns:
 
-          tuple(objs, unsupported): A tuple with:
-            * objs (list): List of zhmcclient resource objects.
-            * unsupported (bool): Indicates whether the "additional-properties"
-              query parameter is unsupported by this version of the HMC.
+          tuple: A tuple with these items:
+
+          * objs (list): List of zhmcclient resource objects.
+          * unsupported (bool): Indicates whether the "additional-properties"
+            query parameter is unsupported by this version of the HMC.
 
         Raises:
 
@@ -1652,14 +1653,13 @@ class Console(BaseResource):  # pylint: disable=too-many-instance-attributes
 
         Parameters:
 
-          ec_levels (list of tuple(ec,mcl)): The specific EC levels back to
-            which the firmware should be deleted.
+          ec_levels (list of tuple): The specific EC levels back to which the
+            firmware should be deleted.
             If `None`, all uninstalled MCLs are deleted.
+            Each tuple has these items:
 
-            The EC levels are specified as a list of tuples (ec, mcl) where:
-
-              - ec (string): EC number of the EC stream (e.g. "P30719")
-              - mcl (string): MCL number within the EC stream (e.g. "001")
+            * ec (string): EC number of the EC stream (e.g. "P30719")
+            * mcl (string): MCL number within the EC stream (e.g. "001")
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion

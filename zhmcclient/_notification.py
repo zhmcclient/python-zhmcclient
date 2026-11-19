@@ -809,9 +809,11 @@ def validate_cert_hostname(cert, hostname):
       hostname (str): Hostname to be verified against.
 
     Returns:
-      tuple(ok, msg), where:
-        ok (bool): Boolean indicating that the validating passed.
-        msg (str): Error message in case the validation did not pass.
+
+      tuple: A tuple with these items:
+
+      * ok (bool): Boolean indicating that the validating passed.
+      * msg (str): Error message in case the validation did not pass.
     """
     try:
         match_hostname(cert, hostname)
