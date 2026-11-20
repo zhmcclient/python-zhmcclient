@@ -1211,10 +1211,11 @@ class BaseManager:
 
         Returns:
 
-          tuple(objs, unsupported): A tuple with:
-            * objs (list): List of zhmcclient resource objects.
-            * unsupported (bool): Indicates whether the "additional-properties"
-              query parameter is unsupported by this version of the HMC.
+          tuple: A tuple with these items:
+
+          * objs (list): List of zhmcclient resource objects.
+          * unsupported (bool): Indicates whether the "additional-properties"
+            query parameter is unsupported by this version of the HMC.
 
         Raises:
 

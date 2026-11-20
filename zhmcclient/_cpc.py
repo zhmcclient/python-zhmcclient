@@ -2564,11 +2564,11 @@ class Cpc(BaseResource):
             This parameter is mutually exclusive with `ec_levels`. If both
             are not provided, all locally available updates will be installed.
 
-          ec_levels (list of tuple(ec,mcl)): Updates to be installed on the
-            SE of this CPC, as a list of tuples (ec, mcl) where:
+          ec_levels (list of tuple): Updates to be installed on the SE of this
+            CPC. Each tuple has these items:
 
-              - ec (string): EC number of the EC stream (e.g. "P30719")
-              - mcl (string): MCL number within the EC stream (e.g. "001")
+            * ec (string): EC number of the EC stream (e.g. "P30719")
+            * mcl (string): MCL number within the EC stream (e.g. "001")
 
             This parameter is mutually exclusive with `bundle_level`. If both
             are not provided, all locally available updates will be installed.
@@ -2690,12 +2690,12 @@ class Cpc(BaseResource):
 
         Parameters:
 
-          ec_levels (list of tuple(ec,mcl)): The MCL levels of retrieved and
-            uninstalled updates that will be deleted on the SE of this CPC, as
-            a list of tuples (ec, mcl) where:
+          ec_levels (list of tuple): The MCL levels of retrieved and
+            uninstalled updates that will be deleted on the SE of this CPC.
+            Each tuple has these items:
 
-              - ec (string): EC number of the EC stream (e.g. "P30719")
-              - mcl (string): MCL number within the EC stream (e.g. "001")
+            * ec (string): EC number of the EC stream (e.g. "P30719")
+            * mcl (string): MCL number within the EC stream (e.g. "001")
 
             Within each specified EC stream, only the one update for the
             specified MCL level will be deleted.

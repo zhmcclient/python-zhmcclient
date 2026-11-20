@@ -1924,6 +1924,7 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
           properties (dict):
             Resource properties.
             Special handling and requirements for certain properties:
+
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
@@ -4654,8 +4655,8 @@ class FakedMetricGroupDefinition:
 
           name (:term:`string`): Name of the metric group.
 
-          types (list of tuple(name, type)): Definition of the metric names
-            and their types, as follows:
+          types (list of tuple): Definition of the metric names and their types.
+            Each tuple has these items:
 
             * name (string): The metric name.
             * type (string): The metric type string (see table above).
@@ -4699,12 +4700,12 @@ class FakedMetricObjectValues:
             apply. Timezone-naive values are converted to timezone-aware values
             using the local timezone.
 
-          values (list of tuple(name, value)): The metric values, as follows:
+          values (list of tuple): The metric values. Each tuple has these items:
 
             * name (string): The metric name.
             * value: The metric value as an object of the Python type listed
               in the table in the description of
-              :class:`~zhmcclient.mock.FakedMetricGroupDefinition`).
+              :class:`~zhmcclient.mock.FakedMetricGroupDefinition`.
         """
         if timestamp.tzinfo is None:
             timestamp = timestamp.replace(tzinfo=tzlocal())  # new object

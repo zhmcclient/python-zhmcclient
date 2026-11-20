@@ -248,11 +248,11 @@ def parse_query_parms(method, uri):
 
     Returns:
 
-        tuple(uri, query_parms) with:
+      tuple: A tuple with these items:
 
-        - uri(str): Input URI without query parms
-        - query_parms(dict): Query parms as dict (name, value). Empty if no
-          query parms were specified.
+      * uri (str): Input URI without query parms
+      * query_parms (dict): Query parms as dict (name, value). Empty if no
+        query parms were specified.
     """
     uri_split = uri.split('?')
     uri = uri_split[0]
