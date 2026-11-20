@@ -421,7 +421,8 @@ def runtestcase(testcase_data):
         exp_exc_attrs = None
 
     # Enable the mocking of requests
-    session.session.mount("https://", mock_adapter)
+    # pylint: disable=protected-access
+    session._transport.test_mount("https://", mock_adapter)
 
     # Perform the call to zhmcclient code to be tested
     if prop_name is not None:

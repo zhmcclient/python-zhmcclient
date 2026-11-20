@@ -1005,7 +1005,7 @@ class FakedSession(Session):
             f"  _base_url = {self._base_url!r}\n"
             f"  _headers = {self._headers!r}\n"
             f"  _session_id = {self._session_id!r}\n"
-            f"  _session = {self._session!r}\n"
+            f"  _transport = {self._transport!r}\n"
             f"  _hmc = {repr_obj_id(self._hmc)}\n"
             f"  _urihandler = {self._urihandler!r}\n"
             ")")
@@ -1225,7 +1225,12 @@ class FakedSession(Session):
             Relative URI path of the resource, e.g. "/api/session".
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session
@@ -1296,7 +1301,12 @@ class FakedSession(Session):
             Relative URI path of the resource, e.g. "/api/session".
             This URI is relative to the base URL of the session (see the
             :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           body (:term:`json object`):
             JSON object to be used as the HTTP request body (payload).
@@ -1413,7 +1423,12 @@ class FakedSession(Session):
             "/api/session/{session-id}".
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session

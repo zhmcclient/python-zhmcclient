@@ -1,0 +1,3 @@
+Restructured how :class:`zhmcclient.Session` communicates with the HMC WS-API
+over the network in order to prepare for a future easier addition of BCPII
+support.
