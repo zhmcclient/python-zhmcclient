@@ -60,7 +60,7 @@ def test_tl_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.tape_library, tl.name,
             'name', 'object-uri', TL_VOLATILE_PROPS,
-            TL_MINIMAL_PROPS, TL_LIST_PROPS)
+            TL_MINIMAL_PROPS, TL_LIST_PROPS, unique_name=False)
 
 
 def test_tl_property(test_logger, hmc_session):

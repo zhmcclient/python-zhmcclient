@@ -26,7 +26,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, \
+from .utils import skip_warn, pick_test_resources, pick_cpc, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -35,7 +35,7 @@ urllib3.disable_warnings()
 SSUB_MINIMAL_PROPS = ['object-uri', 'name']
 
 # Properties in StorageSubsystem objects returned by list() without full props
-SSUB_LIST_PROPS = ['object-uri', 'name', 'storage-site-uri']
+SSUB_LIST_PROPS = ['object-uri', 'name']
 
 # Properties whose values can change between retrievals
 SSUB_VOLATILE_PROPS = []
@@ -61,7 +61,7 @@ def test_ssub_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.storage_subsystems, subsystem.name,
             'name', 'object-uri', SSUB_VOLATILE_PROPS,
-            SSUB_MINIMAL_PROPS, SSUB_LIST_PROPS)
+            SSUB_MINIMAL_PROPS, SSUB_LIST_PROPS, unique_name=False)
 
 
 def test_ssub_property(test_logger, hmc_session):
@@ -328,27 +328,24 @@ def test_ssub_move_to_storage_site(test_logger, hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    subsystem_list = console.storage_subsystems.list()
-    if not subsystem_list:
-        skip_warn(f"No Storage Subsystems defined on HMC {hd.host}")
+    cpc = pick_cpc(client, hd, dpm_enabled=True)
 
-    site_list = console.storage_sites.list()
+    # Need a site for that CPC
+    site_list = console.storage_sites.list(filter_args={'cpc-uri': cpc.uri})
     if len(site_list) < 2:
         skip_warn(
-            f"Need at least 2 Storage Sites on HMC {hd.host} "
-            f"(found {len(site_list)})")
+            f"No two Storage Sites for CPC {cpc.name} defined on HMC {hd.host}")
+    original_site = site_list[0]
+    target_site = site_list[1]
 
+    subsystem_list = console.storage_subsystems.list(
+        filter_args={"storage-site-uri": original_site.uri})
+    if not subsystem_list:
+        skip_warn(
+            f"No Storage Subsystems for site {original_site.name} for "
+            f"CPC {cpc.name} defined on HMC {hd.host}")
     subsystem = pick_test_resources(subsystem_list)[0]
     subsystem.pull_full_properties()
-    original_site_uri = subsystem.properties['storage-site-uri']
-
-    # Find a different target site
-    target_site = next(
-        (s for s in site_list if s.uri != original_site_uri), None)
-    if target_site is None:
-        skip_warn(
-            f"Could not find a site different from current one "
-            f"({original_site_uri}) on HMC {hd.host}")
 
     try:
         # The code to be tested: Move to target site
@@ -365,7 +362,7 @@ def test_ssub_move_to_storage_site(test_logger, hmc_session):
     finally:
         # Move it back to the original site
         try:
-            subsystem.move_to_storage_site(original_site_uri)
+            subsystem.move_to_storage_site(original_site.uri)
             test_logger.info(
                 f"Moved Storage Subsystem {subsystem.name!r} back to "
                 f"original site")

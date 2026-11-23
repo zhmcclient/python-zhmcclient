@@ -1,0 +1,6 @@
+The addition of the required ``cpc`` parameter for specifying the desired CPC
+to the :meth:`~zhmcclient.TapeLibraryManager.request_zoning`
+and :meth:`~zhmcclient.TapeLibraryManager.discover` methods is an incompatible
+change. Previously, these methods always used the first listed CPC, which was
+not very useful.
+If you use these methods, you now need to specify the new ``cpc`` argument.

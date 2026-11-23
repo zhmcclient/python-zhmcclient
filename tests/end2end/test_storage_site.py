@@ -66,7 +66,7 @@ def test_ss_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.storage_sites, ss.name,
             'name', 'object-uri', SS_VOLATILE_PROPS,
-            SS_MINIMAL_PROPS, SS_LIST_PROPS)
+            SS_MINIMAL_PROPS, SS_LIST_PROPS, unique_name=False)
 
 
 def test_ss_property(test_logger, hmc_session):

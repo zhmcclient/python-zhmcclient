@@ -83,6 +83,7 @@ Storage groups can only be associated with CPCs that have the
 
 import copy
 import re
+from urllib.parse import urlencode
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -140,14 +141,13 @@ class StorageGroupManager(BaseManager):
             uri_prop='object-uri',
             name_prop='name',
             query_props=query_props)
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -167,6 +167,13 @@ class StorageGroupManager(BaseManager):
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
+
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        group objects is unique within the associated CPC and can thus be used
+        for a storage group object associated to a different CPC.
+        In that case, specify the ``cpc-uri`` property in addition to the
+        ``name`` property in the filter.
 
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,
@@ -970,7 +977,7 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(
-            self.uri + '/operations/accept-mismatched-fcp-storage-volumes',
+            self.uri + '/operations/accept-mismatched-storage-volumes',
             resource=self, body={})
 
     @logged_api_call
@@ -1005,7 +1012,7 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(
-            self.uri + '/operations/reject-mismatched-fcp-storage-volumes',
+            self.uri + '/operations/reject-mismatched-storage-volumes',
             resource=self, body={})
 
     @logged_api_call
@@ -1013,7 +1020,8 @@ class StorageGroup(BaseResource):
         """
         Get the historical records for this storage group.
 
-        The corresponding HMC operation is "Get Storage Group Histories".
+        The corresponding HMC operation is "Get Storage Group Histories",
+        filtered by this storage group.
 
         This operation retrieves historical information about the storage group,
         such as changes to fulfillment states or configuration changes.
@@ -1043,8 +1051,9 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        qparms = urlencode({"storage-group-uri": self.uri})
         result = self.manager.session.get(
-            self.uri + '/operations/get-storage-group-histories',
+            f'/api/console/operations/get-storage-group-histories?{qparms}',
             resource=self)
         return result
 

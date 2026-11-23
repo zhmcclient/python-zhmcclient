@@ -1,0 +1,2 @@
+Added :meth:`~zhmcclient.StorageSubsystemManager.define` and
+:meth:`~zhmcclient.StorageSubsystem.undefine` methods for Storage Subsystems.

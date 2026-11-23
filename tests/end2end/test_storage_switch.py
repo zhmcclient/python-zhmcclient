@@ -24,7 +24,7 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, \
+from .utils import skip_warn, pick_test_resources, pick_cpc, \
     runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
@@ -59,7 +59,7 @@ def test_sswitch_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.storage_switches, switch.name,
             'name', 'object-uri', SSWITCH_VOLATILE_PROPS,
-            SSWITCH_MINIMAL_PROPS, SSWITCH_LIST_PROPS)
+            SSWITCH_MINIMAL_PROPS, SSWITCH_LIST_PROPS, unique_name=False)
 
 
 def test_sswitch_property(test_logger, hmc_session):
@@ -219,18 +219,22 @@ def test_sswitch_crud(test_logger, hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    # Need a fabric
-    fabric_list = console.storage_fabrics.list()
+    cpc = pick_cpc(client, hd, dpm_enabled=True)
+
+    # Need a fabric for that CPC
+    fabric_list = console.storage_fabrics.list(filter_args={'cpc-uri': cpc.uri})
     if not fabric_list:
-        skip_warn(f"No Storage Fabrics defined on HMC {hd.host}")
+        skip_warn(
+            f"No Storage Fabrics for CPC {cpc.name} defined on HMC {hd.host}")
     fabric = fabric_list[0]
     fabric.pull_full_properties()
     fabric_uri = fabric.uri
 
-    # Need a site
-    site_list = console.storage_sites.list()
+    # Need a site for that CPC
+    site_list = console.storage_sites.list(filter_args={'cpc-uri': cpc.uri})
     if not site_list:
-        skip_warn(f"No Storage Sites defined on HMC {hd.host}")
+        skip_warn(
+            f"No Storage Sites for CPC {cpc.name} defined on HMC {hd.host}")
     site = site_list[0]
     site_uri = site.uri
 
@@ -308,15 +312,18 @@ def test_sswitch_move_to_fabric(test_logger, hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    fabric_list = console.storage_fabrics.list()
+    cpc = pick_cpc(client, hd, dpm_enabled=True)
+
+    fabric_list = console.storage_fabrics.list(filter_args={'cpc-uri': cpc.uri})
     if len(fabric_list) < 2:
         skip_warn(
-            f"Need at least 2 Storage Fabrics on HMC {hd.host} "
-            f"(found {len(fabric_list)})")
+            f"Need at least 2 Storage Fabrics for CPC {cpc.name} on "
+            f"HMC {hd.host} (found {len(fabric_list)})")
 
-    site_list = console.storage_sites.list()
+    site_list = console.storage_sites.list(filter_args={'cpc-uri': cpc.uri})
     if not site_list:
-        skip_warn(f"No Storage Sites defined on HMC {hd.host}")
+        skip_warn(
+            f"No Storage Sites for CPC {cpc.name} defined on HMC {hd.host}")
 
     fabric1 = fabric_list[0]
     fabric2 = fabric_list[1]
@@ -368,15 +375,18 @@ def test_sswitch_move_to_site(test_logger, hmc_session):
     console = client.consoles.console
     hd = hmc_session.hmc_definition
 
-    fabric_list = console.storage_fabrics.list()
-    if not fabric_list:
-        skip_warn(f"No Storage Fabrics defined on HMC {hd.host}")
+    cpc = pick_cpc(client, hd, dpm_enabled=True)
 
-    site_list = console.storage_sites.list()
+    fabric_list = console.storage_fabrics.list(filter_args={'cpc-uri': cpc.uri})
+    if not fabric_list:
+        skip_warn(
+            f"No Storage Fabrics for CPC {cpc.name} defined on HMC {hd.host}")
+
+    site_list = console.storage_sites.list(filter_args={'cpc-uri': cpc.uri})
     if len(site_list) < 2:
         skip_warn(
-            f"Need at least 2 Storage Sites on HMC {hd.host} "
-            f"(found {len(site_list)})")
+            f"Need at least 2 Storage Sites for CPC {cpc.name} on "
+            f"HMC {hd.host} (found {len(site_list)})")
 
     fabric = fabric_list[0]
     site1 = site_list[0]

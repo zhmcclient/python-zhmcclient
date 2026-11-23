@@ -73,7 +73,7 @@ def test_stogrp_find_list(test_logger, dpm_mode_cpcs):
             runtest_find_list(
                 session, console.storage_groups, stogrp.name, 'name',
                 'object-uri', STOGRP_VOLATILE_PROPS, STOGRP_MINIMAL_PROPS,
-                STOGRP_LIST_PROPS)
+                STOGRP_LIST_PROPS, unique_name=False)
 
 
 def test_stogrp_property(test_logger, dpm_mode_cpcs):
@@ -251,10 +251,10 @@ def test_stogrp_get_storage_group_histories(test_logger, dpm_mode_cpcs):
             test_logger.info(
                 f"Retrieved histories for storage group {stogrp.name!r}")
 
-            if 'storage-group-histories' in histories:
-                history_list = histories['storage-group-histories']
-                test_logger.info(
-                    f"  Found {len(history_list)} history record(s)")
+            assert 'storage-group-histories' in histories
+            history_list = histories['storage-group-histories']
+            test_logger.info(
+                f"Found {len(history_list)} history record(s)")
 
 
 def test_stogrp_accept_mismatched_fcp(test_logger, dpm_mode_cpcs):

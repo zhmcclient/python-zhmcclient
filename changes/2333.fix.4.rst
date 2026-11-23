@@ -1,0 +1,2 @@
+Test: Fixed the end2end tests for resource types for which the name is not
+unique in the parent resource (e.g. storage related resources).

@@ -1,0 +1,2 @@
+Docs: Fixed the description of the required authorization for several storage
+related methods.

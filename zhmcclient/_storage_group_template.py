@@ -82,14 +82,13 @@ class StorageGroupTemplateManager(BaseManager):
             uri_prop='object-uri',
             name_prop='name',
             query_props=query_props)
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -109,6 +108,14 @@ class StorageGroupTemplateManager(BaseManager):
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
+
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        group template objects is unique within the associated CPC and can thus
+        be used for a storage group template object associated to a different
+        CPC.
+        In that case, specify the ``cpc-uri`` property in addition to the
+        ``name`` property in the filter.
 
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,

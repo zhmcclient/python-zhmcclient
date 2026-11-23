@@ -66,7 +66,8 @@ class StorageSiteManager(BaseManager):
 
         # Resource properties that are supported as filter query parameters.
         query_props = [
-            'cpc-uris',
+            'cpc-uris',  # will be sent as 'cpc-uri' query parm
+            'cpc-uri',
             'name',
             'type',
         ]
@@ -82,7 +83,6 @@ class StorageSiteManager(BaseManager):
             name_prop='name',
             query_props=query_props,
         )
-        self._console = console
 
         # The HMC query parameter for the 'cpc-uris' property is named
         # 'cpc-uri' (singular), so we need to map the property name to the
@@ -96,7 +96,7 @@ class StorageSiteManager(BaseManager):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -104,8 +104,11 @@ class StorageSiteManager(BaseManager):
         """
         List the storage sites defined in the HMC.
 
-        Storage sites for which the authenticated user does not have
-        object-access permission are not included.
+        If the authenticated user does not have task permission to the
+        "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks, or if no objects are
+        returned due to filtering, the method succeeds and an empty list is
+        returned.
 
         The properties in the returned resource objects are by default those
         returned by the
@@ -117,6 +120,21 @@ class StorageSiteManager(BaseManager):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        site objects is unique within the associated CPC and can thus be used
+        for another storage site object (usually representing the same
+        real-life storage site) on a different CPC.
+        In that case, specify the ``cpc-uri`` property in addition to the
+        ``name`` property in the filter.
+
+        Because the data model property for the CPC URI is named ``cpc-uris``
+        and is an array with one item, and the corresponding filter parameter
+        is named ``cpc-uri``, this method supports an additional ``cpc-uris``
+        filter parameter that is sent to the HMC as ``cpc-uri``. So both
+        ``cpc-uri`` and ``cpc-uris`` can be specified as filter arguments,
+        each with a string value that is a single CPC URI.
+
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,
         see :ref:`Listing resources`.
@@ -127,8 +145,8 @@ class StorageSiteManager(BaseManager):
 
         Authorization requirements:
 
-        * Object-access permission to any storage sites to be included in the
-          result.
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
 
         Parameters:
 
@@ -183,7 +201,8 @@ class StorageSiteManager(BaseManager):
 
         * Object-access permission to the CPC associated with this storage
           site.
-        * Task permission to the "Configure Storage - System Programmer" task.
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
 
         Parameters:
 
@@ -246,6 +265,23 @@ class StorageSite(BaseResource):
             f"{StorageSiteManager}, got {type(manager)}"
         )
         super().__init__(manager, uri, name, properties)
+        self._cpc = None
+
+    @property
+    def cpc(self):
+        """
+        :class:`~zhmcclient.Cpc`: The :term:`CPC` to which this storage site
+        is associated.
+
+        The returned :class:`~zhmcclient.Cpc` has only a minimal set of
+        properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._cpc:
+            cpc_uri = self.get_property('cpc-uri')
+            cpc_mgr = self.manager.console.manager.client.cpcs
+            self._cpc = cpc_mgr.resource_object(cpc_uri)
+        return self._cpc
 
     @logged_api_call
     def delete(self):
@@ -257,8 +293,8 @@ class StorageSite(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to this storage site.
-        * Task permission to the "Configure Storage - System Programmer" task.
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
 
         Raises:
 
@@ -284,8 +320,8 @@ class StorageSite(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to this storage site.
-        * Task permission to the "Configure Storage - System Programmer" task.
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
 
         Parameters:
 

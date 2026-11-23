@@ -78,24 +78,26 @@ class StorageControlUnitManager(BaseManager):
             name_prop='name',
             query_props=query_props,
         )
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
              additional_properties=None):
         """
-        List the storage control units defined in the HMC.
+        List the storage control units of the storage subsystems defined in the
+        HMC.
 
-        Storage control units for which the authenticated user does not have
-        task permission to the "Configure Storage – System Programmer" or
-        "Configure Storage – Storage Administrator" tasks are not included.
+        If the authenticated user does not have task permission to the
+        "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks, or if no objects are
+        returned due to filtering, the method succeeds and an empty list is
+        returned.
 
         The properties in the returned resource objects are by default those
         returned by the
@@ -107,9 +109,21 @@ class StorageControlUnitManager(BaseManager):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled by performing an HMC list operation
-        in context of the parent resource, in an optimized way. For details,
-        see :ref:`Listing resources`.
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        control unit objects is unique within the parent storage subsystem
+        object (which is contained in a storage site which is associated to a
+        CPC) and can thus be used for another storage control unit object
+        in a different storage subsystem object (representing the same or a
+        different real-life storage subsystem).
+        In that case, specify the ``parent`` property (with the URI of the
+        parent storage subsystem) in addition to the ``name`` property in the
+        filter.
+
+        The listing of resources is handled by performing the "List Storage
+        Control Units of a Storage Subsystem" HMC operation either for the
+        specified storage subsystem, or for the list of all storage subsystems
+        in all storage sites.
 
         HMC/SE version requirements:
 
@@ -155,9 +169,22 @@ class StorageControlUnitManager(BaseManager):
           :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'storage-control-units'
-        list_uri = self._base_uri
+
+        if filter_args is None or "parent" not in filter_args:
+            result_controlunits = []
+            subsystems = self.console.storage_subsystems.list()
+            for subsystem in subsystems:
+                list_uri = subsystem.uri + "/storage-control-units"
+                controlunits = self._list_with_operation(
+                    list_uri, result_prop, full_properties, filter_args,
+                    additional_properties)
+                result_controlunits.extend(controlunits)
+            return result_controlunits
+
+        filter_args_ = dict(filter_args)
+        list_uri = filter_args_.pop("parent") + "/storage-control-units"
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args,
+            list_uri, result_prop, full_properties, filter_args_,
             additional_properties)
 
 
@@ -190,6 +217,7 @@ class StorageControlUnit(BaseResource):
         )
         super().__init__(manager, uri, name, properties)
         self._storage_paths = None
+        self._storage_subsystem = None
 
     @property
     def storage_paths(self):
@@ -200,6 +228,23 @@ class StorageControlUnit(BaseResource):
         if self._storage_paths is None:
             self._storage_paths = StoragePathManager(self)
         return self._storage_paths
+
+    @property
+    def storage_subsystem(self):
+        """
+        :class:`~zhmcclient.StorageSubsystem`: The :term:`storage subsystem`
+        that contains this storage control unit.
+
+        The returned :class:`~zhmcclient.StorageSubsystem` has only a minimal
+        set of properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._storage_subsystem:
+            subsystem_uri = self.get_property('parent')
+            subsystem_mgr = self.manager.console.storage_subsystems
+            self._storage_subsystem = subsystem_mgr.resource_object(
+                subsystem_uri)
+        return self._storage_subsystem
 
     @logged_api_call
     def update_properties(self, properties):

@@ -59,7 +59,7 @@ def test_tlink_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.tape_links, tlink.name,
             'name', 'object-uri', TLINK_VOLATILE_PROPS,
-            TLINK_MINIMAL_PROPS, TLINK_LIST_PROPS)
+            TLINK_MINIMAL_PROPS, TLINK_LIST_PROPS, unique_name=False)
 
 
 def test_tlink_property(test_logger, hmc_session):

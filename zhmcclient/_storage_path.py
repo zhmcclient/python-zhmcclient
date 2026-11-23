@@ -43,6 +43,10 @@ class StoragePathManager(BaseManager):
     Derived from :class:`~zhmcclient.BaseManager`; see there for common
     methods and attributes.
 
+    Storage path objects on the HMC do not have a name. In the zhmcclient
+    representation of storage path objects, their "element-id" property
+    is used for naming them.
+
     Objects of this class are not directly created by the user; they are
     accessible via the following instance variable:
 
@@ -64,10 +68,9 @@ class StoragePathManager(BaseManager):
             base_uri=storage_control_unit.uri + '/storage-paths',
             oid_prop='element-id',
             uri_prop='element-uri',
-            name_prop='element-uri',
+            name_prop='element-id',  # The actual resource has no name
             query_props=[],
         )
-        self._storage_control_unit = storage_control_unit
 
     @property
     def storage_control_unit(self):
@@ -75,7 +78,7 @@ class StoragePathManager(BaseManager):
         :class:`~zhmcclient.StorageControlUnit`: The storage control unit
         this manager belongs to.
         """
-        return self._storage_control_unit
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -83,8 +86,14 @@ class StoragePathManager(BaseManager):
         """
         List the storage paths of this storage control unit.
 
+        If no objects are returned due to filtering, the method succeeds and an
+        empty list is returned. If the authenticated user does not have task
+        permission to the "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks,
+        :exc:`~zhmcclient.HTTPError` is raised.
+
         The properties in the returned resource objects are by default only
-        "element-uri" and "element-id" and can be expanded
+        ``element-uri`` and ``element-id`` and can be expanded
         with the "full_properties" and "additional_properties" parameters of
         this method.
 
@@ -138,11 +147,9 @@ class StoragePathManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.FilterConversionError`
         """
-        result_prop = 'storage-paths'
-        list_uri = self._base_uri
-        return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args,
-            additional_properties)
+        return self._list_with_parent_array(
+            self.storage_control_unit, 'storage-path-uris', full_properties,
+            filter_args, additional_properties)
 
     @logged_api_call
     def create(self, properties):
@@ -154,6 +161,7 @@ class StoragePathManager(BaseManager):
 
         Authorization requirements:
 
+        * Object-access permission to the specified adapter.
         * Task permission to the "Configure Storage – System Programmer" or
           "Configure Storage – Storage Administrator" tasks.
 
@@ -166,6 +174,14 @@ class StoragePathManager(BaseManager):
 
             Required fields: ``adapter-port-uri``.
             Optional fields: ``exit-switch-uri``, ``exit-port``.
+
+            Storage path objects on the HMC do not have a name. In the
+            zhmcclient representation of storage path objects, their
+            ``element-id`` property is used for naming them, so their
+            :attr:`~zhmcclient.baseResource.name` attribute will have the
+            value of the ``element-id`` property. However, neither a ``name``
+            property nor the ``element-id`` property can be specified as an
+            input.
 
         Returns:
 
@@ -182,10 +198,14 @@ class StoragePathManager(BaseManager):
             uri=self._base_uri,
             body=properties,
         )
-        uri = result['element-uri']
+        # There should not be overlaps, but just in case there are, the
+        # returned props should overwrite the input props:
         props = copy.deepcopy(properties)
-        props[self._uri_prop] = uri
-        storage_path = StoragePath(self, uri, uri, props)
+        props.update(result)
+        name = props.get(self._name_prop, None)
+        uri = props[self._uri_prop]
+        storage_path = StoragePath(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
         return storage_path
 
     @logged_api_call

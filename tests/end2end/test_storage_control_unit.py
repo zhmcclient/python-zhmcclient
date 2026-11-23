@@ -61,7 +61,7 @@ def test_scu_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.storage_control_units, cu.name,
             'name', 'object-uri', SCU_VOLATILE_PROPS,
-            SCU_MINIMAL_PROPS, SCU_LIST_PROPS)
+            SCU_MINIMAL_PROPS, SCU_LIST_PROPS, unique_name=False)
 
 
 def test_scu_property(test_logger, hmc_session):

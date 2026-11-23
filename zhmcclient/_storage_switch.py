@@ -74,20 +74,19 @@ class StorageSwitchManager(BaseManager):
             class_name=RC_STORAGE_SWITCH,
             session=console.manager.session,
             parent=console,
-            base_uri='/api/storage-switches',
+            base_uri='/api/storage-switches',  # Not for List operation!
             oid_prop='object-id',
             uri_prop='object-uri',
             name_prop='name',
             query_props=query_props,
         )
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -95,24 +94,37 @@ class StorageSwitchManager(BaseManager):
         """
         List the storage switches defined in the HMC.
 
-        Storage switches for which the authenticated user does not have
-        task permission to the "Configure Storage – System Programmer" or
-        "Configure Storage – Storage Administrator" tasks are not included.
+        If the authenticated user does not have task permission to the
+        "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks, or if no objects are
+        returned due to filtering, the method succeeds and an empty list is
+        returned.
 
         The properties in the returned resource objects are by default those
         returned by the
         "List Storage Switches of a Storage Site" or
         "List Storage Switches of a Storage Fabric"
-        HMC operation defined in the :term:`HMC API` book and can be expanded
+        HMC operations defined in the :term:`HMC API` book and can be expanded
         with the "full_properties" and "additional_properties" parameters of
         this method.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled by performing an HMC list operation
-        in context of the parent resource, in an optimized way. For details,
-        see :ref:`Listing resources`.
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        switch objects is unique within the containing storage site object and
+        within the containing storage fabric object. The name can thus be used
+        for another storage switch object (usually representing the same
+        real-life storage switch) on a different CPC.
+        In that case, specify the ``storage-site-uri`` or ``storage-fabric-uri``
+        (or both) properties in addition to the ``name`` property in the filter.
+
+        The listing of resources is handled by performing the "List Storage
+        Switches of a Storage Site" and/or "List Storage Switches of a Storage
+        Fabric" HMC operations depending on which of the ``storage-site-uri``
+        and ``storage-fabric-uri`` properties are specified in the filter
+        arguments.
 
         HMC/SE version requirements:
 
@@ -158,10 +170,54 @@ class StorageSwitchManager(BaseManager):
           :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'storage-switches'
-        list_uri = self._base_uri
-        return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args,
-            additional_properties)
+
+        if filter_args is None or "storage-site-uri" not in filter_args and \
+                "storage-fabric-uri" not in filter_args:
+            sites = self.console.storage_sites.list()
+            result_switches = []
+            for site in sites:
+                list_uri = site.uri + "/storage-switches"
+                switches = self._list_with_operation(
+                    list_uri, result_prop, full_properties, filter_args,
+                    additional_properties)
+                result_switches.extend(switches)
+            return result_switches
+
+        switches_of_site = None
+        switches_of_fabric = None
+        if filter_args and "storage-site-uri" in filter_args:
+            filter_args_ = dict(filter_args)
+            list_uri = filter_args_.pop("storage-site-uri") + \
+                "/storage-switches"
+            switches_of_site = self._list_with_operation(
+                list_uri, result_prop, full_properties, filter_args_,
+                additional_properties)
+        if filter_args and "storage-fabric-uri" in filter_args:
+            filter_args_ = dict(filter_args)
+            list_uri = filter_args_.pop("storage-fabric-uri") + \
+                "/storage-switches"
+            switches_of_fabric = self._list_with_operation(
+                list_uri, result_prop, full_properties, filter_args_,
+                additional_properties)
+
+        if switches_of_site is None:
+            # "storage-fabric-uri" has been specified as a filter
+            return switches_of_fabric
+
+        if switches_of_fabric is None:
+            # "storage-site-uri" has been specified as a filter
+            return switches_of_site
+
+        # Both "storage-fabric-uri" and "storage-site-uri" have been specified
+        # as a filter
+        switch_uris_of_site = \
+            {obj.properties["object-uri"] for obj in switches_of_site}
+        result_switches = []
+        for obj in switches_of_fabric:
+            uri = obj.properties["object-uri"]
+            if uri in switch_uris_of_site:
+                result_switches.append(obj)
+        return result_switches
 
     @logged_api_call
     def define(self, properties):
@@ -239,6 +295,40 @@ class StorageSwitch(BaseResource):
             f"{StorageSwitchManager}, got {type(manager)}"
         )
         super().__init__(manager, uri, name, properties)
+        self._storage_site = None
+        self._storage_fabric = None
+
+    @property
+    def storage_site(self):
+        """
+        :class:`~zhmcclient.StorageSite`: The :term:`storage site` that contains
+        this storage switch.
+
+        The returned :class:`~zhmcclient.StorageSite` has only a minimal set of
+        properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._storage_site:
+            site_uri = self.get_property('storage-site-uri')
+            site_mgr = self.manager.console.storage_sites
+            self._storage_site = site_mgr.resource_object(site_uri)
+        return self._storage_site
+
+    @property
+    def storage_fabric(self):
+        """
+        :class:`~zhmcclient.StorageFabric`: The :term:`storage fabric` that
+        contains this storage switch.
+
+        The returned :class:`~zhmcclient.StorageFabric` has only a minimal set
+        of properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._storage_fabric:
+            fabric_uri = self.get_property('storage-fabric-uri')
+            fabric_mgr = self.manager.console.storage_fabrics
+            self._storage_fabric = fabric_mgr.resource_object(fabric_uri)
+        return self._storage_fabric
 
     @logged_api_call
     def undefine(self):

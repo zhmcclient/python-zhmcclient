@@ -1,0 +1,7 @@
+Fixed the implementation of ``list()`` (and thus, methods building on that
+such as ``find()`` and ``findall()``) in the following resource manager classes:
+
+  - :class:`~zhmcclient.StorageSwitchManager`
+  - :class:`~zhmcclient.StorageSubsystemManager`
+  - :class:`~zhmcclient.StorageControlUnitManager`
+  - :class:`~zhmcclient.StoragePathManager`

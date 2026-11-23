@@ -80,14 +80,13 @@ class StorageSubsystemManager(BaseManager):
             name_prop='name',
             query_props=query_props,
         )
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -95,9 +94,11 @@ class StorageSubsystemManager(BaseManager):
         """
         List the storage subsystems defined in the HMC.
 
-        Storage subsystems for which the authenticated user does not have
-        task permission to the "Configure Storage – System Programmer" or
-        "Configure Storage – Storage Administrator" tasks are not included.
+        If the authenticated user does not have task permission to the
+        "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks, or if no objects are
+        returned due to filtering, the method succeeds and an empty list is
+        returned.
 
         The properties in the returned resource objects are by default those
         returned by the
@@ -109,9 +110,19 @@ class StorageSubsystemManager(BaseManager):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The listing of resources is handled by performing an HMC list operation
-        in context of the parent resource, in an optimized way. For details,
-        see :ref:`Listing resources`.
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        subsystem objects is unique within the containing storage site object
+        (which is associated to a CPC) and can thus be used for another storage
+        subsystem object (usually representing the same real-life storage
+        subsystem) in a different storage site object (on the same or a
+        different CPC).
+        In that case, specify the ``storage-site-uri`` property in addition to
+        the ``name`` property in the filter.
+
+        The listing of resources is handled by performing the "List Storage
+        Subsystems of a Storage Site" HMC operation either for the specified
+        storage site, or for the list of all storage sites.
 
         HMC/SE version requirements:
 
@@ -157,10 +168,69 @@ class StorageSubsystemManager(BaseManager):
           :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'storage-subsystems'
-        list_uri = self._base_uri
+
+        if filter_args is None or "storage-site-uri" not in filter_args:
+            sites = self.console.storage_sites.list()
+            result_subsystems = []
+            for site in sites:
+                list_uri = site.uri + "/storage-subsystems"
+                subsystems = self._list_with_operation(
+                    list_uri, result_prop, full_properties, filter_args,
+                    additional_properties)
+                result_subsystems.extend(subsystems)
+            return result_subsystems
+
+        filter_args_ = dict(filter_args)
+        list_uri = filter_args_.pop("storage-site-uri") + "/storage-subsystems"
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args,
+            list_uri, result_prop, full_properties, filter_args_,
             additional_properties)
+
+    @logged_api_call
+    def define(self, properties):
+        """
+        Define a new storage subsystem with the specified properties.
+
+        This calls the "Define Storage Subsystem" operation on the HMC console
+        (``POST /api/console/operations/define-storage-subsystem``).
+
+        Authorization requirements:
+
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
+
+        Parameters:
+
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body
+            contents' in section 'Define Storage Subsystem' in the
+            :term:`HMC API` book.
+
+            Required fields: ``name``.
+            Optional fields: ``description``, ``storage-site-uri``.
+
+        Returns:
+
+          :class:`~zhmcclient.StorageSubsystem`: The new storage subsystem.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        result = self.session.post(
+            uri='/api/console/operations/define-storage-subsystem',
+            body=properties,
+        )
+        uri = result['object-uri']
+        name = properties.get(self._name_prop)
+        props = copy.deepcopy(properties)
+        props[self._uri_prop] = uri
+        storage_subsystem = StorageSubsystem(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
+        return storage_subsystem
 
 
 class StorageSubsystem(BaseResource):
@@ -191,6 +261,57 @@ class StorageSubsystem(BaseResource):
             f"{StorageSubsystemManager}, got {type(manager)}"
         )
         super().__init__(manager, uri, name, properties)
+        self._storage_site = None
+
+    @property
+    def storage_site(self):
+        """
+        :class:`~zhmcclient.StorageSite`: The :term:`storage site` that contains
+        this storage subsystem.
+
+        The returned :class:`~zhmcclient.StorageSite` has only a minimal set of
+        properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._storage_site:
+            site_uri = self.get_property('storage-site-uri')
+            site_mgr = self.manager.console.storage_sites
+            self._storage_site = site_mgr.resource_object(site_uri)
+        return self._storage_site
+
+    @logged_api_call
+    def undefine(self):
+        """
+        Undefine (delete) this storage subsystem.
+
+        This calls the "Undefine Storage Subsystem" operation
+        (``POST /api/storage-subsystems/{id}/operations/undefine``).
+
+        If the storage subsystem contains control units or connection endpoints,
+        they are removed as well.
+
+        Authorization requirements:
+
+        * Task permission to the "Configure Storage – System Programmer" or
+          "Configure Storage – Storage Administrator" tasks.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.manager.session.post(
+            uri=self.uri + '/operations/undefine',
+            resource=self,
+            body=None,
+        )
+        # pylint: disable=protected-access
+        self.manager._name_uri_cache.delete(
+            self.get_properties_local(self.manager._name_prop, None)
+        )
+        self.cease_existence_local()
 
     @logged_api_call
     def update_properties(self, properties):
