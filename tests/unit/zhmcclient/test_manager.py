@@ -783,9 +783,9 @@ class TestNameUriCache:
         resource3_name = ""
 
         # Update the cache with the empty resource name, and check that no
-        # exception is raised and that the cache is still empty.
+        # exception is raised and that the cache contains the entry.
         self.cache.update(resource3_name, resource3_uri)
-        assert self.cache._uris == {}
+        assert set(self.cache._uris.keys()) == {resource3_name}
         assert self.manager._list_called == 0
 
     def test_update_empty_none(self):

@@ -60,6 +60,9 @@ class _NameUriCache:
     A Name-URI cache, that caches the mapping between resource names and
     resource URIs. It supports looking up resource URIs by resource names.
 
+    Note that there may be resources with an empty string as the name, which
+    is treated by the cache like any other name.
+
     This class is used by the implementation of manager classes, and is not
     part of the external API.
     """
@@ -175,9 +178,9 @@ class _NameUriCache:
         Name-URI cache, and set it to the specified name and URI as a
         tuple(name, uri).
 
-        If the specified name is `None` or the empty string, do nothing.
+        If the specified name is `None`, do nothing.
         """
-        if name:
+        if name is not None:
             self._uris[name] = (name, uri)
 
     def delete(self, name):
@@ -185,10 +188,10 @@ class _NameUriCache:
         Delete the entry for the specified resource name from the Name-URI
         cache.
 
-        If the specified name is `None` or the empty string, or if an entry for
-        the specified name does not exist, do nothing.
+        If the specified name is `None`, or if an entry for the specified name
+        does not exist, do nothing.
         """
-        if name:
+        if name is not None:
             try:
                 del self._uris[name]
             except KeyError:
