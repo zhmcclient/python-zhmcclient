@@ -1,0 +1,3 @@
+Test: Fixed the end2end tests related to CTC by selecting only those FICON
+adapters that have their port configured for CTC ('ficon-use' is 'ctc' or
+'storage-and-ctc').

@@ -31,7 +31,8 @@ import zhmcclient
 
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     skipif_no_partition_link_feature, runtest_find_list, \
-    runtest_get_properties, assert_properties, standard_partition_props
+    runtest_get_properties, assert_properties, standard_partition_props, \
+    get_ctc_adapters
 from ..utils import RunMode, handle_runmode
 
 
@@ -223,13 +224,16 @@ def test_partlink_crud(
 
         if pl_type == 'ctc':
 
-            adapters = cpc.adapters.list(
-                filter_args={'type': 'fc', 'state': 'online'})
-            if len(adapters) < 1:
+            # Select the adapters for the paths of the partition link.
+            # We use the same adapter for both ends of each path of a CTC
+            # connection, for simplicity. Each path uses a different adapter.
+            ctc_adapters = get_ctc_adapters(cpc)
+            if len(ctc_adapters) < 1:
                 skip_log(test_logger,
-                         f"CPC {cpc.name} has no online FC adapters "
-                         "for CTC partition link creation")
-            adapter = random.choice(adapters)
+                         f"CPC {cpc.name} has no online FC adapters with CTC "
+                         "ports for CTC partition link creation")
+            adapter = random.choice(ctc_adapters)
+            test_logger.debug(f"Testing with CTC adapter {adapter.name}")
 
             part1_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
             part1_props = standard_partition_props(cpc, part1_name)
@@ -426,13 +430,19 @@ def test_partlink_create_delete(
         # For CTC, get two FC adapters and two stopped partitions
         if pl_type == 'ctc':
 
-            adapters = cpc.adapters.list(
-                filter_args={'type': 'fc', 'state': 'online'})
-            if len(adapters) < 2:
+            # Select the adapters for the paths of the partition link.
+            # We use the same adapter for both ends of each path of a CTC
+            # connection, for simplicity. Each path uses a different adapter.
+            ctc_adapters = get_ctc_adapters(cpc)
+            num_ctcs = len(ctc_adapters)
+            if num_ctcs < 2:
                 skip_log(test_logger,
-                         f"CPC {cpc.name} has no two online FC adapters "
-                         "for CTC partition link creation")
-            adapter_1, adapter_2 = random.choices(adapters, k=2)
+                         f"CPC {cpc.name} has less than 2 online FC adapters "
+                         "with CTC ports")
+            adapter_1, adapter_2 = random.choices(ctc_adapters, k=2)
+            test_logger.debug(
+                f"Testing with CTC adapters {adapter_1}, {adapter_2}")
+
             replacements['adapter_1'] = adapter_1
             replacements['adapter_2'] = adapter_2
 

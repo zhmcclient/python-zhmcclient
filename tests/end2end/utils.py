@@ -962,3 +962,34 @@ def copy_list(list_):
             v = deepcopy(v)
         ret.append(v)
     return ret
+
+
+def get_ctc_adapters(cpc):
+    """
+    Return a list of online FICON adapters in a CPC whose storage ports are
+    configured for CTC.
+
+    The returned adapters may or may not be connected to each other, so the
+    only way they can be used for CTC connections is if the CTC connection
+    uses the same adapter for both ends of a path. Different paths in the CTC
+    connection must use different adapters.
+
+    Parameters:
+      cpc (zhmcclient.Cpc): The CPC.
+
+    Returns:
+      list: List of online FICON adapters in a CPC that are configured for CTC.
+    """
+    # First, list the online FC-type adapters
+    adapters = cpc.adapters.list(
+        filter_args={'type': 'fc', 'status': 'active'})
+
+    # Out of those, select those whose port is configured for CTC.
+    ctc_adapters = []
+    for adapter in adapters:
+        ports = adapter.ports.list(
+            filter_args={'ficon-usage': 'ctc|storage-and-ctc'})
+        if len(ports) > 0:
+            ctc_adapters.append(adapter)
+
+    return ctc_adapters
