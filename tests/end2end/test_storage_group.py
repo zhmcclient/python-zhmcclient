@@ -213,6 +213,9 @@ def test_stogrp_crud(test_logger, dpm_mode_cpcs):
             console.storage_groups.find(name=stogrp_name_new)
 
 
+@pytest.mark.xfail(
+    reason="Some SGs fail with HTTP 500.12 (IllegalArgumentException: "
+    "Inbound argument must be Integer, Long, Double or Float)")
 def test_stogrp_get_storage_group_histories(test_logger, dpm_mode_cpcs):
     """
     Test StorageGroup.get_storage_group_histories().
