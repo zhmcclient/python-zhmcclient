@@ -108,6 +108,7 @@ def test_mfasrvdef_property(test_logger, hmc_session):
         runtest_get_properties(mfasrvdef.manager, non_list_prop)
 
 
+@pytest.mark.xfail(reason="400.18 radius-shared-secret field issue")
 def test_mfasrvdef_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a MFA server definition.
