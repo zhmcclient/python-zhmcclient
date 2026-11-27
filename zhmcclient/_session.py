@@ -16,6 +16,7 @@
 Session class: A session to the HMC, optionally in context of an HMC user.
 """
 
+from __future__ import annotations
 
 import json
 import time
@@ -44,6 +45,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     BLANKED_OUT_PROPERTY_REPLACE
 from ._utils import repr_obj_id
 from ._version import __version__
+from ._transport import Transport
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
@@ -278,7 +280,57 @@ def _headers_for_logging(headers):
     return headers
 
 
+class NetworkTransport(Transport):
+    """
+    A transport for HMCs that are accessed via the network.
+    """
+
+    def __init__(self, session: Session):  # noqa: F821
+        # pylint: disable=used-before-assignment
+        super().__init__(session)
+        rt_config = session._retry_timeout_config
+        retry = urllib3.Retry(
+            total=rt_config.connect_retries,
+            connect=rt_config.connect_retries,
+            read=rt_config.read_retries,
+            allowed_methods=rt_config.allowed_methods,
+            redirect=rt_config.max_redirects)
+        self._req_session = requests.Session()
+        self._req_session.mount(
+            'https://', requests.adapters.HTTPAdapter(max_retries=retry))
+        self._req_session.mount(
+            'http://', requests.adapters.HTTPAdapter(max_retries=retry))
+
+    def get(self, request: requests.Request, *, verify, timeout):
+        """
+        Perform the GET HTTP method.
+        """
+        url = self._session.base_url + request.url
+        return self._req_session.request(
+            method=request.method, url=url, headers=request.headers,
+            verify=verify, timeout=timeout)
+
+    def post(self, request: requests.Request, *, verify, timeout):
+        """
+        Perform the POST HTTP method.
+        """
+        url = self._session.base_url + request.url
+        return self._req_session.request(
+            method=request.method, url=url, headers=request.headers,
+            verify=verify, timeout=timeout, data=request.data)
+
+    def delete(self, request: requests.Request, *, verify, timeout):
+        """
+        Perform the DELETE HTTP method.
+        """
+        url = self._session.base_url + request.url
+        return self._req_session.request(
+            method=request.method, url=url, headers=request.headers,
+            verify=verify, timeout=timeout)
+
+
 class Session:
+    # pylint: disable=too-many-instance-attributes
     """
     A session to the HMC, optionally in context of an HMC user.
 
@@ -351,11 +403,12 @@ class Session:
 
           host (:term:`string` or iterable of :term:`string`):
             HMC host or list of HMC hosts to try from.
-            For valid formats, see the :attr:`~zhmcclient.Session.host`
-            property.
-            If `session_id` is specified, this must be the single HMC that has
-            that session.
-            Must not be `None`.
+
+            Each host must be in one of the formats described for the
+            :attr:`host` property.
+
+            If `session_id` is specified, the session ID must belong to the
+            specified host.
 
           userid (:term:`string`):
             Userid of the HMC user to be used, or `None`.
@@ -427,7 +480,8 @@ class Session:
             self._hosts = [host]
         else:
             self._hosts = list(host)
-            assert len(self._hosts) >= 1
+            if len(self._hosts) == 0:
+                raise ValueError("At least one host must be specified")
         self._port = port
         self._userid = userid
         self.__password = password
@@ -436,15 +490,14 @@ class Session:
         self._retry_timeout_config = self.default_rt_config.override_with(
             retry_timeout_config)
         self._headers = copy(_STD_HEADERS)  # dict with standard HTTP headers
+        self._transport = self._new_transport()
         if session_id is not None:
             # Create a logged-on state (nearly same state as in _do_logon())
             self._session_id = session_id
-            self._session = self._new_session(self.retry_timeout_config)
             self._headers['X-API-Session'] = session_id
             assert len(self._hosts) == 1
             self._actual_host = self._hosts[0]
-            self._base_url = \
-                self._create_base_url(self._actual_host, self._port)
+            self._set_actual_target(self._actual_host)
             # The following are set in _do_logon()) but not here:
             self._session_credential = None
             self._object_topic = None
@@ -452,7 +505,6 @@ class Session:
         else:
             # Create a logged-off state (same state as in _do_logoff())
             self._session_id = None
-            self._session = None
             self._actual_host = None
             self._base_url = None
             self._session_credential = None
@@ -480,7 +532,7 @@ class Session:
             f"  _base_url={self._base_url!r},\n"
             f"  _headers={headers!r},\n"
             f"  _session_id={blanked_session_id!r},\n"
-            f"  _session={self._session!r}\n"
+            f"  _transport={self._transport!r}\n"
             f"  _object_topic={self._object_topic!r}\n"
             f"  _job_topic={self._job_topic!r}\n"
             f"  _auto_updater={self._auto_updater!r}\n"
@@ -492,7 +544,7 @@ class Session:
         """
         :term:`string` or list of :term:`string`: HMC host or redundant HMC
         hosts to use. The first working HMC from this list will actually be
-        used. The working state of the HMC is detrmined using the
+        used. The working state of the HMC is determined using the
         'Query API Version' operation for which no authentication is needed.
 
         Each host will be in one of the following formats:
@@ -517,14 +569,8 @@ class Session:
         session, if the session is in the logged-on state. `None`, if the
         session is in the logged-off state.
 
-        The HMC host will be in one of the following formats:
-
-          * a short or fully qualified DNS hostname
-          * a literal (= dotted) IPv4 address
-          * a literal IPv6 address, formatted as defined in :term:`RFC3986`
-            with the extensions for zone identifiers as defined in
-            :term:`RFC6874`, supporting ``-`` (minus) for the delimiter
-            before the zone ID string, as an additional choice to ``%25``
+        The HMC host will be in one of the formats described for the
+        :attr:`host` property.
         """
         return self._actual_host
 
@@ -683,15 +729,6 @@ class Session:
         session is in the logged-off state.
         """
         return self._session_credential
-
-    @property
-    def session(self):
-        """
-        :term:`string` or `None`: :class:`requests.Session` object for this
-        session, if the session is in the logged-on state. `None`, if the
-        session is in the logged-off state.
-        """
-        return self._session
 
     @property
     def object_topic(self):
@@ -862,7 +899,7 @@ class Session:
         """
         # Determine working HMC for this session
         self._actual_host = self._determine_actual_host()
-        self._base_url = self._create_base_url(self._actual_host, self._port)
+        self._set_actual_target(self._actual_host)
 
         HMC_LOGGER.debug("Logging on to HMC %s", self._actual_host)
 
@@ -887,20 +924,12 @@ class Session:
             'password': self.__password
         }
         self._headers.pop('X-API-Session', None)  # Just in case
-        self._session = self._new_session(self.retry_timeout_config)
         logon_res = self.post(logon_uri, body=logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
         self._session_credential = logon_res['session-credential']
         self._headers['X-API-Session'] = self._session_id
         self._object_topic = logon_res['notification-topic']
         self._job_topic = logon_res['job-notification-topic']
-
-    @staticmethod
-    def _create_base_url(host, port):
-        """
-        Encapsulates how the base URL of the HMC is constructed.
-        """
-        return f"{_HMC_SCHEME}://{host}:{port}"
 
     def _determine_actual_host(self):
         """
@@ -925,7 +954,7 @@ class Session:
         last_exc = None
         for host in self._hosts:
             HMC_LOGGER.debug("Trying HMC for availability: %s", host)
-            self._base_url = self._create_base_url(host, self._port)
+            self._set_actual_target(host)
             try:
                 self.get('/api/version', logon_required=False,
                          renew_session=False)
@@ -940,23 +969,24 @@ class Session:
                          self._hosts)
         raise last_exc
 
-    @staticmethod
-    def _new_session(retry_timeout_config):
+    def _set_actual_target(self, host):
         """
-        Return a new `requests.Session` object.
+        Set all attributes for the specified HMC host.
+
+        Needs to be set when calling:
+        * self._port  (for network HMC only)
+
+        Will be updated upon return:
+        * self._base_url
         """
-        retry = urllib3.Retry(
-            total=retry_timeout_config.connect_retries,
-            connect=retry_timeout_config.connect_retries,
-            read=retry_timeout_config.read_retries,
-            allowed_methods=retry_timeout_config.allowed_methods,
-            redirect=retry_timeout_config.max_redirects)
-        session = requests.Session()
-        session.mount('https://',
-                      requests.adapters.HTTPAdapter(max_retries=retry))
-        session.mount('http://',
-                      requests.adapters.HTTPAdapter(max_retries=retry))
-        return session
+        self._base_url = f"{_HMC_SCHEME}://{host}:{self._port}"
+
+    def _new_transport(self):
+        """
+        Create and return a new transport.
+        """
+        transport = NetworkTransport(self)
+        return transport
 
     def _do_logoff(self):
         """
@@ -984,7 +1014,6 @@ class Session:
         self._actual_host = None
         self._base_url = None
         self._session_id = None
-        self._session = None
         self._headers.pop('X-API-Session', None)
         self._object_topic = None
         self._job_topic = None
@@ -1135,7 +1164,12 @@ class Session:
             Relative URI path of the resource, e.g. "/api/session".
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session
@@ -1160,21 +1194,24 @@ class Session:
         """
         if logon_required:
             self.logon()
-        elif self._base_url is None:
+        elif self._actual_host is None:
             self._actual_host = self._determine_actual_host()
-            self._base_url = \
-                self._create_base_url(self._actual_host, self._port)
+            self._set_actual_target(self._actual_host)
+
         url = self._base_url + uri
         self._log_http_request('GET', url, resource=resource,
                                headers=self.headers)
         stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
-        req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
+
+        request = requests.Request(
+            method="GET", url=uri, headers=self.headers)
+
         try:
-            result = req.get(url, headers=self.headers, verify=self.verify_cert,
-                             timeout=req_timeout)
+            result = self._transport.get(
+                request, verify=self.verify_cert, timeout=req_timeout)
         # Note: The requests method may raise OSError/IOError in case of
         # HMC certificate validation issues (e.g. incorrect cert path)
         except (requests.exceptions.RequestException, OSError) as exc:
@@ -1255,7 +1292,12 @@ class Session:
             Relative URI path of the resource, e.g. "/api/session".
             This URI is relative to the base URL of the session (see the
             :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           body (:term:`json object` or :term:`string` or file-like object):
             The HTTP request body (payload).
@@ -1359,10 +1401,10 @@ class Session:
         """
         if logon_required:
             self.logon()
-        elif self._base_url is None:
+        elif self._actual_host is None:
             self._actual_host = self._determine_actual_host()
-            self._base_url = \
-                self._create_base_url(self._actual_host, self._port)
+            self._set_actual_target(self._actual_host)
+
         url = self._base_url + uri
         headers = self.headers.copy()  # Standard headers
 
@@ -1404,25 +1446,23 @@ class Session:
 
         self._log_http_request('POST', url, resource=resource, headers=headers,
                                content=log_data, content_len=log_len)
-        req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
         if wait_for_completion:
             stats_total = self.time_stats_keeper.get_stats(
                 'post ' + uri + '+completion')
             stats_total.begin()
+
         try:
             stats = self.time_stats_keeper.get_stats('post ' + uri)
             stats.begin()
+
+            request = requests.Request(
+                method="POST", url=uri, headers=self.headers, data=data)
+
             try:
-                if data is None:
-                    result = req.post(url, headers=headers,
-                                      verify=self.verify_cert,
-                                      timeout=req_timeout)
-                else:
-                    result = req.post(url, data=data, headers=headers,
-                                      verify=self.verify_cert,
-                                      timeout=req_timeout)
+                result = self._transport.post(
+                    request, verify=self.verify_cert, timeout=req_timeout)
             # Note: The requests method may raise OSError/IOError in case of
             # HMC certificate validation issues (e.g. incorrect cert path)
             except (requests.exceptions.RequestException, OSError) \
@@ -1549,7 +1589,12 @@ class Session:
             "/api/session/{session-id}".
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
+            Any query parameters must be specified in this URI.
             Must not be `None`.
+
+          resource (:class:`zhmcclient.BaseResource`): The resource identified
+            by the URI. `None` if a resource object for the resource has not
+            been created. This parameter is used only for logging.
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session
@@ -1576,21 +1621,24 @@ class Session:
         """
         if logon_required:
             self.logon()
-        elif self._base_url is None:
+        elif self._actual_host is None:
             self._actual_host = self._determine_actual_host()
-            self._base_url = \
-                self._create_base_url(self._actual_host, self._port)
+            self._set_actual_target(self._actual_host)
+
         url = self._base_url + uri
         self._log_http_request('DELETE', url, resource=resource,
                                headers=self.headers)
         stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
-        req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
+
+        request = requests.Request(
+            method="DELETE", url=uri, headers=self.headers)
+
         try:
-            result = req.delete(url, headers=self.headers,
-                                verify=self.verify_cert, timeout=req_timeout)
+            result = self._transport.delete(
+                request, verify=self.verify_cert, timeout=req_timeout)
         # Note: The requests method may raise OSError/IOError in case of
         # HMC certificate validation issues (e.g. incorrect cert path)
         except (requests.exceptions.RequestException, OSError) as exc:

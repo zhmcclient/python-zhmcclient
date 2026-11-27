@@ -22,7 +22,6 @@ import json
 import re
 from unittest import mock
 import warnings
-import requests
 import requests_mock
 import pytest
 
@@ -101,13 +100,11 @@ def test_session_init(
     assert session.headers['Accept'] == '*/*'
 
     if session_id is None:
-        assert session.session is None
         assert 'X-API-Session' not in session.headers
         assert len(session.headers) == 3
         assert session.actual_host is None
         assert session.base_url is None
     else:
-        assert isinstance(session.session, requests.Session)
         assert session.headers['X-API-Session'] == session_id
         assert len(session.headers) == 4
         assert session.actual_host == host
@@ -251,7 +248,6 @@ def test_session_logon(
 
         assert session.session_id is None
         assert 'X-API-Session' not in session.headers
-        assert session.session is None
 
         logged_on = session.is_logon()
         assert not logged_on
@@ -274,7 +270,6 @@ def test_session_logon(
 
             assert session.session_id == 'test-session-id'
             assert 'X-API-Session' in session.headers
-            assert isinstance(session.session, requests.Session)
 
             if get_password:
                 if password is None:
@@ -306,7 +301,6 @@ def test_session_logoff():
         session.logoff()
 
         assert session.session_id is None
-        assert session.session is None
         assert 'X-API-Session' not in session.headers
         assert len(session.headers) == 3
 
