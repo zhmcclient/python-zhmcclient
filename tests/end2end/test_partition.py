@@ -31,7 +31,7 @@ import zhmcclient
 
 from .utils import skip_log, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
-    pformat_as_dict, validate_firmware_features
+    pformat_as_dict, validate_firmware_features, get_ctc_adapters
 from ..utils import RunMode, handle_runmode
 
 urllib3.disable_warnings()
@@ -1000,16 +1000,18 @@ def test_part_attach_detach_ctc_link(
         try:
 
             # Select the adapters for the paths of the partition link.
-            # We use the same adapter for each connection, because if we use
-            # different adapters, we cannot determine which ones actually do
-            # have a physical connection.
-            adapters = cpc.adapters.list(
-                filter_args={'type': 'fc', 'status': 'active'})
-            if len(adapters) < num_paths:
+            # We use the same adapter for both ends of each path of a CTC
+            # connection, for simplicity. Each path uses a different adapter.
+            ctc_adapters = get_ctc_adapters(cpc)
+            num_ctcs = len(ctc_adapters)
+            if num_ctcs < num_paths:
                 skip_log(test_logger,
-                         f"CPC {cpc.name} has less than {num_paths} "
-                         "online FC adapters for CTC")
-            path_adapters = random.sample(adapters, num_paths)
+                         f"CPC {cpc.name} has not enough online FC adapters "
+                         f"with CTC ports (has: {num_ctcs}, needed: "
+                         f"{num_paths})")
+            path_adapters = random.sample(ctc_adapters, num_paths)
+            adapter_names = [ad.name for ad in path_adapters]
+            test_logger.debug(f"Testing with CTC adapters {adapter_names}")
 
             # Create the initial partitions for the partition link
             for i in range(0, num_partitions):
