@@ -155,6 +155,39 @@ def pick_test_resources(res_list):
     return sorted(ret_list, key=_res_name)
 
 
+def pick_cpc(client, hmc_definition, dpm_enabled):
+    """
+    Return a CPC in the desired operational mode from the HMC definition.
+
+    If the HMC definition specifies a CPC, the first one that is stated to be
+    in the desired mode is returned. Otherwise, the first CPC managed by the
+    HMC that is in the desired mode is returned.
+
+    Parameters:
+      client (thmcclient.Client): Client for the HMC.
+      hmc_definition (zhmcclient.testutils.HMCDefinition): HMC definition
+        in zhmc inventory file.
+      dpm_enabled (bool): The desired operational mode of the CPC.
+
+    Returns:
+      zhmcclient.Cpc: The selected CPC object.
+    """
+    cpc_name = None
+    if hasattr(hmc_definition, "cpcs"):
+        for name, props in hmc_definition.cpcs.items():
+            hd_dpm_enabled = props.get("dpm_enabled", None)
+            if hd_dpm_enabled is not None and hd_dpm_enabled == dpm_enabled:
+                cpc_name = name
+                break
+    if cpc_name:
+        cpcs = client.cpcs.list(
+            filter_args={"name": cpc_name, "dpm-enabled": dpm_enabled})
+    else:
+        cpcs = client.cpcs.list(filter_args={"dpm-enabled": dpm_enabled})
+    cpc = cpcs[0]
+    return cpc
+
+
 def runtest_find_list(session, manager, name, server_prop, client_prop,
                       volatile_props, minimal_props, list_props, add_props=None,
                       unique_name=True):
@@ -184,7 +217,8 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
       name (string): Name of resource to be found.
 
       server_prop (string): Name of resource property for server-side filtering,
-        or None for no tests with server-side filtering.
+        or None for no tests with server-side filtering. If unique_name is
+        True, this must be the property for the resource name.
 
       client_prop (string): Name of resource property for client-side filtering,
         or None for no tests with client-side filtering.
@@ -203,11 +237,11 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         is not executed.
 
       unique_name (bool): Indicates that the resource name is expected to be
-        unique within its parent resource. That is normally the case, the only
-        known exception are storage volumes in HMC 2.14.0 (they were introduced
-        in 2.14.0 and made unique in 2.14.1).
+        unique within its parent resource (the resource in the 'parent'
+        property). This largely determines what kinds of tests are run.
     """
     if unique_name:
+
         # The code to be tested: find_by_name(name)
         found_res = manager.find_by_name(name)
 
@@ -218,6 +252,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             client_value = exp_props[client_prop]
 
         if server_prop:
+            assert server_prop == manager.name_prop
             server_value = exp_props[server_prop]
 
         # Get the object-id of the resource from its URI
@@ -305,57 +340,61 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                              prop_names=minimal_props)
 
-    # The code to be tested: findall() with no filter
-    found_res_list = manager.findall()
+    else:
+        # The name alone is not unique in the parent resource.
 
-    assert name in (_res.name for _res in found_res_list)
-    found_res_list = list(filter(lambda _res: _res.name == name,
-                                 found_res_list))
-    found_res = found_res_list[0]
-    if len(found_res_list) > 1:
-        found_uri_list = [r.uri for r in found_res_list]
-        parent = manager.parent
-        uri_str = '\n'.join(found_uri_list)
-        raise AssertionError(
-            f"{found_res.prop('class')} findall() result for "
-            f"{parent.prop('class')} {parent.name!r} has non-unique name "
-            f"{name!r} for the following {len(found_res_list)} objects:\n"
-            f"{uri_str}")
-    assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                     prop_names=list_props)
+        # The code to be tested: list() with no filter, as a basis
+        all_objs = manager.list()
+        all_objs_by_uri = {obj.uri: obj for obj in all_objs}
+        all_objs_uris = list(all_objs_by_uri.keys())
 
-    # The code to be tested: list() with no filter and short properties
-    found_res_list = manager.list()
+        # The code to be tested: findall() with no filter
+        found_objs = manager.findall()
+        found_objs_by_uri = {obj.uri: obj for obj in found_objs}
+        found_objs_uris = list(found_objs_by_uri.keys())
 
-    # Because we have only the expected properties for the resource with
-    # the specified name, we only compare that one resource.
-    assert name in (_res.name for _res in found_res_list)
-    found_res_list = list(filter(lambda _res: _res.name == name,
-                                 found_res_list))
-    found_res = found_res_list[0]
-    if len(found_res_list) > 1:
-        raise AssertionError(
-            f"{found_res.prop('class')} list() result with non-unique name "
-            f"{name!r}: {found_res_list}")
-    assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                     prop_names=list_props)
+        assert set(found_objs_uris) == set(all_objs_uris)
 
-    if add_props is not None:
-        # The code to be tested: list() with no filter and additional properties
-        found_res_list = manager.list(additional_properties=add_props)
+        if len(all_objs) > 0:
 
-        # Because we have only the expected properties for the resource with
-        # the specified name, we only compare that one resource.
-        assert name in (_res.name for _res in found_res_list)
-        found_res_list = list(filter(lambda _res: _res.name == name,
-                                     found_res_list))
-        found_res = found_res_list[0]
-        if len(found_res_list) > 1:
-            raise AssertionError(
-                f"{found_res.prop('class')} list() result with non-unique "
-                f"name {name!r}: {found_res_list}")
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=list_props + add_props)
+            if server_prop:
+                server_value = all_objs[0].get_property(server_prop)
+
+                # Code to be tested: list() with server-side filter
+                found_objs = manager.list(
+                    filter_args={server_prop: server_value})
+
+                found_objs_uris = [obj.uri for obj in found_objs]
+                exp_objs = []
+                for obj in all_objs:
+                    if obj.get_property(server_prop) == server_value:
+                        exp_objs.append(obj)
+                exp_objs_uris = [obj.uri for obj in exp_objs]
+                assert set(exp_objs_uris) == set(found_objs_uris)
+
+            if client_prop:
+                client_value = all_objs[0].get_property(client_prop)
+
+                # Code to be tested: list() with client-side filter
+                found_objs = manager.list(
+                    filter_args={client_prop: client_value})
+
+                found_objs_uris = [obj.uri for obj in found_objs]
+                exp_objs = []
+                for obj in all_objs:
+                    if obj.get_property(client_prop) == client_value:
+                        exp_objs.append(obj)
+                exp_objs_uris = [obj.uri for obj in exp_objs]
+                assert set(exp_objs_uris) == set(found_objs_uris)
+
+            if add_props is not None:
+
+                # The code to be tested: list() with additional properties
+                found_res_list = manager.list(additional_properties=add_props)
+
+                for res in found_res_list:
+                    for pname in add_props:
+                        assert pname in res.properties
 
 
 def runtest_get_properties(manager, non_list_prop):

@@ -75,7 +75,8 @@ def test_stogrptpl_find_list(test_logger, dpm_mode_cpcs):
             runtest_find_list(
                 session, console.storage_group_templates, stogrptpl.name,
                 'name', 'object-uri', STOGRPTPL_VOLATILE_PROPS,
-                STOGRPTPL_MINIMAL_PROPS, STOGRPTPL_LIST_PROPS)
+                STOGRPTPL_MINIMAL_PROPS, STOGRPTPL_LIST_PROPS,
+                unique_name=False)
 
 
 def test_stogrptpl_property(test_logger, dpm_mode_cpcs):

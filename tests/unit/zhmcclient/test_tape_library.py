@@ -165,13 +165,19 @@ class TestTapeLibrary:
         assert_resources(tape_libs, exp_faked_tape_libs, prop_names)
 
     @pytest.mark.parametrize(
-        "input_props,fcp_availability ,exp_exc", [
-            ({}, True, None),
-            ({}, False, HTTPError({'http-status': 409, 'reason': 487})),
+        "fcp_availability, exp_exc", [
+            (
+                True,
+                None
+            ),
+            (
+                False,
+                HTTPError({'http-status': 409, 'reason': 487})
+            ),
         ]
     )
     def test_tape_lib_manager_request_zoning(
-            self, caplog, input_props, fcp_availability, exp_exc):
+            self, caplog, fcp_availability, exp_exc):
         """Test TapeLibraryManager.request_zoning()."""
 
         logger_name = "zhmcclient.api"
@@ -186,26 +192,30 @@ class TestTapeLibrary:
 
             with pytest.raises(exp_exc.__class__) as exc_info:
 
-                tape_lib_mgr.request_zoning(input_props)
+                tape_lib_mgr.request_zoning(cpc=self.cpc)
 
             exc = exc_info.value
             if isinstance(exp_exc, HTTPError):
                 assert exc.http_status == exp_exc.http_status
                 assert exc.reason == exp_exc.reason
         else:
-            tape_lib_mgr.request_zoning(input_props)
+            tape_lib_mgr.request_zoning(cpc=self.cpc)
 
     @pytest.mark.parametrize(
-        "input_props,management_world_wide_port_name, exp_exc", [
-            ({},
-             False, HTTPError({'http-status': 409, 'reason': 501})
-             ),
-            ({}, True, None)
+        "management_world_wide_port_name, exp_exc",
+        [
+            (
+                False,
+                HTTPError({'http-status': 409, 'reason': 501})
+            ),
+            (
+                True,
+                None
+            )
         ]
     )
-    def test_tape_lib_manager_discovertl(
-            self, caplog, input_props,
-            management_world_wide_port_name, exp_exc):
+    def test_tape_lib_manager_discover(
+            self, caplog, management_world_wide_port_name, exp_exc):
         """Test TapeLibraryManager.discover()."""
 
         logger_name = "zhmcclient.api"
@@ -222,7 +232,7 @@ class TestTapeLibrary:
             with pytest.raises(exp_exc.__class__) as exc_info:
 
                 # Execute the code to be tested
-                tape_lib_mgr.discover(input_props)
+                tape_lib_mgr.discover(cpc=self.cpc)
 
             exc = exc_info.value
             if isinstance(exp_exc, HTTPError):
@@ -230,24 +240,23 @@ class TestTapeLibrary:
                 assert exc.reason == exp_exc.reason
 
         else:
-            tape_lib_mgr.discover(input_props)
+            tape_lib_mgr.discover(cpc=self.cpc)
 
     @pytest.mark.parametrize(
-        "input_props, exp_exc", [
-            ({'name': TL1_NAME},
-             None),
-            ({'name': TL2_NAME},
-             None),
+        "name, exp_exc", [
+            (
+                TL1_NAME,
+                None
+            ),
         ]
     )
-    def test_tape_lib_undefine(self, input_props, exp_exc):
+    def test_tape_lib_undefine(self, name, exp_exc):
         """Test TapeLibrary.undefine()."""
 
-        faked_tape_lib = self.add_tape_library(name=input_props['name'])
+        faked_tape_lib = self.add_tape_library(name=name)
 
         tape_lib_mgr = self.console.tape_library
         tape_lib = tape_lib_mgr.find(name=faked_tape_lib.name)
-        print('Manager before undefine', str(tape_lib_mgr))
 
         if exp_exc is not None:
 

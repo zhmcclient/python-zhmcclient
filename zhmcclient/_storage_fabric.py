@@ -80,14 +80,13 @@ class StorageFabricManager(BaseManager):
             name_prop='name',
             query_props=query_props,
         )
-        self._console = console
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -95,9 +94,11 @@ class StorageFabricManager(BaseManager):
         """
         List the storage fabrics defined in the HMC.
 
-        Storage fabrics for which the authenticated user does not have
-        task permission to the "Configure Storage – System Programmer" or
-        "Configure Storage – Storage Administrator" tasks are not included.
+        If the authenticated user does not have task permission to the
+        "Configure Storage – System Programmer" or
+        "Configure Storage – Storage Administrator" tasks, or if no objects are
+        returned due to filtering, the method succeeds and an empty list is
+        returned.
 
         The properties in the returned resource objects are by default those
         returned by the
@@ -108,6 +109,14 @@ class StorageFabricManager(BaseManager):
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
+
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of storage
+        fabric objects is unique within the associated CPC and can thus be used
+        for another storage fabric object (usually representing the same
+        real-life storage fabric) on a different CPC.
+        In that case, specify the ``cpc-uri`` property in addition to the
+        ``name`` property in the filter.
 
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,
@@ -238,6 +247,23 @@ class StorageFabric(BaseResource):
             f"{StorageFabricManager}, got {type(manager)}"
         )
         super().__init__(manager, uri, name, properties)
+        self._cpc = None
+
+    @property
+    def cpc(self):
+        """
+        :class:`~zhmcclient.Cpc`: The :term:`CPC` to which this storage fabric
+        is associated.
+
+        The returned :class:`~zhmcclient.Cpc` has only a minimal set of
+        properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._cpc:
+            cpc_uri = self.get_property('cpc-uri')
+            cpc_mgr = self.manager.console.manager.client.cpcs
+            self._cpc = cpc_mgr.resource_object(cpc_uri)
+        return self._cpc
 
     @logged_api_call
     def delete(self):

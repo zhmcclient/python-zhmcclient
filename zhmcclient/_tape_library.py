@@ -90,34 +90,13 @@ class TapeLibraryManager(BaseManager):
             name_prop="name",
             query_props=query_props,
         )
-        self._console = console
-        self._cpc = None
 
     @property
     def console(self):
         """
         :class:`~zhmcclient.Console`: The Console object representing the HMC.
         """
-        return self._console
-
-    @property
-    def cpc(self):
-        """
-        :class:`~zhmcclient.Cpc`: The :term:`CPC` to which this tape library
-        is associated.
-
-        The returned :class:`~zhmcclient.Cpc` has only a minimal set of
-        properties populated.
-        """
-        # We do here some lazy loading.
-        if not self._cpc:
-            # Get the first tape library to extract its CPC URI
-            cpc_mgr = self.console.manager.client.cpcs
-            # List all CPCs and get the first one
-            cpc_list = cpc_mgr.list()
-            if cpc_list:
-                self._cpc = cpc_list[0]
-        return self._cpc
+        return self._parent
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None,
@@ -137,6 +116,13 @@ class TapeLibraryManager(BaseManager):
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
+
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of tape
+        library objects is unique within the associated CPC and can thus be
+        used for a tape library object associated to a different CPC.
+        In that case, specify the ``cpc-uri`` property in addition to the
+        ``name`` property in the filter.
 
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,
@@ -193,10 +179,11 @@ class TapeLibraryManager(BaseManager):
             additional_properties)
 
     @logged_api_call
-    def request_zoning(self, email_to_addresses=None, email_cc_addresses=None):
+    def request_zoning(
+            self, cpc, email_to_addresses=None, email_cc_addresses=None):
         """
-        Request tape library zoning configuration by sending email notifications
-        to storage administrators.
+        Request tape library zoning configuration for a CPC by sending email
+        notifications to storage administrators.
 
         This operation sends emails to storage administrators requesting them to
         configure SAN zoning for tape library access. The CPC must have at least
@@ -212,6 +199,9 @@ class TapeLibraryManager(BaseManager):
         * Task permission to the "Configure Storage - System Programmer" task.
 
         Parameters:
+
+          cpc (:class:`~zhmcclient.Cpc`): The CPC for which the tape library
+            zoning configuration is requested.
 
           email_to_addresses (:term:`iterable` of :term:`string`): Email
             addresses of one or more storage administrators to be notified.
@@ -234,15 +224,13 @@ class TapeLibraryManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-
-        body = {}
-        cpc_uri_temp = self.cpc
-        body["cpc-uri"] = cpc_uri_temp.uri
+        body = {
+            "cpc-uri": cpc.uri,
+        }
         if email_to_addresses:
             body["email-to-addresses"] = email_to_addresses
             if email_cc_addresses:
                 body["email-cc-addresses"] = email_cc_addresses
-
         result = self.session.post(
             self._base_uri + "/operations/request-tape-library-zoning",
             body=body
@@ -251,11 +239,10 @@ class TapeLibraryManager(BaseManager):
 
     @logged_api_call
     def discover(
-        self, force_restart=False, wait_for_completion=True,
-        operation_timeout=None
-    ):
+            self, cpc, force_restart=False, wait_for_completion=True,
+            operation_timeout=None):
         """
-        Discover tape libraries connected to the CPC.
+        Discover tape libraries connected to a CPC.
 
         This operation initiates discovery of tape libraries attached to the CPC
         through FCP adapters. The CPC must have a
@@ -277,6 +264,9 @@ class TapeLibraryManager(BaseManager):
           or to the "Configure Storage - Storage Administrator" task.
 
         Parameters:
+
+          cpc (:class:`~zhmcclient.Cpc`):
+            The CPC for which the connected tape libraries should be discovered.
 
           force_restart (bool):
             Indicates if there is an in-progress discovery operation for the
@@ -315,11 +305,10 @@ class TapeLibraryManager(BaseManager):
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
               waiting for completion of the operation.
         """
-
-        body = {}
-        body["force-restart"] = force_restart
-        cpc_uri_temp = self.cpc
-        body["cpc-uri"] = cpc_uri_temp.uri
+        body = {
+            "cpc-uri": cpc.uri,
+            "force-restart": force_restart,
+        }
         result = self.session.post(
             self._base_uri + "/operations/discover-tape-libraries",
             resource=self,
@@ -362,9 +351,23 @@ class TapeLibrary(BaseResource):
             f"{TapeLibraryManager}, got {type(manager)}"
         )
         super().__init__(manager, uri, name, properties)
-        # The manager objects for child resources (with lazy initialization):
-        self._tape_library = None
         self._cpc = None
+
+    @property
+    def cpc(self):
+        """
+        :class:`~zhmcclient.Cpc`: The :term:`CPC` to which this tape library
+        is associated.
+
+        The returned :class:`~zhmcclient.Cpc` has only a minimal set of
+        properties populated.
+        """
+        # We do here some lazy loading.
+        if not self._cpc:
+            cpc_uri = self.get_property('cpc-uri')
+            cpc_mgr = self.manager.console.manager.client.cpcs
+            self._cpc = cpc_mgr.resource_object(cpc_uri)
+        return self._cpc
 
     @logged_api_call
     def undefine(self):

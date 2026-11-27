@@ -1,0 +1,2 @@
+Test: Fixed the end2end tests for storage subsystem and storage switch by
+ensuring that the storage objects are associated to the same CPC, where needed.

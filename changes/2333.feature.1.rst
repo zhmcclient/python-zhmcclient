@@ -1,0 +1,15 @@
+Added an attribute to the zhmcclient resource classes that represents the
+resource that provides the scope for the name of the resource, where it was
+missing:
+
+ - :attr:`~zhmcclient.StorageSite.cpc` in
+   :class:`~zhmcclient.StorageSite`
+ - :attr:`~zhmcclient.StorageFabric.cpc` in
+   :class:`~zhmcclient.StorageFabric`
+ - :attr:`~zhmcclient.StorageSwitch.storage_site` and
+   :attr:`~zhmcclient.StorageSwitch.storage_fabric` in
+   :class:`~zhmcclient.StorageSwitch`
+ - :attr:`~zhmcclient.StorageSubsystem.storage_site` in
+   :class:`~zhmcclient.StorageSubsystem`
+ - :attr:`~zhmcclient.StorageControlUnit.storage_subsystem` in
+   :class:`~zhmcclient.StorageControlUnit`

@@ -1,0 +1,2 @@
+Fixed the name of the incorrect 'cpc-uris' query parameter for
+Storage Site objects to 'cpc-uri'.

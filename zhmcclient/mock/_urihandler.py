@@ -5821,14 +5821,6 @@ class StorageGroupGetHistoriesHandler:
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: Get Storage Group Histories."""
-        storage_group_oid = uri_parms[0]
-        storage_group_uri = '/api/storage-groups/' + storage_group_oid
-        try:
-            hmc.lookup_by_uri(storage_group_uri)
-        except KeyError:
-            new_exc = InvalidResourceError(method, uri)
-            new_exc.__cause__ = None
-            raise new_exc  # zhmcclient.mock.InvalidResourceError
 
         # Return mock history data
         return {
@@ -7087,7 +7079,6 @@ class StoragePathsHandler:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc
-
         result_paths = []
         for path in cu.storage_paths.list(None):
             result_path = {}
@@ -7231,11 +7222,10 @@ class TapeLibraryUndefineHandler:
             tape_library_uri = f'/api/tape-libraries/{tape_library_id}'
             tape_library = hmc.lookup_by_uri(tape_library_uri)
         except KeyError:
-
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
-        print("resource object " + str(tape_library))
+
         tape_library.manager.remove(tape_library.oid)
 
 
@@ -7250,8 +7240,7 @@ class TapeLibraryRequestZoningHandler:
         # pylint: disable=unused-argument
         """Operation: Request Tape Library Zoning"""
         assert wait_for_completion is True  # always synchronous
-        check_required_fields(method, uri, body,
-                              ['cpc-uri'])
+        check_required_fields(method, uri, body, ['cpc-uri'])
         cpc_uri = body['cpc-uri']
         try:
             cpc = hmc.lookup_by_uri(cpc_uri)
@@ -7262,7 +7251,6 @@ class TapeLibraryRequestZoningHandler:
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         if cpc.adapters.list():
-            print('This is CPC Adapters', str(cpc.adapters.list()))
             cpc.properties['management-world-wide-port-name'] =\
                 'a1b2c3d4e5f60002'
             return {}
@@ -9116,13 +9104,12 @@ URIS = (
     (r'/api/storage-groups/([^/]+)/operations/fulfill-ficon-storage-volumes',
      StorageGroupFulfillFiconHandler),
     (r'/api/storage-groups/([^/]+)/operations/'
-     r'accept-mismatched-fcp-storage-volumes',
+     r'accept-mismatched-storage-volumes',
      StorageGroupAcceptMismatchedFcpHandler),
     (r'/api/storage-groups/([^/]+)/operations/'
-     r'reject-mismatched-fcp-storage-volumes',
+     r'reject-mismatched-storage-volumes',
      StorageGroupRejectMismatchedFcpHandler),
-    (r'/api/storage-groups/([^/]+)/operations/'
-     r'get-storage-group-histories(?:\?(.*))?',
+    (r'/api/console/operations/get-storage-group-histories(?:\?(.*))?',
      StorageGroupGetHistoriesHandler),
 
     (r'/api/storage-groups/([^/]+)/storage-volumes(?:\?(.*))?',

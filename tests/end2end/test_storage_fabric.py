@@ -58,7 +58,7 @@ def test_sfabric_find_list(test_logger, hmc_session):
         runtest_find_list(
             hmc_session, console.storage_fabrics, fabric.name,
             'name', 'object-uri', SFABRIC_VOLATILE_PROPS,
-            SFABRIC_MINIMAL_PROPS, SFABRIC_LIST_PROPS)
+            SFABRIC_MINIMAL_PROPS, SFABRIC_LIST_PROPS, unique_name=False)
 
 
 def test_sfabric_property(test_logger, hmc_session):

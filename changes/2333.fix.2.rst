@@ -1,0 +1,7 @@
+Fixed the incorrect placement of the ``cpc`` attribute that scopes the names of
+Tape Library objects by moving it from :class:`~zhmcclient.TapeLibraryManager`
+to :class:`~zhmcclient.TapeLibrary`.
+
+In addition, fixed the :meth:`~zhmcclient.TapeLibraryManager.request_zoning`
+and :meth:`~zhmcclient.TapeLibraryManager.discover` methods to add a
+required ``cpc`` parameter for specifying the desired CPC.

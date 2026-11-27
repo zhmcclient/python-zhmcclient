@@ -132,7 +132,7 @@ def test_partlink_find_list(
             runtest_find_list(
                 session, console.partition_links, partlink.name, 'name',
                 'object-uri', PARTLINK_VOLATILE_PROPS, PARTLINK_MINIMAL_PROPS,
-                PARTLINK_LIST_PROPS)
+                PARTLINK_LIST_PROPS, unique_name=False)
 
 
 @pytest.mark.parametrize(

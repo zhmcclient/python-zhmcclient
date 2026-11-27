@@ -1,0 +1,4 @@
+Fixed the URLs used by the methods
+:meth:`zhmcclient.StorageGroup.accept_mismatched_fcp_storage_volumes`,
+:meth:`zhmcclient.StorageGroup.reject_mismatched_fcp_storage_volumes` and
+:meth:`zhmcclient.StorageGroup.get_storage_group_histories`

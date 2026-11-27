@@ -1,0 +1,15 @@
+Clarified that the ``name`` property alone is not sufficient when filtering
+for a single object in the ``list()`` method, for the following resource
+classes:
+
+  - :class:`~zhmcclient.Certificate`
+  - :class:`~zhmcclient.PartitionLink`
+  - :class:`~zhmcclient.StorageControlUnit`
+  - :class:`~zhmcclient.StorageFabric`
+  - :class:`~zhmcclient.StorageGroup`
+  - :class:`~zhmcclient.StorageGroupTemplate`
+  - :class:`~zhmcclient.StorageSite`
+  - :class:`~zhmcclient.StorageSubsystem`
+  - :class:`~zhmcclient.StorageSwitch`
+  - :class:`~zhmcclient.TapeLibrary`
+  - :class:`~zhmcclient.TapeLink`

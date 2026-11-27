@@ -79,7 +79,8 @@ def test_stovoltpl_find_list(test_logger, dpm_mode_cpcs):
             runtest_find_list(
                 session, stogrptpl.storage_volume_templates, stovoltpl.name,
                 'name', 'size', STOVOLTPL_VOLATILE_PROPS,
-                STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS)
+                STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS,
+                unique_name=False)
 
 
 def test_stovoltpl_property(test_logger, dpm_mode_cpcs):

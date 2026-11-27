@@ -108,6 +108,15 @@ class CertificateManager(BaseManager):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
+        When using filters to get a single resource object of this type, the
+        ``name`` property alone is not sufficient, because the name of
+        certificate objects is unique within the same parent (CPC or Console)
+        and the same certificate type, and can thus be used for a certificate
+        object of different type or parent.
+        In that case, specify the ``parent`` or ``parent-name`` property and
+        the ``type`` property in addition to the ``name`` property in the
+        filter.
+
         The listing of resources is handled by performing an HMC list operation
         in context of the parent resource, in an optimized way. For details,
         see :ref:`Listing resources`.

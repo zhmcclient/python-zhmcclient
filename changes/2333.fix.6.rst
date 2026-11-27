@@ -1,0 +1,2 @@
+Removed prints from the zhmcclient mock support for the HMC operations
+"Undefine Tape Library" and "Request Tape Library Zoning".

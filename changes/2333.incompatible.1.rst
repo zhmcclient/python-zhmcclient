@@ -1,0 +1,9 @@
+The movement of the ``cpc`` attribute from :class:`~zhmcclient.TapeLibraryManager`
+to :class:`~zhmcclient.TapeLibrary` is an incompatible change.
+On :class:`~zhmcclient.TapeLibraryManager`, it resolved to the first listed CPC,
+which was not very useful.
+
+If you used the ``cpc`` attribute on :class:`~zhmcclient.TapeLibraryManager`,
+review your code as to what you actually wanted to achieve. If you wanted to
+get the CPC associated with the tape library, use the new ``cpc`` attribute on
+:class:`~zhmcclient.TapeLibrary` instead.
