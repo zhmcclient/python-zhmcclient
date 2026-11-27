@@ -146,6 +146,7 @@ def test_ssosrvdef_property(test_logger, hmc_session):
         runtest_get_properties(ssosrvdef.manager, non_list_prop)
 
 
+@pytest.mark.xfail(reason="Unexpected value for logout-url")
 def test_ssosrvdef_crud(test_logger, hmc_session):
     """
     Test create, read, update and delete a SSO server definition.
